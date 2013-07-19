@@ -21,13 +21,13 @@ void setup()
     leds.begin();
 
     for (unsigned i = 0; i < ledsTotal; ++i) {
-        pixbuf.pixels[i].color = HColor16(0x1080, 0x0080, 0x0080);
+        pixbuf.pixels[i].color = HColor16(0x0080, 0x0080, 0x0080);
     }
 }
 
 void loop()
 {
-    pixbuf.pixels[0].color.r = millis() & 0xffff;
+    pixbuf.pixels[0].color.b = millis() & 0xffff;
 
     pixbuf.show(leds);
 }

@@ -1,13 +1,6 @@
-# Compiled Object files
-*.slo
-*.lo
+*.elf
+*.hex
 *.o
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
+*.d
+
