@@ -1,3 +1,18 @@
+#######################################################
+# Environment setup
+
+# Teensy loader tools (for 'make install')
+TOOLSPATH = /Applications/Arduino.app/Contents/Resources/Java/hardware/tools
+
+# toolchain
+CC = arm-none-eabi-gcc
+CXX = arm-none-eabi-g++
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+SIZE = arm-none-eabi-size
+
+#######################################################
+
 # The name of your project (used to name the compiled .hex file)
 TARGET = fadecandy
 
@@ -32,12 +47,6 @@ LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -T$(LDSCRIPT)
 # additional libraries to link
 LIBS = -lm
 
-# toolchain
-CC = arm-none-eabi-gcc
-CXX = arm-none-eabi-g++
-OBJCOPY = arm-none-eabi-objcopy
-SIZE = arm-none-eabi-size
-
 OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 
 all: $(TARGET).hex
@@ -55,4 +64,11 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 clean:
 	rm -f src/*.d src/*.o teensy3/*.o teensy3/*.d $(TARGET).elf $(TARGET).hex
 
-.PHONY: clean install
+install: $(TARGET).hex
+	$(abspath $(TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))
+	$(abspath $(TOOLSPATH))/teensy_reboot
+
+objdump: $(TARGET).elf
+	$(OBJDUMP) -d $<
+
+.PHONY: clean install objdump
