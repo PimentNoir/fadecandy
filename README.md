@@ -23,3 +23,9 @@ This is a work in progress! Things I don't know yet:
 * How many LEDs will be supported per Teensy board
 * Maximum frame rates
 * Specific documentation for the USB protocol
+
+Prerequisites
+-------------
+
+* The recommended ARM toolchain, from <https://code.launchpad.net/gcc-arm-embedded>
+* The Teensy Loader: <http://www.pjrc.com/teensy/loader.html>
