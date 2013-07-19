@@ -17,6 +17,8 @@ int drawingMemory[ledsPerStrip * 6];
 OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz);
 HPixelBuffer<ledsTotal> pixbuf;
 
+uint16_t sinelut[1024];
+
 void setup()
 {
     leds.begin();
@@ -25,6 +27,11 @@ void setup()
     for (unsigned i = 0; i < ledsTotal; ++i) {
         pixbuf.pixels[i].color = HColor16(0,0,0);
     }
+
+    // Quick and dirty...
+    for (unsigned i = 0; i < 1024; ++i) {
+    	sinelut[i] = pow(sin(i * (M_PI * 2 / 1024)) * 0.5 + 0.5, 2.2) * 0x1000;
+    }
 }
 
 void loop()
@@ -32,11 +39,10 @@ void loop()
 	// XXX: Proof of concept
 
 	for (int i = 0; i < 16; i++) {
-		unsigned c = pow(sin(i * 0.2 + millis() * 0.0005) * 0.5 + 0.5, 2.2) * 0x1000;
+		int t = (millis() >> 2) + (i << 4);
+		unsigned c = sinelut[t & 1023];
 	    pixbuf.pixels[i].color = HColor16(c>>2, c, c>>1);
    	}
 	
-	for (int i = 0; i < 100; i++) {
-		pixbuf.show(leds);
-	}
+	pixbuf.show(leds);
 }
