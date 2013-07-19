@@ -94,9 +94,9 @@ struct HPixel {
     uint32_t dither() {
 
         // Incorporate the residual from last frame
-        int r16 = color.r + residual[0];
-        int g16 = color.g + residual[1];
-        int b16 = color.b + residual[2];
+        int r16 = color.r + (residual[0] >> 1);
+        int g16 = color.g + (residual[1] >> 1);
+        int b16 = color.b + (residual[2] >> 1);
 
         // Round to the nearest 8-bit value
         int r8 = std::min<int>(0xff, std::max<int>(0, (r16 + 0x80) >> 8));
@@ -104,9 +104,11 @@ struct HPixel {
         int b8 = std::min<int>(0xff, std::max<int>(0, (b16 + 0x80) >> 8));
 
         // Compute the error, after expanding the 8-bit value back to 16-bit.
+        #if 1
         residual[0] = r16 - (r8 * 257);
         residual[1] = g16 - (g8 * 257);
         residual[2] = b16 - (b8 * 257);
+        #endif
 
         return (r8 << 16) | (g8 << 8) | b8;
     }
