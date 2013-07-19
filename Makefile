@@ -52,7 +52,7 @@ OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 all: $(TARGET).hex
 
 $(TARGET).elf: $(OBJS) $(LDSCRIPT)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.hex: %.elf
 	$(SIZE) $<

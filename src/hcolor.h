@@ -92,15 +92,22 @@ struct HPixel {
 
     /// Temporal dithering algorithm. Returns a 24-bit RGB color.
     uint32_t dither() {
+
+        // Incorporate the residual from last frame
         int r16 = color.r + residual[0];
         int g16 = color.g + residual[1];
         int b16 = color.b + residual[2];
+
+        // Round to the nearest 8-bit value
         int r8 = std::min<int>(0xff, std::max<int>(0, (r16 + 0x80) >> 8));
         int g8 = std::min<int>(0xff, std::max<int>(0, (g16 + 0x80) >> 8));
         int b8 = std::min<int>(0xff, std::max<int>(0, (b16 + 0x80) >> 8));
-        residual[0] = r16 - (r8 | (r8 << 8));
-        residual[1] = g16 - (g8 | (g8 << 8));
-        residual[2] = b16 - (b8 | (b8 << 8));
+
+        // Compute the error, after expanding the 8-bit value back to 16-bit.
+        residual[0] = r16 - (r8 * 257);
+        residual[1] = g16 - (g8 * 257);
+        residual[2] = b16 - (b8 * 257);
+
         return (r8 << 16) | (g8 << 8) | b8;
     }
 };
