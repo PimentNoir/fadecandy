@@ -26,18 +26,14 @@
 #include "WProgram.h"
 #include "pins_arduino.h"
 
-#define WS2811_RGB	0	// The WS2811 datasheet documents this way
-#define WS2811_RBG	1
-#define WS2811_GRB	2	// Most LED strips are wired this way
-#define WS2811_GBR	3
-
 #define WS2811_800kHz 0x00	// Nearly all WS2811 are 800 kHz
 #define WS2811_400kHz 0x10	// Adafruit's Flora Pixels
 
 
 class OctoWS2811z {
 public:
-	OctoWS2811z(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config = WS2811_GRB);
+	// Buffers: 48 bytes * numPerStrip
+	OctoWS2811z(uint32_t numPerStrip, void *buffer, uint8_t config = 0);
 	void begin(void);
 
 	void setPixel(uint32_t num, int color);
@@ -53,7 +49,8 @@ public:
 		return stripLen * 8;
 	}
 	int color(uint8_t red, uint8_t green, uint8_t blue) {
-		return (red << 16) | (green << 8) | blue;
+		// GRB order
+		return (green << 16) | (red << 8) | blue;
 	}
 	
 

@@ -29,9 +29,8 @@
 static const int ledsPerStrip = 64;
 static const int ledsTotal = ledsPerStrip * 8;
 
-DMAMEM int displayMemory[ledsPerStrip * 6];
-int drawingMemory[ledsPerStrip * 6];
-OctoWS2811z leds(ledsPerStrip, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz);
+DMAMEM int ledBuffer[ledsPerStrip * 12];
+OctoWS2811z leds(ledsPerStrip, ledBuffer, WS2811_800kHz);
 HPixelBuffer<ledsTotal> pixbuf;
 
 

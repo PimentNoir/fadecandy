@@ -24,6 +24,7 @@
 */
 
 #include <string.h>
+#include <algorithm>
 #include "OctoWS2811z.h"
 
 
@@ -38,11 +39,11 @@ static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
 
 
-OctoWS2811z::OctoWS2811z(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config)
+OctoWS2811z::OctoWS2811z(uint32_t numPerStrip, void *buffer, uint8_t config)
 {
 	stripLen = numPerStrip;
-	frameBuffer = frameBuf;
-	drawBuffer = drawBuf;
+	frameBuffer = buffer;
+	drawBuffer = (24 * numPerStrip) + (uint8_t*) buffer;
 	params = config;
 }
 
@@ -71,13 +72,9 @@ void OctoWS2811z::begin(void)
 
 	bufsize = stripLen*24;
 
-	// set up the buffers
+	// Clear both front and back buffers
 	memset(frameBuffer, 0, bufsize);
-	if (drawBuffer) {
-		memset(drawBuffer, 0, bufsize);
-	} else {
-		drawBuffer = frameBuffer;
-	}
+	memset(drawBuffer, 0, bufsize);
 	
 	// configure the 8 output pins
 	GPIOD_PCOR = 0xFF;
@@ -190,13 +187,10 @@ void OctoWS2811z::show(void)
 
 	// wait for any prior DMA operation
 	while (update_in_progress) ; 
-	// it's ok to copy the drawing buffer to the frame buffer
-	// during the 50us WS2811 reset time
-	if (drawBuffer != frameBuffer) {
-		// TODO: this could be faster with DMA, especially if the
-		// buffers are 32 bit aligned... but does it matter?
-		memcpy(frameBuffer, drawBuffer, stripLen * 24);
-	}
+
+	// Swap buffer pointers without copying
+	std::swap(frameBuffer, drawBuffer);
+
 	// wait for WS2811 reset
 	while (micros() - update_completed_at < 50) ;
 
@@ -234,23 +228,11 @@ void OctoWS2811z::setPixel(uint32_t num, int color)
 	uint32_t strip, offset, mask;
 	uint8_t bit, *p;
 	
-	switch (params & 7) {
-	  case WS2811_RBG:
-		color = (color&0xFF0000) | ((color<<8)&0x00FF00) | ((color>>8)&0x0000FF);
-		break;
-	  case WS2811_GRB:
-		color = ((color<<8)&0xFF0000) | ((color>>8)&0x00FF00) | (color&0x0000FF);
-		break;
-	  case WS2811_GBR:
-		color = ((color<<8)&0xFFFF00) | ((color>>16)&0x0000FF);
-		break;
-	  default:
-		break;
-	}
 	strip = num / stripLen;  // Cortex-M4 has 2 cycle unsigned divide :-)
 	offset = num % stripLen;
 	bit = (1<<strip);
 	p = ((uint8_t *)drawBuffer) + offset * 24;
+
 	for (mask = (1<<23) ; mask ; mask >>= 1) {
 		if (color & mask) {
 			*p++ |= bit;
@@ -272,19 +254,6 @@ int OctoWS2811z::getPixel(uint32_t num)
 	p = ((uint8_t *)drawBuffer) + offset * 24;
 	for (mask = (1<<23) ; mask ; mask >>= 1) {
 		if (*p++ & bit) color |= mask;
-	}
-	switch (params & 7) {
-	  case WS2811_RBG:
-		color = (color&0xFF0000) | ((color<<8)&0x00FF00) | ((color>>8)&0x0000FF);
-		break;
-	  case WS2811_GRB:
-		color = ((color<<8)&0xFF0000) | ((color>>8)&0x00FF00) | (color&0x0000FF);
-		break;
-	  case WS2811_GBR:
-		color = ((color<<8)&0xFFFF00) | ((color>>16)&0x0000FF);
-		break;
-	  default:
-		break;
 	}
 	return color;
 }
