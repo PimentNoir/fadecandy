@@ -72,12 +72,3 @@ char * ltoa(long val, char *buf, int radix)
 	}
 }
 
-// TODO: actually write an efficient dtostrf()....
-char * dtostrf(float val, int width, unsigned int precision, char *buf)
-{
-	char format[20];
-	sprintf(format, "%%%d.%df", width, precision);
-	sprintf(buf, format, val);
-	return buf;
-}
-
