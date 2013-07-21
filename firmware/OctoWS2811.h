@@ -21,8 +21,8 @@
     THE SOFTWARE.
 */
 
-
-#include <Arduino.h>
+#include "WProgram.h"
+#include "pins_arduino.h"
 
 #define WS2811_RGB	0	// The WS2811 datasheet documents this way
 #define WS2811_RBG	1

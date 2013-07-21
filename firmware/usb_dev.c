@@ -708,26 +708,6 @@ void usb_isr(void)
 				usb_reboot_timer = --t;
 				if (!t) _reboot_Teensyduino_();
 			}
-#ifdef CDC_DATA_INTERFACE
-			t = usb_cdc_transmit_flush_timer;
-			if (t) {
-				usb_cdc_transmit_flush_timer = --t;
-				if (t == 0) usb_serial_flush_callback();
-			}
-#endif
-#ifdef SEREMU_INTERFACE
-			t = usb_seremu_transmit_flush_timer;
-			if (t) {
-				usb_seremu_transmit_flush_timer = --t;
-				if (t == 0) usb_seremu_flush_callback();
-			}
-#endif
-#ifdef MIDI_INTERFACE
-                        usb_midi_flush_output();
-#endif
-#ifdef FLIGHTSIM_INTERFACE
-			usb_flightsim_flush_callback();
-#endif
 		}
 		USB0_ISTAT = USB_INTEN_SOFTOKEN;
 	}
