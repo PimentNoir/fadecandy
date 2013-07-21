@@ -2,6 +2,8 @@
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
     Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
 
+	Zero-copy variant (OctoWS2811z) hacked up by Micah Elizabeth Scott.
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -22,13 +24,13 @@
 */
 
 #include <string.h>
-#include "OctoWS2811.h"
+#include "OctoWS2811z.h"
 
 
-uint16_t OctoWS2811::stripLen;
-void * OctoWS2811::frameBuffer;
-void * OctoWS2811::drawBuffer;
-uint8_t OctoWS2811::params;
+uint16_t OctoWS2811z::stripLen;
+void * OctoWS2811z::frameBuffer;
+void * OctoWS2811z::drawBuffer;
+uint8_t OctoWS2811z::params;
 
 
 static const uint8_t ones = 0xFF;
@@ -36,7 +38,7 @@ static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
 
 
-OctoWS2811::OctoWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config)
+OctoWS2811z::OctoWS2811z(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config)
 {
 	stripLen = numPerStrip;
 	frameBuffer = frameBuf;
@@ -63,7 +65,7 @@ OctoWS2811::OctoWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint
 #define WS2811_TIMING_T1H  176
 
 
-void OctoWS2811::begin(void)
+void OctoWS2811z::begin(void)
 {
 	uint32_t bufsize, frequency;
 
@@ -173,7 +175,7 @@ void dma_ch3_isr(void)
 	update_in_progress = 0;
 }
 
-int OctoWS2811::busy(void)
+int OctoWS2811z::busy(void)
 {
 	//if (DMA_ERQ & 0xE) return 1;
 	if (update_in_progress) return 1;
@@ -182,7 +184,7 @@ int OctoWS2811::busy(void)
 	return 0;
 }
 
-void OctoWS2811::show(void)
+void OctoWS2811z::show(void)
 {
 	uint32_t cv, sc;
 
@@ -227,7 +229,7 @@ void OctoWS2811::show(void)
 	interrupts();
 }
 
-void OctoWS2811::setPixel(uint32_t num, int color)
+void OctoWS2811z::setPixel(uint32_t num, int color)
 {
 	uint32_t strip, offset, mask;
 	uint8_t bit, *p;
@@ -258,7 +260,7 @@ void OctoWS2811::setPixel(uint32_t num, int color)
 	}
 }
 
-int OctoWS2811::getPixel(uint32_t num)
+int OctoWS2811z::getPixel(uint32_t num)
 {
 	uint32_t strip, offset, mask;
 	uint8_t bit, *p;

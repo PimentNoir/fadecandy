@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <algorithm>
 
-class OctoWS2811;
+class OctoWS2811z;
 
 /// Basic data type for a high-dynamic-range color.
 struct HColor {
@@ -135,7 +135,7 @@ struct HPixelBuffer {
     HPixel pixels[tCount];
 
     /// Update the entire frame
-    void show(OctoWS2811 &leds) {
+    void show(OctoWS2811z &leds) {
         for (unsigned i = 0; i < tCount; ++i) {
             leds.setPixel(i, pixels[i].dither());
         }

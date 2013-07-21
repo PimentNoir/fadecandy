@@ -2,6 +2,8 @@
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
     Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
 
+	Zero-copy variant (OctoWS2811z) hacked up by Micah Elizabeth Scott.
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -33,9 +35,9 @@
 #define WS2811_400kHz 0x10	// Adafruit's Flora Pixels
 
 
-class OctoWS2811 {
+class OctoWS2811z {
 public:
-	OctoWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config = WS2811_GRB);
+	OctoWS2811z(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config = WS2811_GRB);
 	void begin(void);
 
 	void setPixel(uint32_t num, int color);

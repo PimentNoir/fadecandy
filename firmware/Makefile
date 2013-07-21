@@ -31,7 +31,7 @@ C_FILES = \
 
 CPP_FILES = \
 	main.cpp \
-	OctoWS2811.cpp
+	OctoWS2811z.cpp
 
 # Headers
 INCLUDES = -I.

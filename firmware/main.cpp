@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <OctoWS2811.h>
 #include <math.h>
+#include "OctoWS2811z.h"
 #include "hcolor.h"
 #include "usb_dev.h"
 
@@ -31,7 +31,7 @@ static const int ledsTotal = ledsPerStrip * 8;
 
 DMAMEM int displayMemory[ledsPerStrip * 6];
 int drawingMemory[ledsPerStrip * 6];
-OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz);
+OctoWS2811z leds(ledsPerStrip, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz);
 HPixelBuffer<ledsTotal> pixbuf;
 
 
@@ -44,7 +44,6 @@ extern "C" int main()
     }
 
     while (1) {
-
     	pixbuf.show(leds);
     }
 }
