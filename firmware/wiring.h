@@ -25,11 +25,9 @@
 #ifndef Wiring_h
 #define Wiring_h
 
-//#include <avr/io.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "binary.h"
-#include "core_id.h"
 #include "core_pins.h"
 
 #ifdef __cplusplus
@@ -95,12 +93,6 @@ typedef uint8_t byte;
 
 uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout);
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
-
-//void tone(uint8_t pin, uint16_t frequency, uint32_t duration);
-//void noTone(uint8_t pin);
-
-//void attachInterrupt(uint8_t, void (*)(void), uint8_t mode);
-//void detachInterrupt(uint8_t);
 
 void setup(void);
 void loop(void);

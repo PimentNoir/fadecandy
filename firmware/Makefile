@@ -17,17 +17,25 @@ SIZE = arm-none-eabi-size
 TARGET = fadecandy
 
 # configurable options
-OPTIONS = -DF_CPU=48000000 -DUSB_SERIAL -DLAYOUT_US_ENGLISH
-
-# options needed by many Arduino libraries to configure for Teensy 3.0
-OPTIONS += -D__MK20DX128__ -DARDUIO=104 -DARDUINO
+OPTIONS = -DF_CPU=48000000
 
 # Sources
-C_FILES = $(wildcard src/*.c) $(wildcard teensy3/*.c)
-CPP_FILES = $(wildcard src/*.cpp) $(wildcard teensy3/*.cpp)
+C_FILES = \
+	mk20dx128.c \
+	nonstd.c \
+	pins_teensy.c \
+	usb_desc.c \
+	usb_dev.c \
+	usb_mem.c \
+	yield.c
+
+CPP_FILES = \
+	main.cpp \
+	OctoWS2811.cpp \
+	usb_inst.cpp
 
 # Headers
-INCLUDES = -Isrc -Iteensy3
+INCLUDES = -I.
 
 # CPPFLAGS = compiler options for C and C++
 CPPFLAGS = -Wall -g -Os -mcpu=cortex-m4 -mthumb -nostdlib -MMD $(OPTIONS) $(INCLUDES)
@@ -39,7 +47,7 @@ CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 CFLAGS =
 
 # linker script
-LDSCRIPT = teensy3/mk20dx128.ld
+LDSCRIPT = mk20dx128.ld
 
 # linker options
 LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -T$(LDSCRIPT)
@@ -62,7 +70,7 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f src/*.d src/*.o teensy3/*.o teensy3/*.d $(TARGET).elf $(TARGET).hex
+	rm -f *.d *.o $(TARGET).elf $(TARGET).hex
 
 install: $(TARGET).hex
 	$(abspath $(TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))

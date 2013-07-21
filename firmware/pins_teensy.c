@@ -30,7 +30,6 @@
 
 #include "core_pins.h"
 #include "pins_arduino.h"
-#include "HardwareSerial.h"
 
 #if 0
 // moved to pins_arduino.h
@@ -352,8 +351,6 @@ void _init_Teensyduino_internal_(void)
 	FTM1_C1SC = 0x28;
 	FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(DEFAULT_FTM_PRESCALE);
 
-	analog_init();
-	//delay(100); // TODO: this is not necessary, right?
 	usb_init();
 }
 
