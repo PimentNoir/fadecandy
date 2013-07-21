@@ -89,7 +89,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN  9
   #define EP0_SIZE    64
   #define NUM_ENDPOINTS   1
-  #define NUM_USB_BUFFERS 16
+  #define NUM_USB_BUFFERS 75  // Three full frames, plus a little extra!
   #define NUM_INTERFACE   1
   #define FC_INTERFACE    0
   #define FC_OUT_ENDPOINT 1
