@@ -18,7 +18,7 @@ These features add up to give *very smooth* fades and high dynamic range. Ever n
 Vitals
 ------
 
-* 512 LEDs supported per Teensy board (8 strings, 64 LEDs per string)
+* 512 pixels supported per Teensy board (8 strings, 64 pixels per string)
 * Constant hardware frame rate of 520 FPS, to support temporal dithering
 * Full-speed (12 Mbps) USB
 
