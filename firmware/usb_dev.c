@@ -29,7 +29,6 @@
  */
 
 #include "mk20dx128.h"
-//#include "HardwareSerial.h"
 #include "usb_dev.h"
 #include "usb_mem.h"
 
