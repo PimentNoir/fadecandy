@@ -80,22 +80,22 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define VENDOR_ID   0xe461
-  #define PRODUCT_ID    0x0015
-  #define DEVICE_CLASS    0xff // Vendor specific
-  #define MANUFACTURER_NAME {'s','c','a','n','l','i','m','e'}
-  #define MANUFACTURER_NAME_LEN 8
-  #define PRODUCT_NAME    {'F','a','d','e','c','a','n','d','y'}
-  #define PRODUCT_NAME_LEN  9
-  #define EP0_SIZE    64
-  #define NUM_ENDPOINTS   1
-  #define NUM_USB_BUFFERS 75  // Three full frames, plus a little extra!
-  #define NUM_INTERFACE   1
-  #define FC_INTERFACE    0
-  #define FC_OUT_ENDPOINT 1
-  #define FC_OUT_SIZE     64
-  #define CONFIG_DESC_SIZE  (9+9+7)
-  #define ENDPOINT1_CONFIG  ENDPOINT_RECEIVE_ONLY
+  #define VENDOR_ID                 0x1d50    // OpenMoko
+  #define PRODUCT_ID                0x607a    // Assigned to Fadecandy project
+  #define DEVICE_CLASS              0xff      // Vendor specific
+  #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
+  #define MANUFACTURER_NAME_LEN     8
+  #define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y'}
+  #define PRODUCT_NAME_LEN          9
+  #define EP0_SIZE                  64
+  #define NUM_ENDPOINTS             1
+  #define NUM_USB_BUFFERS           75        // Three full frames, plus a little extra!
+  #define NUM_INTERFACE             1
+  #define FC_INTERFACE              0
+  #define FC_OUT_ENDPOINT           1
+  #define FC_OUT_SIZE               64
+  #define CONFIG_DESC_SIZE          (9+9+7)
+  #define ENDPOINT1_CONFIG          ENDPOINT_RECEIVE_ONLY
 
 // NUM_ENDPOINTS = number of non-zero endpoints (0 to 15)
 extern const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS];
