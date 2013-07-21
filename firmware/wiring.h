@@ -27,7 +27,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "binary.h"
 #include "core_pins.h"
 
 #ifdef __cplusplus
