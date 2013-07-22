@@ -31,6 +31,8 @@
 #ifndef _usb_desc_h_
 #define _usb_desc_h_
 
+#include "fc_defs.h"
+
 // This header is NOT meant to be included when compiling
 // user sketches in Arduino.  The low-level functions
 // provided by usb_dev.c are meant to be called only by
@@ -39,10 +41,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define ENDPOINT_UNUSED			0x00
-#define ENDPOINT_TRANSIMIT_ONLY		0x15
-#define ENDPOINT_RECEIVE_ONLY		0x19
-#define ENDPOINT_TRANSMIT_AND_RECEIVE	0x1D
+#define ENDPOINT_UNUSED     0x00
+#define ENDPOINT_TRANSIMIT_ONLY   0x15
+#define ENDPOINT_RECEIVE_ONLY   0x19
+#define ENDPOINT_TRANSMIT_AND_RECEIVE 0x1D
 
 /*
 To modify a USB Type to have different interfaces, start in this
@@ -80,8 +82,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define VENDOR_ID                 0x1d50    // OpenMoko
-  #define PRODUCT_ID                0x607a    // Assigned to Fadecandy project
   #define DEVICE_CLASS              0xff      // Vendor specific
   #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
   #define MANUFACTURER_NAME_LEN     8
@@ -89,7 +89,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN          9
   #define EP0_SIZE                  64
   #define NUM_ENDPOINTS             1
-  #define NUM_USB_BUFFERS           75        // Three full frames, plus a little extra!
   #define NUM_INTERFACE             1
   #define FC_INTERFACE              0
   #define FC_OUT_ENDPOINT           1
@@ -101,10 +100,10 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 extern const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS];
 
 typedef struct {
-	uint16_t	wValue;
-	uint16_t	wIndex;
-	const uint8_t	*addr;
-	uint16_t	length;
+    uint16_t  wValue;
+    uint16_t  wIndex;
+    const uint8_t *addr;
+    uint16_t  length;
 } usb_descriptor_list_t;
 
 extern const usb_descriptor_list_t usb_descriptor_list[];

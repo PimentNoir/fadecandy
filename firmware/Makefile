@@ -30,7 +30,8 @@ C_FILES = \
 	yield.c
 
 CPP_FILES = \
-	main.cpp \
+	fadecandy.cpp \
+	fc_usb.cpp \
 	OctoWS2811z.cpp
 
 # Headers

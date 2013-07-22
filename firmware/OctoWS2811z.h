@@ -2,7 +2,7 @@
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
     Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
 
-	Zero-copy variant (OctoWS2811z) hacked up by Micah Elizabeth Scott.
+    Zero-copy variant (OctoWS2811z) hacked up by Micah Elizabeth Scott.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,27 @@
 #include "WProgram.h"
 #include "pins_arduino.h"
 
-#define WS2811_800kHz 0x00	// Nearly all WS2811 are 800 kHz
-#define WS2811_400kHz 0x10	// Adafruit's Flora Pixels
+#define WS2811_800kHz 0x00  // Nearly all WS2811 are 800 kHz
+#define WS2811_400kHz 0x10  // Adafruit's Flora Pixels
 
 
 class OctoWS2811z {
 public:
-	// Buffers: 48 bytes * numPerStrip
-	OctoWS2811z(uint32_t numPerStrip, void *buffer, uint8_t config = 0);
-	void begin(void);
+    // Buffers: 48 bytes * numPerStrip
+    OctoWS2811z(uint32_t numPerStrip, void *buffer, uint8_t config = 0);
+    void begin(void);
 
-	void setPixel(uint32_t num, int color);
-	void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
-		setPixel(num, color(red, green, blue));
-	}
-	int getPixel(uint32_t num);
+    void* getDrawBuffer() {
+        return drawBuffer;
+    }
 
-	void show(void);
-	int busy(void);
-
-	int numPixels(void) {
-		return stripLen * 8;
-	}
-	int color(uint8_t red, uint8_t green, uint8_t blue) {
-		// GRB order
-		return (green << 16) | (red << 8) | blue;
-	}
-	
+    void show(void);
+    int busy(void);
 
 private:
-	static uint16_t stripLen;
-	static void *frameBuffer;
-	static void *drawBuffer;
-	static uint8_t params;
+    static uint16_t stripLen;
+    static void *frameBuffer;
+    static void *drawBuffer;
+    static uint8_t params;
 };
 

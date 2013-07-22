@@ -45,33 +45,33 @@ static uint32_t usb_buffer_available[4] = { -1, -1, -1, -1 };
 
 usb_packet_t * usb_malloc(void)
 {
-	unsigned int n, avail, idx = 0;
-	uint8_t *p;
+    unsigned int n, avail, idx = 0;
+    uint8_t *p;
 
-	__disable_irq();
+    __disable_irq();
 
-	do {
-		avail = usb_buffer_available[idx];
-		if (avail) {
-			break;
-		}
-		idx++;
-	} while (idx < sizeof(usb_buffer_available) / sizeof(usb_buffer_available[0]));
+    do {
+        avail = usb_buffer_available[idx];
+        if (avail) {
+            break;
+        }
+        idx++;
+    } while (idx < sizeof(usb_buffer_available) / sizeof(usb_buffer_available[0]));
 
-	n = __builtin_clz(avail) + (idx << 5);
-	if (n >= NUM_USB_BUFFERS) {
-		__enable_irq();
-		return NULL;
-	}
+    n = __builtin_clz(avail) + (idx << 5);
+    if (n >= NUM_USB_BUFFERS) {
+        __enable_irq();
+        return NULL;
+    }
 
-	usb_buffer_available[idx] = avail & ~(0x80000000 >> (n & 31));
-	__enable_irq();
+    usb_buffer_available[idx] = avail & ~(0x80000000 >> (n & 31));
+    __enable_irq();
 
-	p = usb_buffer_memory + (n * sizeof(usb_packet_t));
+    p = usb_buffer_memory + (n * sizeof(usb_packet_t));
 
-	*(uint32_t *)p = 0;
-	*(uint32_t *)(p + 4) = 0;
-	return (usb_packet_t *)p;
+    *(uint32_t *)p = 0;
+    *(uint32_t *)(p + 4) = 0;
+    return (usb_packet_t *)p;
 }
 
 // for the receive endpoints to request memory
@@ -80,22 +80,22 @@ extern void usb_rx_memory(usb_packet_t *packet);
 
 void usb_free(usb_packet_t *p)
 {
-	unsigned int n, mask, idx;
+    unsigned int n, mask, idx;
 
-	n = ((uint8_t *)p - usb_buffer_memory) / sizeof(usb_packet_t);
-	if (n >= NUM_USB_BUFFERS) return;
+    n = ((uint8_t *)p - usb_buffer_memory) / sizeof(usb_packet_t);
+    if (n >= NUM_USB_BUFFERS) return;
 
-	// if any endpoints are starving for memory to receive
-	// packets, give this memory to them immediately!
-	if (usb_rx_memory_needed && usb_configuration) {
-		usb_rx_memory(p);
-		return;
-	}
+    // if any endpoints are starving for memory to receive
+    // packets, give this memory to them immediately!
+    if (usb_rx_memory_needed && usb_configuration) {
+        usb_rx_memory(p);
+        return;
+    }
 
-	idx = n >> 5;
-	mask = 0x80000000 >> (n & 31);
-	__disable_irq();
-	usb_buffer_available[idx] |= mask;
-	__enable_irq();
+    idx = n >> 5;
+    mask = 0x80000000 >> (n & 31);
+    __disable_irq();
+    usb_buffer_available[idx] |= mask;
+    __enable_irq();
 }
 

@@ -90,10 +90,10 @@ extern const struct digital_pin_bitband_and_config_table_struct digital_pin_to_i
 static inline uint8_t digitalPinToTimer(uint8_t) __attribute__((always_inline, unused));
 static inline uint8_t digitalPinToTimer(uint8_t pin)
 {
-	if (pin >= 3 && pin <= 6) return pin - 2;
-	if (pin >= 9 && pin <= 10) return pin - 4;
-	if (pin >= 20 && pin <= 23) return pin - 13;
-	return NOT_ON_TIMER;
+    if (pin >= 3 && pin <= 6) return pin - 2;
+    if (pin >= 9 && pin <= 10) return pin - 4;
+    if (pin >= 20 && pin <= 23) return pin - 13;
+    return NOT_ON_TIMER;
 }
 
 

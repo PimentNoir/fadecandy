@@ -21,28 +21,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <math.h>
-#include "OctoWS2811z.h"
-#include "hcolor.h"
-#include "usb_dev.h"
+/*
+ * Definitions for Fadecandy, based on the number of supported LEDs
+ */
 
-static const int ledsPerStrip = 64;
-static const int ledsTotal = ledsPerStrip * 8;
+#pragma once
 
-DMAMEM int ledBuffer[ledsPerStrip * 12];
-OctoWS2811z leds(ledsPerStrip, ledBuffer, WS2811_800kHz);
-HPixelBuffer<ledsTotal> pixbuf;
+#define LEDS_PER_STRIP          64
+#define LEDS_TOTAL              (LEDS_PER_STRIP * 8)
+#define CHANNELS_TOTAL          (LEDS_TOTAL * 3)
 
+// USB packet layout
+#define PIXELS_PER_PACKET       21
+#define LUTENTRIES_PER_PACKET   31
+#define PACKETS_PER_FRAME       25
+#define PACKETS_PER_LUT         25
 
-extern "C" int main()
-{
-    leds.begin();
+#define NUM_USB_BUFFERS         128       // Three full frames (3*25), two LUT buffers (2*25), a little extra (3)
 
-    for (int i = 0; i < ledsTotal; ++i) {
-        pixbuf.pixels[i].color = HColor16(0x2000,0x2000,0x2000);
-    }
-
-    while (1) {
-    	pixbuf.show(leds);
-    }
-}
+#define VENDOR_ID               0x1d50    // OpenMoko
+#define PRODUCT_ID              0x607a    // Assigned to Fadecandy project

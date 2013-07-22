@@ -67,17 +67,17 @@ static uint8_t device_descriptor[] = {
 #ifdef DEVICE_CLASS
         DEVICE_CLASS,                           // bDeviceClass
 #else
-	0,
+        0,
 #endif
 #ifdef DEVICE_SUBCLASS
         DEVICE_SUBCLASS,                        // bDeviceSubClass
 #else
-	0,
+        0,
 #endif
 #ifdef DEVICE_PROTOCOL
         DEVICE_PROTOCOL,                        // bDeviceProtocol
 #else
-	0,
+        0,
 #endif
         EP0_SIZE,                               // bMaxPacketSize0
         LSB(VENDOR_ID), MSB(VENDOR_ID),         // idVendor
@@ -170,7 +170,7 @@ struct usb_string_descriptor_struct usb_string_manufacturer_name_default = {
         MANUFACTURER_NAME
 };
 struct usb_string_descriptor_struct usb_string_product_name_default = {
-	2 + PRODUCT_NAME_LEN * 2,
+        2 + PRODUCT_NAME_LEN * 2,
         3,
         PRODUCT_NAME
 };
@@ -182,24 +182,24 @@ struct usb_string_descriptor_struct usb_string_serial_number_default = {
 
 void usb_init_serialnumber(void)
 {
-	char buf[11];
-	uint32_t i, num;
+        char buf[11];
+        uint32_t i, num;
 
-	__disable_irq();
-	FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
-	FTFL_FCCOB0 = 0x41;
-	FTFL_FCCOB1 = 15;
-	FTFL_FSTAT = FTFL_FSTAT_CCIF;
-	while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF)) ; // wait
-	num = *(uint32_t *)&FTFL_FCCOB7;
-	__enable_irq();
-	ultoa(num, buf, 10);
-	for (i=0; i<10; i++) {
-		char c = buf[i];
-		if (!c) break;
-		usb_string_serial_number_default.wString[i] = c;
-	}
-	usb_string_serial_number_default.bLength = i * 2 + 2;
+        __disable_irq();
+        FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
+        FTFL_FCCOB0 = 0x41;
+        FTFL_FCCOB1 = 15;
+        FTFL_FSTAT = FTFL_FSTAT_CCIF;
+        while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF)) ; // wait
+        num = *(uint32_t *)&FTFL_FCCOB7;
+        __enable_irq();
+        ultoa(num, buf, 10);
+        for (i=0; i<10; i++) {
+                char c = buf[i];
+                if (!c) break;
+                usb_string_serial_number_default.wString[i] = c;
+        }
+        usb_string_serial_number_default.bLength = i * 2 + 2;
 }
 
 
@@ -210,12 +210,12 @@ void usb_init_serialnumber(void)
 // This table provides access to all the descriptor data above.
 
 const usb_descriptor_list_t usb_descriptor_list[] = {
-	//wValue, wIndex, address,          length
-	{0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
-	{0x0200, 0x0000, config_descriptor, sizeof(config_descriptor)},
+        //wValue, wIndex, address,          length
+        {0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
+        {0x0200, 0x0000, config_descriptor, sizeof(config_descriptor)},
 #ifdef SEREMU_INTERFACE
-	{0x2200, SEREMU_INTERFACE, seremu_report_desc, sizeof(seremu_report_desc)},
-	{0x2100, SEREMU_INTERFACE, config_descriptor+SEREMU_DESC_OFFSET, 9},
+        {0x2200, SEREMU_INTERFACE, seremu_report_desc, sizeof(seremu_report_desc)},
+        {0x2100, SEREMU_INTERFACE, config_descriptor+SEREMU_DESC_OFFSET, 9},
 #endif
 #ifdef KEYBOARD_INTERFACE
         {0x2200, KEYBOARD_INTERFACE, keyboard_report_desc, sizeof(keyboard_report_desc)},
@@ -230,12 +230,12 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
         {0x2100, JOYSTICK_INTERFACE, config_descriptor+JOYSTICK_DESC_OFFSET, 9},
 #endif
 #ifdef RAWHID_INTERFACE
-	{0x2200, RAWHID_INTERFACE, rawhid_report_desc, sizeof(rawhid_report_desc)},
-	{0x2100, RAWHID_INTERFACE, config_descriptor+RAWHID_DESC_OFFSET, 9},
+        {0x2200, RAWHID_INTERFACE, rawhid_report_desc, sizeof(rawhid_report_desc)},
+        {0x2100, RAWHID_INTERFACE, config_descriptor+RAWHID_DESC_OFFSET, 9},
 #endif
 #ifdef FLIGHTSIM_INTERFACE
-	{0x2200, FLIGHTSIM_INTERFACE, flightsim_report_desc, sizeof(flightsim_report_desc)},
-	{0x2100, FLIGHTSIM_INTERFACE, config_descriptor+FLIGHTSIM_DESC_OFFSET, 9},
+        {0x2200, FLIGHTSIM_INTERFACE, flightsim_report_desc, sizeof(flightsim_report_desc)},
+        {0x2100, FLIGHTSIM_INTERFACE, config_descriptor+FLIGHTSIM_DESC_OFFSET, 9},
 #endif
         {0x0300, 0x0000, (const uint8_t *)&string0, 0},
         {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
@@ -244,7 +244,7 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
         //{0x0301, 0x0409, (const uint8_t *)&string1, 0},
         //{0x0302, 0x0409, (const uint8_t *)&string2, 0},
         //{0x0303, 0x0409, (const uint8_t *)&string3, 0},
-	{0, 0, NULL, 0}
+        {0, 0, NULL, 0}
 };
 
 
@@ -260,8 +260,8 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
 // 
 const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS] = 
 {
-	0x00, 0x15, 0x19, 0x15, 0x00, 0x00, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x15, 0x19, 0x15, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 };
 #endif
 
@@ -269,79 +269,79 @@ const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS] =
 const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS] = 
 {
 #if (defined(ENDPOINT1_CONFIG) && NUM_ENDPOINTS >= 1)
-	ENDPOINT1_CONFIG,
+        ENDPOINT1_CONFIG,
 #elif (NUM_ENDPOINTS >= 1)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT2_CONFIG) && NUM_ENDPOINTS >= 2)
-	ENDPOINT2_CONFIG,
+        ENDPOINT2_CONFIG,
 #elif (NUM_ENDPOINTS >= 2)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT3_CONFIG) && NUM_ENDPOINTS >= 3)
-	ENDPOINT3_CONFIG,
+        ENDPOINT3_CONFIG,
 #elif (NUM_ENDPOINTS >= 3)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT4_CONFIG) && NUM_ENDPOINTS >= 4)
-	ENDPOINT4_CONFIG,
+        ENDPOINT4_CONFIG,
 #elif (NUM_ENDPOINTS >= 4)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT5_CONFIG) && NUM_ENDPOINTS >= 5)
-	ENDPOINT5_CONFIG,
+        ENDPOINT5_CONFIG,
 #elif (NUM_ENDPOINTS >= 5)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT6_CONFIG) && NUM_ENDPOINTS >= 6)
-	ENDPOINT6_CONFIG,
+        ENDPOINT6_CONFIG,
 #elif (NUM_ENDPOINTS >= 6)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT7_CONFIG) && NUM_ENDPOINTS >= 7)
-	ENDPOINT7_CONFIG,
+        ENDPOINT7_CONFIG,
 #elif (NUM_ENDPOINTS >= 7)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT8_CONFIG) && NUM_ENDPOINTS >= 8)
-	ENDPOINT8_CONFIG,
+        ENDPOINT8_CONFIG,
 #elif (NUM_ENDPOINTS >= 8)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT9_CONFIG) && NUM_ENDPOINTS >= 9)
-	ENDPOINT9_CONFIG,
+        ENDPOINT9_CONFIG,
 #elif (NUM_ENDPOINTS >= 9)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT10_CONFIG) && NUM_ENDPOINTS >= 10)
-	ENDPOINT10_CONFIG,
+        ENDPOINT10_CONFIG,
 #elif (NUM_ENDPOINTS >= 10)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT11_CONFIG) && NUM_ENDPOINTS >= 11)
-	ENDPOINT11_CONFIG,
+        ENDPOINT11_CONFIG,
 #elif (NUM_ENDPOINTS >= 11)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT12_CONFIG) && NUM_ENDPOINTS >= 12)
-	ENDPOINT12_CONFIG,
+        ENDPOINT12_CONFIG,
 #elif (NUM_ENDPOINTS >= 12)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT13_CONFIG) && NUM_ENDPOINTS >= 13)
-	ENDPOINT13_CONFIG,
+        ENDPOINT13_CONFIG,
 #elif (NUM_ENDPOINTS >= 13)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT14_CONFIG) && NUM_ENDPOINTS >= 14)
-	ENDPOINT14_CONFIG,
+        ENDPOINT14_CONFIG,
 #elif (NUM_ENDPOINTS >= 14)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 #if (defined(ENDPOINT15_CONFIG) && NUM_ENDPOINTS >= 15)
-	ENDPOINT15_CONFIG,
+        ENDPOINT15_CONFIG,
 #elif (NUM_ENDPOINTS >= 15)
-	ENDPOINT_UNUSED,
+        ENDPOINT_UNUSED,
 #endif
 };
 

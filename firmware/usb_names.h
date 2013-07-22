@@ -41,9 +41,9 @@ extern "C" {
 #endif
 
 struct usb_string_descriptor_struct {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t wString[];
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wString[];
 };
 
 extern struct usb_string_descriptor_struct usb_string_manufacturer_name;

@@ -125,7 +125,7 @@ struct HPixel {
         residual[1] = g16 - (g8 * 257);
         residual[2] = b16 - (b8 * 257);
 
-        return (r8 << 16) | (g8 << 8) | b8;
+        return (g8 << 16) | (r8 << 8) | b8;
     }
 };
 
@@ -137,7 +137,7 @@ struct HPixelBuffer {
     /// Update the entire frame
     void show(OctoWS2811z &leds) {
         for (unsigned i = 0; i < tCount; ++i) {
-            leds.setPixel(i, pixels[i].dither());
+//            leds.setPixel(i, 0x804020 /*pixels[i].dither()*/);
         }
         leds.show();
     }
