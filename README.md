@@ -28,6 +28,23 @@ Prerequisites
 * The recommended ARM toolchain, from <https://code.launchpad.net/gcc-arm-embedded>
 * The Teensy Loader: <http://www.pjrc.com/teensy/loader.html>
 
+Pin Assignment
+--------------
+
+The pin assignment is the same as the original [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) pinout:
+
+Teensy 3.0 Pin | Function
+-------------- | --------------
+2              | Led strip #1
+14             | Led strip #2
+7              | Led strip #3
+8              | Led strip #4
+6              | Led strip #5
+20             | Led strip #6
+21             | Led strip #7
+5              | Led strip #8
+15 & 16        | Connect together
+
 Color Processing
 ----------------
 
