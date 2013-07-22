@@ -22,6 +22,7 @@
  */
 
 #include <math.h>
+#include <algorithm>
 #include "OctoWS2811z.h"
 #include "fc_usb.h"
 #include "fc_defs.h"
@@ -37,33 +38,91 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 static int8_t residual[CHANNELS_TOTAL];
 
 
-static uint32_t updatePixel(unsigned n)
+static uint32_t lutInterpolate(unsigned channel, uint32_t arg)
 {
-    const uint8_t *pixel = buffers.fbNext->pixel(n);
-    return (pixel[1] << 16) | (pixel[0] << 8) | pixel[2];
+    /*
+     * Using our color LUT for the indicated channel, convert the
+     * 16-bit intensity "arg" in our input colorspace to a corresponding
+     * 16-bit intensity in the device colorspace.
+     */
+
+    return arg;
 }
 
-static void updateDrawBuffer()
+static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
+{
+    /*
+     * Update pipeline for one pixel:
+     *
+     *    1. Interpolate framebuffer
+     *    2. Interpolate LUT
+     *    3. Dithering
+     */
+
+    const uint8_t *pixelPrev = buffers.fbPrev->pixel(n);
+    const uint8_t *pixelNext = buffers.fbNext->pixel(n);
+
+    // Per-channel linear interpolation and conversion to 16-bit color.
+    uint32_t iR = (pixelPrev[0] * icPrev + pixelNext[0] * icNext) >> 16;
+    uint32_t iG = (pixelPrev[1] * icPrev + pixelNext[1] * icNext) >> 16;
+    uint32_t iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
+
+    // Pass through our color LUT
+    iR = lutInterpolate(0, iR);
+    iG = lutInterpolate(1, iG);
+    iB = lutInterpolate(2, iB);
+
+    // Pointer to the residual buffer for this pixel
+    int8_t *pResidual = &residual[n * 3];
+
+    // Incorporate the residual from last frame
+    iR += pResidual[0];
+    iG += pResidual[1];
+    iB += pResidual[2];
+
+    // Round to the nearest 8-bit value
+    int r8 = std::min<int>(0xff, std::max<int>(0, (iR + 0x80) >> 8));
+    int g8 = std::min<int>(0xff, std::max<int>(0, (iG + 0x80) >> 8));
+    int b8 = std::min<int>(0xff, std::max<int>(0, (iB + 0x80) >> 8));
+
+    // Compute the error, after expanding the 8-bit value back to 16-bit.
+    pResidual[0] = iR - (r8 * 257);
+    pResidual[1] = iG - (g8 * 257);
+    pResidual[2] = iB - (b8 * 257);
+
+    // Pack the result, in GRB order.
+    return (g8 << 16) | (r8 << 8) | b8;
+}
+
+static void updateDrawBuffer(unsigned interpCoefficient)
 {
     /*
      * Update the LED draw buffer. In one step, we do the interpolation,
      * gamma correction, dithering, and we convert packed-pixel data to the
      * planar format used for OctoWS2811 DMAs.
+     *
+     * "interpCoefficient" indicates how far between fbPrev and fbNext
+     * we are. It is a fixed point value in the range [0x0000, 0x10000],
+     * corresponding to 100% fbPrev and 100% fbNext, respectively.
      */
 
     // For each pixel, this is a 24-byte stream of bits (6 words)
     uint32_t *out = (uint32_t*) leds.getDrawBuffer();
 
+    // Interpolation coefficients, including a multiply by 257 to convert 8-bit color to 16-bit color.
+    uint32_t icPrev = 257 * (0x10000 - interpCoefficient);
+    uint32_t icNext = 257 * interpCoefficient;
+
     for (int i = 0; i < LEDS_PER_STRIP; ++i) {
 
-        uint32_t plane0 = updatePixel(i + LEDS_PER_STRIP * 0);
-        uint32_t plane1 = updatePixel(i + LEDS_PER_STRIP * 1);
-        uint32_t plane2 = updatePixel(i + LEDS_PER_STRIP * 2);
-        uint32_t plane3 = updatePixel(i + LEDS_PER_STRIP * 3);
-        uint32_t plane4 = updatePixel(i + LEDS_PER_STRIP * 4);
-        uint32_t plane5 = updatePixel(i + LEDS_PER_STRIP * 5);
-        uint32_t plane6 = updatePixel(i + LEDS_PER_STRIP * 6);
-        uint32_t plane7 = updatePixel(i + LEDS_PER_STRIP * 7);
+        uint32_t plane0 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 0);
+        uint32_t plane1 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 1);
+        uint32_t plane2 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 2);
+        uint32_t plane3 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 3);
+        uint32_t plane4 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 4);
+        uint32_t plane5 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 5);
+        uint32_t plane6 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 6);
+        uint32_t plane7 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 7);
 
         *(out++) = ( (plane0 >> 23) & (1 << 0 ) ) |     // Bit 23
                    ( (plane1 >> 22) & (1 << 1 ) ) |
@@ -289,7 +348,8 @@ extern "C" int main()
 
     while (1) {
         buffers.handleUSB();
-        updateDrawBuffer();
+
+        updateDrawBuffer((millis() << 6) & 0xFFFF);
         leds.show();
     }
 }
