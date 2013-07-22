@@ -80,7 +80,7 @@ struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 
 struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 {
-    const uint16_t entry(unsigned channel, unsigned value)
+    const unsigned entry(unsigned channel, unsigned value)
     {
         unsigned index = (channel << 8) | value;
         const uint8_t *p = &packets[index / LUTENTRIES_PER_PACKET]->buf[2 + (index % LUTENTRIES_PER_PACKET) * 2];

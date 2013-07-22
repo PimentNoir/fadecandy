@@ -46,7 +46,14 @@ static uint32_t lutInterpolate(unsigned channel, uint32_t arg)
      * 16-bit intensity in the device colorspace.
      */
 
-    return arg;
+    unsigned index = arg >> 8;
+    unsigned alpha = arg & 0xFF;
+    unsigned invAlpha = 0x100 - alpha;
+
+    unsigned v1 = buffers.lutCurrent->entry(channel, index);
+    unsigned v2 = buffers.lutCurrent->entry(channel, index + 1);
+
+    return (v1 * invAlpha + v2 * alpha) >> 8;
 }
 
 static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
