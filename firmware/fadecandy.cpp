@@ -66,6 +66,8 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
      *    3. Dithering
      */
 
+    digitalWrite(DEBUG_PIN, HIGH);
+
     const uint8_t *pixelPrev = buffers.fbPrev->pixel(n);
     const uint8_t *pixelNext = buffers.fbNext->pixel(n);
 
@@ -96,6 +98,8 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
     pResidual[0] = iR - (r8 * 257);
     pResidual[1] = iG - (g8 * 257);
     pResidual[2] = iB - (b8 * 257);
+
+    digitalWrite(DEBUG_PIN, LOW);
 
     // Pack the result, in GRB order.
     return (g8 << 16) | (r8 << 8) | b8;
@@ -352,6 +356,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
 extern "C" int main()
 {
     leds.begin();
+    pinMode(DEBUG_PIN, OUTPUT);
 
     while (1) {
         buffers.handleUSB();
