@@ -21,6 +21,24 @@ dev.set_configuration()
 
 print "Serial number: %s" % usb.util.get_string(dev, 255, dev.iSerialNumber)
 
+# Set up a default color LUT
+
+lut = [0] * (64 * 25)
+for index in range(25):
+	lut[index*64] = index | 0x40
+lut[24*64] |= 0x20
+for channel in range(3):
+	for row in range(256):
+		value = int(pow(row / 256.0, 2.2) * 0x10000)
+		i = (channel << 8) + row
+		packetNum = i / 31
+		packetIndex = i % 31
+		lut[packetNum*64 + 2 + packetIndex*2] = value & 0xFF
+		lut[packetNum*64 + 3 + packetIndex*2] = value >> 8
+dev.write(1, ''.join(map(chr, lut)))
+print "LUT programmed"
+
+# Slowly push random frames to the device
 
 while True:
 
