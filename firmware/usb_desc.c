@@ -174,32 +174,33 @@ struct usb_string_descriptor_struct usb_string_product_name_default = {
         3,
         PRODUCT_NAME
 };
+
+// 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
 struct usb_string_descriptor_struct usb_string_serial_number_default = {
-        12,
+        2 + 32 * 2,
         3,
-        {0,0,0,0,0,0,0,0,0,0}
+        {0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0}
 };
+
+static void toHexWide(uint32_t value, uint16_t *buffer)
+{
+    static const uint8_t digits[] = "0123456789ABCDEF";
+    unsigned i;
+    for (i = 0; i < 8; i++) {
+        buffer[i] = digits[value >> 28];
+        value <<= 4;
+    }
+}
 
 void usb_init_serialnumber(void)
 {
-        char buf[11];
-        uint32_t i, num;
-
-        __disable_irq();
-        FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
-        FTFL_FCCOB0 = 0x41;
-        FTFL_FCCOB1 = 15;
-        FTFL_FSTAT = FTFL_FSTAT_CCIF;
-        while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF)) ; // wait
-        num = *(uint32_t *)&FTFL_FCCOB7;
-        __enable_irq();
-        ultoa(num, buf, 10);
-        for (i=0; i<10; i++) {
-                char c = buf[i];
-                if (!c) break;
-                usb_string_serial_number_default.wString[i] = c;
-        }
-        usb_string_serial_number_default.bLength = i * 2 + 2;
+    toHexWide(SIM_UIDH,  usb_string_serial_number_default.wString + 8*0);
+    toHexWide(SIM_UIDMH, usb_string_serial_number_default.wString + 8*1);
+    toHexWide(SIM_UIDML, usb_string_serial_number_default.wString + 8*2);
+    toHexWide(SIM_UIDL,  usb_string_serial_number_default.wString + 8*3);
 }
 
 

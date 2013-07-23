@@ -22,7 +22,6 @@ OPTIONS = -DF_CPU=48000000
 # Sources
 C_FILES = \
 	mk20dx128.c \
-	nonstd.c \
 	pins_teensy.c \
 	usb_desc.c \
 	usb_dev.c \
