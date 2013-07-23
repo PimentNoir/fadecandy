@@ -54,7 +54,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-ALWAYS_INLINE static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
+static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
 {
     /*
      * Update pipeline for one pixel:
@@ -111,7 +111,20 @@ ALWAYS_INLINE static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNex
     pResidual[2] = iB - (b8 * 257);
 
     // Pack the result, in GRB order.
-    return (g8 << 16) | (r8 << 8) | b8;
+
+    union {
+        uint32_t word;
+        struct {
+            uint32_t b:8, r:8, g:8, x:8;
+        };
+    } result;
+
+    // Pack using BFI instruction.
+    result.b = b8;
+    result.r = r8;
+    result.g = g8;
+
+    return result.word;
 }
 
 static void updateDrawBuffer(unsigned interpCoefficient)
@@ -135,230 +148,271 @@ static void updateDrawBuffer(unsigned interpCoefficient)
 
     for (int i = 0; i < LEDS_PER_STRIP; ++i) {
 
-        uint32_t plane0 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 0);
-        uint32_t plane1 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 1);
-        uint32_t plane2 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 2);
-        uint32_t plane3 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 3);
-        uint32_t plane4 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 4);
-        uint32_t plane5 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 5);
-        uint32_t plane6 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 6);
-        uint32_t plane7 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 7);
+        // Eight bit planes
+        union {
+            uint32_t word;
+            struct {
+                uint32_t x0:1, x1:1, x2:1, x3:1, x4:1, x5:1, x6:1, x7:1,
+                         y0:1, y1:1, y2:1, y3:1, y4:1, y5:1, y6:1, y7:1,
+                         z0:1, z1:1, z2:1, z3:1, z4:1, z5:1, z6:1, z7:1,
+                         spare:8;
+            };
+        } p0, p1, p2, p3, p4, p5, p6, p7;
 
-        *(out++) = ( (plane0 >> 23) & (1 << 0 ) ) |     // Bit 23
-                   ( (plane1 >> 22) & (1 << 1 ) ) |
-                   ( (plane2 >> 21) & (1 << 2 ) ) |
-                   ( (plane3 >> 20) & (1 << 3 ) ) |
-                   ( (plane4 >> 19) & (1 << 4 ) ) |
-                   ( (plane5 >> 18) & (1 << 5 ) ) |
-                   ( (plane6 >> 17) & (1 << 6 ) ) |
-                   ( (plane7 >> 16) & (1 << 7 ) ) |
+        // Six output words
+        union {
+            uint32_t word;
+            struct {
+                uint32_t p0a:1, p1a:1, p2a:1, p3a:1, p4a:1, p5a:1, p6a:1, p7a:1,
+                         p0b:1, p1b:1, p2b:1, p3b:1, p4b:1, p5b:1, p6b:1, p7b:1,
+                         p0c:1, p1c:1, p2c:1, p3c:1, p4c:1, p5c:1, p6c:1, p7c:1,
+                         p0d:1, p1d:1, p2d:1, p3d:1, p4d:1, p5d:1, p6d:1, p7d:1;
+            };
+        } o0, o1, o2, o3, o4, o5;
 
-                   ( (plane0 >> 14) & (1 << 8 ) ) |     // Bit 22
-                   ( (plane1 >> 13) & (1 << 9 ) ) |
-                   ( (plane2 >> 12) & (1 << 10) ) |
-                   ( (plane3 >> 11) & (1 << 11) ) |
-                   ( (plane4 >> 10) & (1 << 12) ) |
-                   ( (plane5 >> 9 ) & (1 << 13) ) |
-                   ( (plane6 >> 8 ) & (1 << 14) ) |
-                   ( (plane7 >> 7 ) & (1 << 15) ) |
+        // Gather inputs
 
-                   ( (plane0 >> 5 ) & (1 << 16) ) |     // Bit 21
-                   ( (plane1 >> 4 ) & (1 << 17) ) |
-                   ( (plane2 >> 3 ) & (1 << 18) ) |
-                   ( (plane3 >> 2 ) & (1 << 19) ) |
-                   ( (plane4 >> 1 ) & (1 << 20) ) |
-                   ( (plane5      ) & (1 << 21) ) |
-                   ( (plane6 << 1 ) & (1 << 22) ) |
-                   ( (plane7 << 2 ) & (1 << 23) ) |
+        p0.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 0);
+        p1.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 1);
+        p2.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 2);
+        p3.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 3);
+        p4.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 4);
+        p5.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 5);
+        p6.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 6);
+        p7.word = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 7);
 
-                   ( (plane0 << 4 ) & (1 << 24) ) |     // Bit 20
-                   ( (plane1 << 5 ) & (1 << 25) ) |
-                   ( (plane2 << 6 ) & (1 << 26) ) |
-                   ( (plane3 << 7 ) & (1 << 27) ) |
-                   ( (plane4 << 8 ) & (1 << 28) ) |
-                   ( (plane5 << 9 ) & (1 << 29) ) |
-                   ( (plane6 << 10) & (1 << 30) ) |
-                   ( (plane7 << 11) & (1 << 31) ) ;
+        /*
+         * Remap bits.
+         * This generates fairly efficient code using the UBFX and BFI instructions.
+         */
 
-        *(out++) = ( (plane0 >> 19) & (1 << 0 ) ) |     // Bit 19
-                   ( (plane1 >> 18) & (1 << 1 ) ) |
-                   ( (plane2 >> 17) & (1 << 2 ) ) |
-                   ( (plane3 >> 16) & (1 << 3 ) ) |
-                   ( (plane4 >> 15) & (1 << 4 ) ) |
-                   ( (plane5 >> 14) & (1 << 5 ) ) |
-                   ( (plane6 >> 13) & (1 << 6 ) ) |
-                   ( (plane7 >> 12) & (1 << 7 ) ) |
+        o0.p0a = p0.z7;
+        o0.p1a = p1.z7;
+        o0.p2a = p2.z7;
+        o0.p3a = p3.z7;
+        o0.p4a = p4.z7;
+        o0.p5a = p5.z7;
+        o0.p6a = p6.z7;
+        o0.p7a = p7.z7;
 
-                   ( (plane0 >> 10) & (1 << 8 ) ) |     // Bit 18
-                   ( (plane1 >> 9 ) & (1 << 9 ) ) |
-                   ( (plane2 >> 8 ) & (1 << 10) ) |
-                   ( (plane3 >> 7 ) & (1 << 11) ) |
-                   ( (plane4 >> 6 ) & (1 << 12) ) |
-                   ( (plane5 >> 5 ) & (1 << 13) ) |
-                   ( (plane6 >> 4 ) & (1 << 14) ) |
-                   ( (plane7 >> 3 ) & (1 << 15) ) |
+        o0.p0b = p0.z6;
+        o0.p1b = p1.z6;
+        o0.p2b = p2.z6;
+        o0.p3b = p3.z6;
+        o0.p4b = p4.z6;
+        o0.p5b = p5.z6;
+        o0.p6b = p6.z6;
+        o0.p7b = p7.z6;
 
-                   ( (plane0 >> 1 ) & (1 << 16) ) |     // Bit 17
-                   ( (plane1      ) & (1 << 17) ) |
-                   ( (plane2 << 1 ) & (1 << 18) ) |
-                   ( (plane3 << 2 ) & (1 << 19) ) |
-                   ( (plane4 << 3 ) & (1 << 20) ) |
-                   ( (plane5 << 4 ) & (1 << 21) ) |
-                   ( (plane6 << 5 ) & (1 << 22) ) |
-                   ( (plane7 << 6 ) & (1 << 23) ) |
+        o0.p0c = p0.z5;
+        o0.p1c = p1.z5;
+        o0.p2c = p2.z5;
+        o0.p3c = p3.z5;
+        o0.p4c = p4.z5;
+        o0.p5c = p5.z5;
+        o0.p6c = p6.z5;
+        o0.p7c = p7.z5;
 
-                   ( (plane0 << 8 ) & (1 << 24) ) |     // Bit 16
-                   ( (plane1 << 9 ) & (1 << 25) ) |
-                   ( (plane2 << 10) & (1 << 26) ) |
-                   ( (plane3 << 11) & (1 << 27) ) |
-                   ( (plane4 << 12) & (1 << 28) ) |
-                   ( (plane5 << 13) & (1 << 29) ) |
-                   ( (plane6 << 14) & (1 << 30) ) |
-                   ( (plane7 << 15) & (1 << 31) ) ;
+        o0.p0d = p0.z4;
+        o0.p1d = p1.z4;
+        o0.p2d = p2.z4;
+        o0.p3d = p3.z4;
+        o0.p4d = p4.z4;
+        o0.p5d = p5.z4;
+        o0.p6d = p6.z4;
+        o0.p7d = p7.z4;
 
-        *(out++) = ( (plane0 >> 15) & (1 << 0 ) ) |     // Bit 15
-                   ( (plane1 >> 14) & (1 << 1 ) ) |
-                   ( (plane2 >> 13) & (1 << 2 ) ) |
-                   ( (plane3 >> 12) & (1 << 3 ) ) |
-                   ( (plane4 >> 11) & (1 << 4 ) ) |
-                   ( (plane5 >> 10) & (1 << 5 ) ) |
-                   ( (plane6 >> 9 ) & (1 << 6 ) ) |
-                   ( (plane7 >> 8 ) & (1 << 7 ) ) |
+        *(out++) = o0.word;
 
-                   ( (plane0 >> 6 ) & (1 << 8 ) ) |     // Bit 14
-                   ( (plane1 >> 5 ) & (1 << 9 ) ) |
-                   ( (plane2 >> 4 ) & (1 << 10) ) |
-                   ( (plane3 >> 3 ) & (1 << 11) ) |
-                   ( (plane4 >> 2 ) & (1 << 12) ) |
-                   ( (plane5 >> 1 ) & (1 << 13) ) |
-                   ( (plane6      ) & (1 << 14) ) |
-                   ( (plane7 << 1 ) & (1 << 15) ) |
+        o1.p0a = p0.z3;
+        o1.p1a = p1.z3;
+        o1.p2a = p2.z3;
+        o1.p3a = p3.z3;
+        o1.p4a = p4.z3;
+        o1.p5a = p5.z3;
+        o1.p6a = p6.z3;
+        o1.p7a = p7.z3;
 
-                   ( (plane0 << 3 ) & (1 << 16) ) |     // Bit 13
-                   ( (plane1 << 4 ) & (1 << 17) ) |
-                   ( (plane2 << 5 ) & (1 << 18) ) |
-                   ( (plane3 << 6 ) & (1 << 19) ) |
-                   ( (plane4 << 7 ) & (1 << 20) ) |
-                   ( (plane5 << 8 ) & (1 << 21) ) |
-                   ( (plane6 << 9 ) & (1 << 22) ) |
-                   ( (plane7 << 10) & (1 << 23) ) |
+        o1.p0b = p0.z2;
+        o1.p1b = p1.z2;
+        o1.p2b = p2.z2;
+        o1.p3b = p3.z2;
+        o1.p4b = p4.z2;
+        o1.p5b = p5.z2;
+        o1.p6b = p6.z2;
+        o1.p7b = p7.z2;
 
-                   ( (plane0 << 12) & (1 << 24) ) |     // Bit 12
-                   ( (plane1 << 13) & (1 << 25) ) |
-                   ( (plane2 << 14) & (1 << 26) ) |
-                   ( (plane3 << 15) & (1 << 27) ) |
-                   ( (plane4 << 16) & (1 << 28) ) |
-                   ( (plane5 << 17) & (1 << 29) ) |
-                   ( (plane6 << 18) & (1 << 30) ) |
-                   ( (plane7 << 19) & (1 << 31) ) ;
+        o1.p0c = p0.z1;
+        o1.p1c = p1.z1;
+        o1.p2c = p2.z1;
+        o1.p3c = p3.z1;
+        o1.p4c = p4.z1;
+        o1.p5c = p5.z1;
+        o1.p6c = p6.z1;
+        o1.p7c = p7.z1;
 
-        *(out++) = ( (plane0 >> 11) & (1 << 0 ) ) |     // Bit 11
-                   ( (plane1 >> 10) & (1 << 1 ) ) |
-                   ( (plane2 >> 9 ) & (1 << 2 ) ) |
-                   ( (plane3 >> 8 ) & (1 << 3 ) ) |
-                   ( (plane4 >> 7 ) & (1 << 4 ) ) |
-                   ( (plane5 >> 6 ) & (1 << 5 ) ) |
-                   ( (plane6 >> 5 ) & (1 << 6 ) ) |
-                   ( (plane7 >> 4 ) & (1 << 7 ) ) |
+        o1.p0d = p0.z0;
+        o1.p1d = p1.z0;
+        o1.p2d = p2.z0;
+        o1.p3d = p3.z0;
+        o1.p4d = p4.z0;
+        o1.p5d = p5.z0;
+        o1.p6d = p6.z0;
+        o1.p7d = p7.z0;
 
-                   ( (plane0 >> 2 ) & (1 << 8 ) ) |     // Bit 10
-                   ( (plane1 >> 1 ) & (1 << 9 ) ) |
-                   ( (plane2      ) & (1 << 10) ) |
-                   ( (plane3 << 1 ) & (1 << 11) ) |
-                   ( (plane4 << 2 ) & (1 << 12) ) |
-                   ( (plane5 << 3 ) & (1 << 13) ) |
-                   ( (plane6 << 4 ) & (1 << 14) ) |
-                   ( (plane7 << 5 ) & (1 << 15) ) |
+        *(out++) = o1.word;
 
-                   ( (plane0 << 7 ) & (1 << 16) ) |     // Bit 9
-                   ( (plane1 << 8 ) & (1 << 17) ) |
-                   ( (plane2 << 9 ) & (1 << 18) ) |
-                   ( (plane3 << 10) & (1 << 19) ) |
-                   ( (plane4 << 11) & (1 << 20) ) |
-                   ( (plane5 << 12) & (1 << 21) ) |
-                   ( (plane6 << 13) & (1 << 22) ) |
-                   ( (plane7 << 14) & (1 << 23) ) |
+        o2.p0a = p0.y7;
+        o2.p1a = p1.y7;
+        o2.p2a = p2.y7;
+        o2.p3a = p3.y7;
+        o2.p4a = p4.y7;
+        o2.p5a = p5.y7;
+        o2.p6a = p6.y7;
+        o2.p7a = p7.y7;
 
-                   ( (plane0 << 16) & (1 << 24) ) |     // Bit 8
-                   ( (plane1 << 17) & (1 << 25) ) |
-                   ( (plane2 << 18) & (1 << 26) ) |
-                   ( (plane3 << 19) & (1 << 27) ) |
-                   ( (plane4 << 20) & (1 << 28) ) |
-                   ( (plane5 << 21) & (1 << 29) ) |
-                   ( (plane6 << 22) & (1 << 30) ) |
-                   ( (plane7 << 23) & (1 << 31) ) ;
+        o2.p0b = p0.y6;
+        o2.p1b = p1.y6;
+        o2.p2b = p2.y6;
+        o2.p3b = p3.y6;
+        o2.p4b = p4.y6;
+        o2.p5b = p5.y6;
+        o2.p6b = p6.y6;
+        o2.p7b = p7.y6;
 
-        *(out++) = ( (plane0 >> 7 ) & (1 << 0 ) ) |     // Bit 7
-                   ( (plane1 >> 6 ) & (1 << 1 ) ) |
-                   ( (plane2 >> 5 ) & (1 << 2 ) ) |
-                   ( (plane3 >> 4 ) & (1 << 3 ) ) |
-                   ( (plane4 >> 3 ) & (1 << 4 ) ) |
-                   ( (plane5 >> 2 ) & (1 << 5 ) ) |
-                   ( (plane6 >> 1 ) & (1 << 6 ) ) |
-                   ( (plane7      ) & (1 << 7 ) ) |
+        o2.p0c = p0.y5;
+        o2.p1c = p1.y5;
+        o2.p2c = p2.y5;
+        o2.p3c = p3.y5;
+        o2.p4c = p4.y5;
+        o2.p5c = p5.y5;
+        o2.p6c = p6.y5;
+        o2.p7c = p7.y5;
 
-                   ( (plane0 << 2 ) & (1 << 8 ) ) |     // Bit 6
-                   ( (plane1 << 3 ) & (1 << 9 ) ) |
-                   ( (plane2 << 4 ) & (1 << 10) ) |
-                   ( (plane3 << 5 ) & (1 << 11) ) |
-                   ( (plane4 << 6 ) & (1 << 12) ) |
-                   ( (plane5 << 7 ) & (1 << 13) ) |
-                   ( (plane6 << 8 ) & (1 << 14) ) |
-                   ( (plane7 << 9 ) & (1 << 15) ) |
+        o2.p0d = p0.y4;
+        o2.p1d = p1.y4;
+        o2.p2d = p2.y4;
+        o2.p3d = p3.y4;
+        o2.p4d = p4.y4;
+        o2.p5d = p5.y4;
+        o2.p6d = p6.y4;
+        o2.p7d = p7.y4;
 
-                   ( (plane0 << 11) & (1 << 16) ) |     // Bit 5
-                   ( (plane1 << 12) & (1 << 17) ) |
-                   ( (plane2 << 13) & (1 << 18) ) |
-                   ( (plane3 << 14) & (1 << 19) ) |
-                   ( (plane4 << 15) & (1 << 20) ) |
-                   ( (plane5 << 16) & (1 << 21) ) |
-                   ( (plane6 << 17) & (1 << 22) ) |
-                   ( (plane7 << 18) & (1 << 23) ) |
+        *(out++) = o2.word;
 
-                   ( (plane0 << 20) & (1 << 24) ) |     // Bit 4
-                   ( (plane1 << 21) & (1 << 25) ) |
-                   ( (plane2 << 22) & (1 << 26) ) |
-                   ( (plane3 << 23) & (1 << 27) ) |
-                   ( (plane4 << 24) & (1 << 28) ) |
-                   ( (plane5 << 25) & (1 << 29) ) |
-                   ( (plane6 << 26) & (1 << 30) ) |
-                   ( (plane7 << 27) & (1 << 31) ) ;
+        o3.p0a = p0.y3;
+        o3.p1a = p1.y3;
+        o3.p2a = p2.y3;
+        o3.p3a = p3.y3;
+        o3.p4a = p4.y3;
+        o3.p5a = p5.y3;
+        o3.p6a = p6.y3;
+        o3.p7a = p7.y3;
 
-        *(out++) = ( (plane0 >> 3 ) & (1 << 0 ) ) |     // Bit 3
-                   ( (plane1 >> 2 ) & (1 << 1 ) ) |
-                   ( (plane2 >> 1 ) & (1 << 2 ) ) |
-                   ( (plane3      ) & (1 << 3 ) ) |
-                   ( (plane4 << 1 ) & (1 << 4 ) ) |
-                   ( (plane5 << 2 ) & (1 << 5 ) ) |
-                   ( (plane6 << 3 ) & (1 << 6 ) ) |
-                   ( (plane7 << 4 ) & (1 << 7 ) ) |
+        o3.p0b = p0.y2;
+        o3.p1b = p1.y2;
+        o3.p2b = p2.y2;
+        o3.p3b = p3.y2;
+        o3.p4b = p4.y2;
+        o3.p5b = p5.y2;
+        o3.p6b = p6.y2;
+        o3.p7b = p7.y2;
 
-                   ( (plane0 << 6 ) & (1 << 8 ) ) |     // Bit 2
-                   ( (plane1 << 7 ) & (1 << 9 ) ) |
-                   ( (plane2 << 8 ) & (1 << 10) ) |
-                   ( (plane3 << 9 ) & (1 << 11) ) |
-                   ( (plane4 << 10) & (1 << 12) ) |
-                   ( (plane5 << 11) & (1 << 13) ) |
-                   ( (plane6 << 12) & (1 << 14) ) |
-                   ( (plane7 << 13) & (1 << 15) ) |
+        o3.p0c = p0.y1;
+        o3.p1c = p1.y1;
+        o3.p2c = p2.y1;
+        o3.p3c = p3.y1;
+        o3.p4c = p4.y1;
+        o3.p5c = p5.y1;
+        o3.p6c = p6.y1;
+        o3.p7c = p7.y1;
 
-                   ( (plane0 << 15) & (1 << 16) ) |     // Bit 1
-                   ( (plane1 << 16) & (1 << 17) ) |
-                   ( (plane2 << 17) & (1 << 18) ) |
-                   ( (plane3 << 18) & (1 << 19) ) |
-                   ( (plane4 << 19) & (1 << 20) ) |
-                   ( (plane5 << 20) & (1 << 21) ) |
-                   ( (plane6 << 21) & (1 << 22) ) |
-                   ( (plane7 << 22) & (1 << 23) ) |
+        o3.p0d = p0.y0;
+        o3.p1d = p1.y0;
+        o3.p2d = p2.y0;
+        o3.p3d = p3.y0;
+        o3.p4d = p4.y0;
+        o3.p5d = p5.y0;
+        o3.p6d = p6.y0;
+        o3.p7d = p7.y0;
 
-                   ( (plane0 << 24) & (1 << 24) ) |     // Bit 0
-                   ( (plane1 << 25) & (1 << 25) ) |
-                   ( (plane2 << 26) & (1 << 26) ) |
-                   ( (plane3 << 27) & (1 << 27) ) |
-                   ( (plane4 << 28) & (1 << 28) ) |
-                   ( (plane5 << 29) & (1 << 29) ) |
-                   ( (plane6 << 30) & (1 << 30) ) |
-                   ( (plane7 << 31) & (1 << 31) ) ;
+        *(out++) = o3.word;
+
+        o4.p0a = p0.x7;
+        o4.p1a = p1.x7;
+        o4.p2a = p2.x7;
+        o4.p3a = p3.x7;
+        o4.p4a = p4.x7;
+        o4.p5a = p5.x7;
+        o4.p6a = p6.x7;
+        o4.p7a = p7.x7;
+
+        o4.p0b = p0.x6;
+        o4.p1b = p1.x6;
+        o4.p2b = p2.x6;
+        o4.p3b = p3.x6;
+        o4.p4b = p4.x6;
+        o4.p5b = p5.x6;
+        o4.p6b = p6.x6;
+        o4.p7b = p7.x6;
+
+        o4.p0c = p0.x5;
+        o4.p1c = p1.x5;
+        o4.p2c = p2.x5;
+        o4.p3c = p3.x5;
+        o4.p4c = p4.x5;
+        o4.p5c = p5.x5;
+        o4.p6c = p6.x5;
+        o4.p7c = p7.x5;
+
+        o4.p0d = p0.x4;
+        o4.p1d = p1.x4;
+        o4.p2d = p2.x4;
+        o4.p3d = p3.x4;
+        o4.p4d = p4.x4;
+        o4.p5d = p5.x4;
+        o4.p6d = p6.x4;
+        o4.p7d = p7.x4;
+
+        *(out++) = o4.word;
+
+        o5.p0a = p0.x3;
+        o5.p1a = p1.x3;
+        o5.p2a = p2.x3;
+        o5.p3a = p3.x3;
+        o5.p4a = p4.x3;
+        o5.p5a = p5.x3;
+        o5.p6a = p6.x3;
+        o5.p7a = p7.x3;
+
+        o5.p0b = p0.x2;
+        o5.p1b = p1.x2;
+        o5.p2b = p2.x2;
+        o5.p3b = p3.x2;
+        o5.p4b = p4.x2;
+        o5.p5b = p5.x2;
+        o5.p6b = p6.x2;
+        o5.p7b = p7.x2;
+
+        o5.p0c = p0.x1;
+        o5.p1c = p1.x1;
+        o5.p2c = p2.x1;
+        o5.p3c = p3.x1;
+        o5.p4c = p4.x1;
+        o5.p5c = p5.x1;
+        o5.p6c = p6.x1;
+        o5.p7c = p7.x1;
+
+        o5.p0d = p0.x0;
+        o5.p1d = p1.x0;
+        o5.p2d = p2.x0;
+        o5.p3d = p3.x0;
+        o5.p4d = p4.x0;
+        o5.p5d = p5.x0;
+        o5.p6d = p6.x0;
+        o5.p7d = p7.x0;
+
+        *(out++) = o5.word;
     }
 }
 
