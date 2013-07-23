@@ -31,29 +31,6 @@
 #include "core_pins.h"
 #include "pins_arduino.h"
 
-#if 0
-// moved to pins_arduino.h
-struct digital_pin_bitband_and_config_table_struct {
-    volatile uint32_t *reg;
-    volatile uint32_t *config;
-};
-const struct digital_pin_bitband_and_config_table_struct digital_pin_to_info_PGM[];
-
-// compatibility macros
-#define digitalPinToPort(pin) (pin)
-#define digitalPinToBitMask(pin) (1)
-#define portOutputRegister(pin) ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 0))
-#define portSetRegister(pin)    ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 32))
-#define portClearRegister(pin)  ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 64))
-#define portToggleRegister(pin) ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 96))
-#define portInputRegister(pin)  ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 128))
-#define portModeRegister(pin)   ((volatile uint8_t *)(digital_pin_to_info_PGM[(pin)].reg + 160))
-#define portConfigRegister(pin) ((volatile uint32_t *)(digital_pin_to_info_PGM[(pin)].config))
-#endif
-
-//#define digitalPinToTimer(P) ( pgm_read_byte( digital_pin_to_timer_PGM + (P) ) )
-//#define analogInPinToBit(P) (P)
-
 #define GPIO_BITBAND_ADDR(reg, bit) (((uint32_t)&(reg) - 0x40000000) * 32 + (bit) * 4 + 0x42000000)
 #define GPIO_BITBAND_PTR(reg, bit) ((uint32_t *)GPIO_BITBAND_ADDR((reg), (bit)))
 //#define GPIO_SET_BIT(reg, bit) (*GPIO_BITBAND_PTR((reg), (bit)) = 1)
@@ -95,132 +72,6 @@ const struct digital_pin_bitband_and_config_table_struct digital_pin_to_info_PGM
     {GPIO_BITBAND_PTR(CORE_PIN32_PORTREG, CORE_PIN32_BIT), &CORE_PIN32_CONFIG},
     {GPIO_BITBAND_PTR(CORE_PIN33_PORTREG, CORE_PIN33_BIT), &CORE_PIN33_CONFIG}
 };
-
-
-
-
-typedef void (*voidFuncPtr)(void);
-volatile static voidFuncPtr intFunc[CORE_NUM_DIGITAL];
-
-void init_pin_interrupts(void)
-{
-    //SIM_SCGC5 = 0x00043F82;       // clocks active to all GPIO
-    NVIC_ENABLE_IRQ(IRQ_PORTA);
-    NVIC_ENABLE_IRQ(IRQ_PORTB);
-    NVIC_ENABLE_IRQ(IRQ_PORTC);
-    NVIC_ENABLE_IRQ(IRQ_PORTD);
-    NVIC_ENABLE_IRQ(IRQ_PORTE);
-    // TODO: maybe these should be set to a lower priority
-    // so if the user puts lots of slow code on attachInterrupt
-    // fast interrupts will still be serviced quickly?
-}
-
-void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
-{
-    volatile uint32_t *config;
-    uint32_t cfg, mask;
-
-    if (pin >= CORE_NUM_DIGITAL) return;
-    switch (mode) {
-      case CHANGE:  mask = 0x0B; break;
-      case RISING:  mask = 0x09; break;
-      case FALLING: mask = 0x0A; break;
-      case LOW: mask = 0x08; break;
-      case HIGH:    mask = 0x0C; break;
-      default: return;
-    }
-    mask = (mask << 16) | 0x01000000;
-    config = portConfigRegister(pin);
-
-    __disable_irq();
-    cfg = *config;
-    cfg &= ~0x000F0000;     // disable any previous interrupt
-    *config = cfg;
-    intFunc[pin] = function;    // set the function pointer
-    cfg |= mask;
-    *config = cfg;          // enable the new interrupt
-    __enable_irq();
-}
-
-void detachInterrupt(uint8_t pin)
-{
-    volatile uint32_t *config;
-
-    config = portConfigRegister(pin);
-    __disable_irq();
-    *config = ((*config & ~0x000F0000) | 0x01000000);
-    intFunc[pin] = NULL;
-    __enable_irq();
-}
-
-
-void porta_isr(void)
-{
-    uint32_t isfr = PORTA_ISFR;
-    PORTA_ISFR = isfr;
-    if ((isfr & CORE_PIN3_BITMASK) && intFunc[3]) intFunc[3]();
-    if ((isfr & CORE_PIN4_BITMASK) && intFunc[4]) intFunc[4]();
-    if ((isfr & CORE_PIN24_BITMASK) && intFunc[24]) intFunc[24]();
-    if ((isfr & CORE_PIN33_BITMASK) && intFunc[33]) intFunc[33]();
-}
-
-void portb_isr(void)
-{
-    uint32_t isfr = PORTB_ISFR;
-    PORTB_ISFR = isfr;
-    if ((isfr & CORE_PIN0_BITMASK) && intFunc[0]) intFunc[0]();
-    if ((isfr & CORE_PIN1_BITMASK) && intFunc[1]) intFunc[1]();
-    if ((isfr & CORE_PIN16_BITMASK) && intFunc[16]) intFunc[16]();
-    if ((isfr & CORE_PIN17_BITMASK) && intFunc[17]) intFunc[17]();
-    if ((isfr & CORE_PIN18_BITMASK) && intFunc[18]) intFunc[18]();
-    if ((isfr & CORE_PIN19_BITMASK) && intFunc[19]) intFunc[19]();
-    if ((isfr & CORE_PIN25_BITMASK) && intFunc[25]) intFunc[25]();
-    if ((isfr & CORE_PIN32_BITMASK) && intFunc[32]) intFunc[32]();
-}
-
-void portc_isr(void)
-{
-    // TODO: these are inefficent.  Use CLZ somehow....
-    uint32_t isfr = PORTC_ISFR;
-    PORTC_ISFR = isfr;
-    if ((isfr & CORE_PIN9_BITMASK) && intFunc[9]) intFunc[9]();
-    if ((isfr & CORE_PIN10_BITMASK) && intFunc[10]) intFunc[10]();
-    if ((isfr & CORE_PIN11_BITMASK) && intFunc[11]) intFunc[11]();
-    if ((isfr & CORE_PIN12_BITMASK) && intFunc[12]) intFunc[12]();
-    if ((isfr & CORE_PIN13_BITMASK) && intFunc[13]) intFunc[13]();
-    if ((isfr & CORE_PIN15_BITMASK) && intFunc[15]) intFunc[15]();
-    if ((isfr & CORE_PIN22_BITMASK) && intFunc[22]) intFunc[22]();
-    if ((isfr & CORE_PIN23_BITMASK) && intFunc[23]) intFunc[23]();
-    if ((isfr & CORE_PIN27_BITMASK) && intFunc[27]) intFunc[27]();
-    if ((isfr & CORE_PIN28_BITMASK) && intFunc[28]) intFunc[28]();
-    if ((isfr & CORE_PIN29_BITMASK) && intFunc[29]) intFunc[29]();
-    if ((isfr & CORE_PIN30_BITMASK) && intFunc[30]) intFunc[30]();
-}
-
-void portd_isr(void)
-{
-    uint32_t isfr = PORTD_ISFR;
-    PORTD_ISFR = isfr;
-    if ((isfr & CORE_PIN2_BITMASK) && intFunc[2]) intFunc[2]();
-    if ((isfr & CORE_PIN5_BITMASK) && intFunc[5]) intFunc[5]();
-    if ((isfr & CORE_PIN6_BITMASK) && intFunc[6]) intFunc[6]();
-    if ((isfr & CORE_PIN7_BITMASK) && intFunc[7]) intFunc[7]();
-    if ((isfr & CORE_PIN8_BITMASK) && intFunc[8]) intFunc[8]();
-    if ((isfr & CORE_PIN14_BITMASK) && intFunc[14]) intFunc[14]();
-    if ((isfr & CORE_PIN20_BITMASK) && intFunc[20]) intFunc[20]();
-    if ((isfr & CORE_PIN21_BITMASK) && intFunc[21]) intFunc[21]();
-}
-
-void porte_isr(void)
-{
-    uint32_t isfr = PORTE_ISFR;
-    PORTE_ISFR = isfr;
-    if ((isfr & CORE_PIN26_BITMASK) && intFunc[26]) intFunc[26]();
-    if ((isfr & CORE_PIN31_BITMASK) && intFunc[31]) intFunc[31]();
-}
-
-
-
 
 unsigned long rtc_get(void)
 {
@@ -271,50 +122,6 @@ void rtc_compensate(int adjust)
     RTC_TCR = ((interval - 1) << 8) | tcr;
 }
 
-#if 0
-// TODO: build system should define this
-// so RTC is automatically initialized to approx correct time
-// at least when the program begins running right after upload
-#ifndef TIME_T
-#define TIME_T 1350160272
-#endif
-
-void init_rtc(void)
-{
-    serial_print("init_rtc\n");
-    //SIM_SCGC6 |= SIM_SCGC6_RTC;
-
-    // enable the RTC crystal oscillator, for approx 12pf crystal
-    if (!(RTC_CR & RTC_CR_OSCE)) {
-        serial_print("start RTC oscillator\n");
-        RTC_SR = 0;
-        RTC_CR = RTC_CR_SC16P | RTC_CR_SC4P | RTC_CR_OSCE;
-    }
-    // should wait for crystal to stabilize.....
-
-    serial_print("SR=");
-    serial_phex32(RTC_SR);
-    serial_print("\n");
-    serial_print("CR=");
-    serial_phex32(RTC_CR);
-    serial_print("\n");
-    serial_print("TSR=");
-    serial_phex32(RTC_TSR);
-    serial_print("\n");
-    serial_print("TCR=");
-    serial_phex32(RTC_TCR);
-    serial_print("\n");
-
-    if (RTC_SR & RTC_SR_TIF) {
-        // enable the RTC
-        RTC_SR = 0;
-        RTC_TPR = 0;
-        RTC_TSR = TIME_T;
-        RTC_SR = RTC_SR_TCE;
-    }
-}
-#endif
-
 extern void usb_init(void);
 
 
@@ -330,8 +137,6 @@ extern void usb_init(void);
 //void init_pins(void)
 void _init_Teensyduino_internal_(void)
 {
-    init_pin_interrupts();
-
     //SIM_SCGC6 |= SIM_SCGC6_FTM0;  // TODO: use bitband for atomic read-mod-write
     //SIM_SCGC6 |= SIM_SCGC6_FTM1;
     FTM0_CNT = 0;
@@ -494,12 +299,6 @@ void analogWriteFrequency(uint8_t pin, uint32_t frequency)
         FTM0_SC = FTM_SC_CLKS(1) | FTM_SC_PS(prescale);
     }
 }
-
-
-
-
-// TODO: startup code needs to initialize all pins to GPIO mode, input by default
-
 void digitalWrite(uint8_t pin, uint8_t val)
 {
     if (pin >= CORE_NUM_DIGITAL) return;
@@ -552,69 +351,6 @@ void pinMode(uint8_t pin, uint8_t mode)
     }
 }
 
-
-void _shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t value)
-{
-        if (bitOrder == LSBFIRST) {
-                shiftOut_lsbFirst(dataPin, clockPin, value);
-        } else {
-                shiftOut_msbFirst(dataPin, clockPin, value);
-        }
-}
-
-void shiftOut_lsbFirst(uint8_t dataPin, uint8_t clockPin, uint8_t value)
-{
-        uint8_t mask;
-        for (mask=0x01; mask; mask <<= 1) {
-                digitalWrite(dataPin, value & mask);
-                digitalWrite(clockPin, HIGH);
-                digitalWrite(clockPin, LOW);
-        }
-}
-
-void shiftOut_msbFirst(uint8_t dataPin, uint8_t clockPin, uint8_t value)
-{
-        uint8_t mask;
-        for (mask=0x80; mask; mask >>= 1) {
-                digitalWrite(dataPin, value & mask);
-                digitalWrite(clockPin, HIGH);
-                digitalWrite(clockPin, LOW);
-        }
-}
-
-uint8_t _shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder)
-{
-        if (bitOrder == LSBFIRST) {
-                return shiftIn_lsbFirst(dataPin, clockPin);
-        } else {
-                return shiftIn_msbFirst(dataPin, clockPin);
-        }
-}
-
-uint8_t shiftIn_lsbFirst(uint8_t dataPin, uint8_t clockPin)
-{
-        uint8_t mask, value=0;
-        for (mask=0x01; mask; mask <<= 1) {
-                digitalWrite(clockPin, HIGH);
-                if (digitalRead(dataPin)) value |= mask;
-                digitalWrite(clockPin, LOW);
-        }
-        return value;
-}
-
-uint8_t shiftIn_msbFirst(uint8_t dataPin, uint8_t clockPin)
-{
-        uint8_t mask, value=0;
-        for (mask=0x80; mask; mask >>= 1) {
-                digitalWrite(clockPin, HIGH);
-                if (digitalRead(dataPin)) value |= mask;
-                digitalWrite(clockPin, LOW);
-        }
-        return value;
-}
-
-
-
 // the systick interrupt is supposed to increment this at 1 kHz rate
 volatile uint32_t systick_millis_count = 0;
 
@@ -648,72 +384,9 @@ void delay(uint32_t ms)
                 if (ms == 0) return;
                 start += 1000;
             }
-            yield();
         }
     }
 }
-
-#if F_CPU == 96000000
-#define PULSEIN_LOOPS_PER_USEC 14
-#elif F_CPU == 48000000
-#define PULSEIN_LOOPS_PER_USEC 7
-#elif F_CPU == 24000000
-#define PULSEIN_LOOPS_PER_USEC 4
-#endif
-
-
-uint32_t pulseIn_high(volatile uint8_t *reg, uint32_t timeout)
-{
-    uint32_t timeout_count = timeout * PULSEIN_LOOPS_PER_USEC;
-    uint32_t usec_start, usec_stop;
-    
-    // wait for any previous pulse to end
-    while (*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    // wait for the pulse to start
-    while (!*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    usec_start = micros();
-    // wait for the pulse to stop
-    while (*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    usec_stop = micros();
-    return usec_stop - usec_start;
-}
-
-uint32_t pulseIn_low(volatile uint8_t *reg, uint32_t timeout)
-{
-    uint32_t timeout_count = timeout * PULSEIN_LOOPS_PER_USEC;
-    uint32_t usec_start, usec_stop;
-    
-    // wait for any previous pulse to end
-    while (!*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    // wait for the pulse to start
-    while (*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    usec_start = micros();
-    // wait for the pulse to stop
-    while (!*reg) {
-        if (--timeout_count == 0) return 0;
-    }
-    usec_stop = micros();
-    return usec_stop - usec_start;
-}
-
-// TODO: an inline version should handle the common case where state is const
-uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout)
-{
-    if (pin >= CORE_NUM_DIGITAL) return 0;
-    if (state) return pulseIn_high(portInputRegister(pin), timeout);
-    return pulseIn_low(portInputRegister(pin), timeout);;
-}
-
 
 
 

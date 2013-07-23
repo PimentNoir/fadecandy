@@ -25,8 +25,7 @@ C_FILES = \
 	pins_teensy.c \
 	usb_desc.c \
 	usb_dev.c \
-	usb_mem.c \
-	yield.c
+	usb_mem.c
 
 CPP_FILES = \
 	fadecandy.cpp \

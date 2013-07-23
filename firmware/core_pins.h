@@ -687,16 +687,7 @@ void analogWrite(uint8_t pin, int val);
 void analogWriteRes(uint32_t bits);
 static inline void analogWriteResolution(uint32_t bits) { analogWriteRes(bits); }
 void analogWriteFrequency(uint8_t pin, uint32_t frequency);
-void attachInterrupt(uint8_t pin, void (*function)(void), int mode);
-void detachInterrupt(uint8_t pin);
 void _init_Teensyduino_internal_(void);
-
-int analogRead(uint8_t pin);
-void analogReference(uint8_t type);
-void analogReadRes(unsigned int bits);
-static inline void analogReadResolution(unsigned int bits) { analogReadRes(bits); }
-void analogReadAveraging(unsigned int num);
-void analog_init(void);
 
 #define DEFAULT         0
 #define INTERNAL        2
@@ -704,49 +695,7 @@ void analog_init(void);
 #define INTERNAL1V1     2
 #define EXTERNAL        0
 
-int touchRead(uint8_t pin);
-
-
-static inline void shiftOut(uint8_t, uint8_t, uint8_t, uint8_t) __attribute__((always_inline, unused));
-extern void _shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t value) __attribute__((noinline));
-extern void shiftOut_lsbFirst(uint8_t dataPin, uint8_t clockPin, uint8_t value) __attribute__((noinline));
-extern void shiftOut_msbFirst(uint8_t dataPin, uint8_t clockPin, uint8_t value) __attribute__((noinline));
-
-static inline void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t value)
-{
-        if (__builtin_constant_p(bitOrder)) {
-                if (bitOrder == LSBFIRST) {
-                        shiftOut_lsbFirst(dataPin, clockPin, value);
-                } else {
-                        shiftOut_msbFirst(dataPin, clockPin, value);
-                }
-        } else {
-                _shiftOut(dataPin, clockPin, bitOrder, value);
-        }
-}
-
-static inline uint8_t shiftIn(uint8_t, uint8_t, uint8_t) __attribute__((always_inline, unused));
-extern uint8_t _shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) __attribute__((noinline));
-extern uint8_t shiftIn_lsbFirst(uint8_t dataPin, uint8_t clockPin) __attribute__((noinline));
-extern uint8_t shiftIn_msbFirst(uint8_t dataPin, uint8_t clockPin) __attribute__((noinline));
-
-static inline uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder)
-{
-        if (__builtin_constant_p(bitOrder)) {
-                if (bitOrder == LSBFIRST) {
-                        return shiftIn_lsbFirst(dataPin, clockPin);
-                } else {
-                        return shiftIn_msbFirst(dataPin, clockPin);
-                }
-        } else {
-                return _shiftIn(dataPin, clockPin, bitOrder);
-        }
-}
-
-void _reboot_Teensyduino_(void) __attribute__((noreturn));
 void _restart_Teensyduino_(void) __attribute__((noreturn));
-
-void yield(void);
 
 void delay(uint32_t msec);
 
@@ -784,19 +733,13 @@ static inline void delayMicroseconds(uint32_t usec)
 }
 #endif
 
-
-
-
-
-
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 unsigned long rtc_get(void);
 void rtc_set(unsigned long t);
 void rtc_compensate(int adjust);
+
 #ifdef __cplusplus
 }
 class teensy3_clock_class
@@ -808,8 +751,5 @@ public:
 };
 extern teensy3_clock_class Teensy3Clock;
 #endif
-
-
-
 
 #endif
