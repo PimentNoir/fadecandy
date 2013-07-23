@@ -52,7 +52,7 @@ while True:
 		data = chr(control) + ''.join(chr(random.randrange(256)) for i in range(63))
 		dev.write(1, data)
 		print binascii.b2a_hex(data)
-		time.sleep(0.1)
+		#time.sleep(0.1)
 
 	print
 	time.sleep(2)
