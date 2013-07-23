@@ -21,7 +21,7 @@ Vitals
 ------
 
 * 512 pixels supported per Teensy board (8 strings, 64 pixels per string)
-* Constant hardware frame rate of 520 FPS, to support temporal dithering
+* Very high hardware frame rate (395 FPS) to support temporal dithering
 * Full-speed (12 Mbps) USB
 * 768-entry 16-bit color lookup table, for gamma correction and color balance
 
