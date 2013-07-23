@@ -21,6 +21,10 @@ dev.set_configuration()
 
 print "Serial number: %s" % usb.util.get_string(dev, 255, dev.iSerialNumber)
 
+# Disable dithering?
+if 0:
+	dev.write(1, '\x80\x01')
+
 # Set up a default color LUT
 
 lut = [0] * (64 * 25)
