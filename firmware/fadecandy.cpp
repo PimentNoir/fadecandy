@@ -126,11 +126,21 @@ static void updateDrawBuffer(unsigned interpCoefficient)
     // For each pixel, this is a 24-byte stream of bits (6 words)
     uint32_t *out = (uint32_t*) leds.getDrawBuffer();
 
-    // Interpolation coefficients, including a multiply by 257 to convert 8-bit color to 16-bit color.
+    /*
+     * Interpolation coefficients, including a multiply by 257 to convert 8-bit color to 16-bit color.
+     * You'd think that it would save clock cycles to calculate icPrev in updatePixel(), but this doesn't
+     * seem to be the case.
+     */
+
     uint32_t icPrev = 257 * (0x10000 - interpCoefficient);
     uint32_t icNext = 257 * interpCoefficient;
 
-    // Pointer to the residual buffer for this pixel
+    /*
+     * Pointer to the residual buffer for this pixel. Calculating this here rather than in updatePixel
+     * saves a lot of clock cycles, since otherwise updatePixel() immediately needs to do a load from
+     * constant pool and some multiplication.
+     */
+
     int8_t *pResidual = residual;
 
     for (int i = 0; i < LEDS_PER_STRIP; ++i, pResidual += 3) {
@@ -148,7 +158,8 @@ static void updateDrawBuffer(unsigned interpCoefficient)
 
         /*
          * Remap bits.
-         * This generates fairly efficient code using the UBFX and BFI instructions.
+         *
+         * This generates compact and efficient code using the BFI instruction.
          */
 
         uint32_t p0 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 0, pResidual + LEDS_PER_STRIP * 3 * 0);
