@@ -89,10 +89,10 @@ struct fcFramebufferIter
 
     ALWAYS_INLINE void next()
     {
-        if (++index >= (1 + PIXELS_PER_PACKET * 3)) {
-            index = 0;
-            packet++;
-        }
+        index += 3;
+        unsigned overflow = index >> 6;
+        index = (index + overflow) & 63;
+        packet += overflow;
         component += 3;
     }
 };
