@@ -54,7 +54,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-static inline uint32_t updatePixel(fcFramebufferIter iter, uint32_t ic)
+static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, fcFramebufferIter iter)
 {
     /*
      * Update pipeline for one pixel:
@@ -68,10 +68,9 @@ static inline uint32_t updatePixel(fcFramebufferIter iter, uint32_t ic)
     const uint8_t *pixelNext = buffers.fbNext->pixel(iter);
 
     // Per-channel linear interpolation and conversion to 16-bit color.
-    uint32_t icPrev = (257 * 0x10000) - ic;
-    int iR = (pixelPrev[0] * icPrev + pixelNext[0] * ic) >> 16;
-    int iG = (pixelPrev[1] * icPrev + pixelNext[1] * ic) >> 16;
-    int iB = (pixelPrev[2] * icPrev + pixelNext[2] * ic) >> 16;
+    int iR = (pixelPrev[0] * icPrev + pixelNext[0] * icNext) >> 16;
+    int iG = (pixelPrev[1] * icPrev + pixelNext[1] * icNext) >> 16;
+    int iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
 
     // Pass through our color LUT
     iR = lutInterpolate(&buffers.lutCurrent[0 * 256], iR);
@@ -130,8 +129,9 @@ static void updateDrawBuffer(unsigned interpCoefficient)
     // For each pixel, this is a 24-byte stream of bits (6 words)
     uint32_t *out = (uint32_t*) leds.getDrawBuffer();
 
-    // Interpolation coefficient, including a multiply by 257 to convert 8-bit color to 16-bit color.
-    uint32_t ic = 257 * interpCoefficient;
+    // Interpolation coefficients, including a multiply by 257 to convert 8-bit color to 16-bit color.
+    uint32_t icPrev = 257 * (0x10000 - interpCoefficient);
+    uint32_t icNext = 257 * interpCoefficient;
 
     /*
      * Iterators for each LED strip. (Avoids division later on).
@@ -175,7 +175,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
          */
 
         i0.next();
-        uint32_t p0 = updatePixel(i0, ic);
+        uint32_t p0 = updatePixel(icPrev, icNext, i0);
 
         o5.p0d = p0;
         o5.p0c = p0 >> 1;
@@ -203,7 +203,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p0a = p0 >> 23;
 
         i1.next();
-        uint32_t p1 = updatePixel(i1, ic);
+        uint32_t p1 = updatePixel(icPrev, icNext, i1);
 
         o5.p1d = p1;
         o5.p1c = p1 >> 1;
@@ -231,7 +231,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p1a = p1 >> 23;
 
         i2.next();
-        uint32_t p2 = updatePixel(i2, ic);
+        uint32_t p2 = updatePixel(icPrev, icNext, i2);
 
         o5.p2d = p2;
         o5.p2c = p2 >> 1;
@@ -259,7 +259,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p2a = p2 >> 23;
 
         i3.next();
-        uint32_t p3 = updatePixel(i3, ic);
+        uint32_t p3 = updatePixel(icPrev, icNext, i3);
 
         o5.p3d = p3;
         o5.p3c = p3 >> 1;
@@ -287,7 +287,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p3a = p3 >> 23;
 
         i4.next();
-        uint32_t p4 = updatePixel(i4, ic);
+        uint32_t p4 = updatePixel(icPrev, icNext, i4);
 
         o5.p4d = p4;
         o5.p4c = p4 >> 1;
@@ -315,7 +315,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p4a = p4 >> 23;
 
         i5.next();
-        uint32_t p5 = updatePixel(i5, ic);
+        uint32_t p5 = updatePixel(icPrev, icNext, i5);
 
         o5.p5d = p5;
         o5.p5c = p5 >> 1;
@@ -343,7 +343,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p5a = p5 >> 23;
 
         i6.next();
-        uint32_t p6 = updatePixel(i6, ic);
+        uint32_t p6 = updatePixel(icPrev, icNext, i6);
 
         o5.p6d = p6;
         o5.p6c = p6 >> 1;
@@ -371,7 +371,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p6a = p6 >> 23;
 
         i7.next();
-        uint32_t p7 = updatePixel(i7, ic);
+        uint32_t p7 = updatePixel(icPrev, icNext, i7);
 
         o5.p7d = p7;
         o5.p7c = p7 >> 1;
