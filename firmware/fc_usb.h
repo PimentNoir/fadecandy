@@ -80,9 +80,8 @@ struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 
 struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 {
-    const unsigned entry(unsigned channel, unsigned value)
+    const unsigned entry(unsigned index)
     {
-        unsigned index = (channel << 8) | value;
         const uint8_t *p = &packets[index / LUTENTRIES_PER_PACKET]->buf[2 + (index % LUTENTRIES_PER_PACKET) * 2];
         return *(uint16_t*)p;
     }
@@ -95,24 +94,20 @@ struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 
 struct fcBuffers
 {
-    fcFramebuffer fb[3];        // Triple-buffered video frames
-    fcColorLUT lut[2];          // Double-buffered color LUTs
-
     fcFramebuffer *fbPrev;      // Frame we're interpolating from
     fcFramebuffer *fbNext;      // Frame we're interpolating to
     fcFramebuffer *fbNew;       // Partial frame, getting ready to become fbNext
 
-    fcColorLUT *lutCurrent;     // Active LUT
-    fcColorLUT *lutNew;         // Partial LUT, not yet finalized
+    fcFramebuffer fb[3];        // Triple-buffered video frames
+
+    fcColorLUT lutNew;                   // Partial LUT, not yet finalized
+    uint16_t lutCurrent[LUT_SIZE + 1];   // Active LUT, linearized for efficiency, padded on the end.
 
     fcBuffers()
     {
         fbPrev = &fb[0];
         fbNext = &fb[1];
         fbNew = &fb[2];
-
-        lutCurrent = &lut[0];
-        lutNew = &lut[1];
     }
 
     void handleUSB();

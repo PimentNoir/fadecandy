@@ -64,7 +64,7 @@ void fcBuffers::handleUSB()
                 break;
 
             case TYPE_LUT:
-                lutNew->store(index, packet);
+                lutNew.store(index, packet);
                 if (final) {
                     finalizeLUT();
                 }
@@ -87,5 +87,16 @@ void fcBuffers::finalizeFramebuffer()
 
 void fcBuffers::finalizeLUT()
 {
-    std::swap(lutCurrent, lutNew);
+    /*
+     * To keep LUT lookups super-fast, we copy the LUT into a linear array at this point.
+     * LUT changes are intended to be infrequent (initialization or configuration-time only),
+     * so this isn't a performance bottleneck.
+     */
+
+    for (unsigned i = 0; i < LUT_SIZE; ++i) {
+        lutCurrent[i] = lutNew.entry(i);
+    }
+
+    // Padding, so that it's okay to read past the end during interpolation
+    lutCurrent[LUT_SIZE] = lutCurrent[LUT_SIZE - 1];
 }

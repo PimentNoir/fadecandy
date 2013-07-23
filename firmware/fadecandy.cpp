@@ -38,7 +38,7 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 static int8_t residual[CHANNELS_TOTAL];
 
 
-static uint32_t lutInterpolate(unsigned channel, uint32_t arg)
+static uint32_t __attribute__((always_inline)) lutInterpolate(const uint16_t *lut, uint32_t arg)
 {
     /*
      * Using our color LUT for the indicated channel, convert the
@@ -50,13 +50,10 @@ static uint32_t lutInterpolate(unsigned channel, uint32_t arg)
     unsigned alpha = arg & 0xFF;
     unsigned invAlpha = 0x100 - alpha;
 
-    unsigned v1 = buffers.lutCurrent->entry(channel, index);
-    unsigned v2 = buffers.lutCurrent->entry(channel, index + 1);
-
-    return (v1 * invAlpha + v2 * alpha) >> 8;
+    return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
+static uint32_t __attribute__((always_inline)) updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
 {
     /*
      * Update pipeline for one pixel:
@@ -77,9 +74,9 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
     uint32_t iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
 
     // Pass through our color LUT
-    iR = lutInterpolate(0, iR);
-    iG = lutInterpolate(1, iG);
-    iB = lutInterpolate(2, iB);
+    iR = lutInterpolate(&buffers.lutCurrent[0 * 256], iR);
+    iG = lutInterpolate(&buffers.lutCurrent[1 * 256], iG);
+    iB = lutInterpolate(&buffers.lutCurrent[2 * 256], iB);
 
     // Pointer to the residual buffer for this pixel
     int8_t *pResidual = &residual[n * 3];

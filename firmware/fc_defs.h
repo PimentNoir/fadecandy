@@ -31,13 +31,15 @@
 #define LEDS_TOTAL              (LEDS_PER_STRIP * 8)
 #define CHANNELS_TOTAL          (LEDS_TOTAL * 3)
 
+#define LUT_SIZE				(256 * 3)
+
 // USB packet layout
 #define PIXELS_PER_PACKET       21
 #define LUTENTRIES_PER_PACKET   31
 #define PACKETS_PER_FRAME       25
 #define PACKETS_PER_LUT         25
 
-#define NUM_USB_BUFFERS         128       // Three full frames (3*25), two LUT buffers (2*25), a little extra (3)
+#define NUM_USB_BUFFERS         104       // Three full frames (3*25), one LUT buffer (25), a little extra (4)
 
 #define VENDOR_ID               0x1d50    // OpenMoko
 #define PRODUCT_ID              0x607a    // Assigned to Fadecandy project
