@@ -419,5 +419,10 @@ extern "C" int main()
 
         updateDrawBuffer((millis() << 4) & 0xFFFF);
         leds.show();
+
+        // Optionally disable dithering by clearing our residual buffer every frame.
+        if (buffers.flags & CFLAG_NO_DITHERING) {
+            memset(residual, 0, sizeof residual);
+        }
     }
 }

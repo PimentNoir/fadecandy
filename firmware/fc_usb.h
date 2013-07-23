@@ -90,6 +90,13 @@ struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 
 
 /*
+ * Configuration flag values
+ */
+
+#define CFLAG_NO_DITHERING      (1 << 0)
+
+
+/*
  * All USB-writable buffers
  */
 
@@ -103,6 +110,8 @@ struct fcBuffers
 
     fcColorLUT lutNew;                   // Partial LUT, not yet finalized
     uint16_t lutCurrent[LUT_SIZE + 1];   // Active LUT, linearized for efficiency, padded on the end.
+
+    uint8_t flags;              // Configuration flags
 
     fcBuffers()
     {

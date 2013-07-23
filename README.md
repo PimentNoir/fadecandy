@@ -101,7 +101,7 @@ Type code | Meaning of 'final' bit          | Index range | Packet contents
 --------- | ------------------------------- | ----------- | -------------------------------------
 0         | Interpolate to new video frame  | 0 … 24      | Up to 21 pixels, 24-bit RGB
 1         | Instantly apply new color LUT   | 0 … 24      | Up to 31 16-bit lookup table entries
-2         |                                 |             | (reserved)
+2         | (reserved)                      | 0           | Set configuration data
 3         |                                 |             | (reserved)
 
 In a type 0 packet, the USB packet contains up to 21 pixels of 24-bit RGB color data. The last packet (index 24) only needs to contain 8 valid pixels. Pixels 9-20 in these packets are ignored.
@@ -133,6 +133,13 @@ Byte Offset   | Description
 …             | …
 62            | LUT entry #30, low byte
 63            | LUT entry #30, high byte
+
+A type 2 packet sets optional device-wide configuration settings. Right now it's just used to disable dithering for debug or side-by-side comparison purposes. Other bytes in this packet are reserved.
+
+Byte Offset   | Description
+------------- | ------------
+0             | Control byte
+1             | Flags. Bit 0: Disable dithering
 
 
 Contact

@@ -32,6 +32,7 @@
 
 #define TYPE_FRAMEBUFFER    0x00
 #define TYPE_LUT            0x40
+#define TYPE_CONFIG         0x80
 
 
 
@@ -68,6 +69,11 @@ void fcBuffers::handleUSB()
                 if (final) {
                     finalizeLUT();
                 }
+                break;
+
+            case TYPE_CONFIG:
+                flags = packet->buf[1];
+                usb_free(packet);
                 break;
 
             default:
