@@ -63,50 +63,14 @@ struct fcPacketBuffer
 
 
 /*
- * Iterator referring to one pixel in the framebuffer
- */
-
-struct fcFramebufferIter
-{
-    unsigned packet;
-    unsigned index;
-    unsigned component;
-
-    ALWAYS_INLINE void setNegativeOne()
-    {
-        // Special case: After one call to next(), this points to LED #0.
-        index = -1;
-        packet = 0;
-        component = -3;
-    }
-
-    ALWAYS_INLINE void set(unsigned led)
-    {
-        packet = led / PIXELS_PER_PACKET;
-        index = 1 + (led % PIXELS_PER_PACKET) * 3;
-        component = led * 3;
-    }
-
-    ALWAYS_INLINE void next()
-    {
-        if (++index >= (1 + PIXELS_PER_PACKET * 3)) {
-            index = 0;
-            packet++;
-        }
-        component += 3;
-    }
-};
-
-
-/*
  * Framebuffer
  */
 
 struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 {
-    ALWAYS_INLINE const uint8_t* pixel(fcFramebufferIter iter) const
+    ALWAYS_INLINE const uint8_t* pixel(unsigned index)
     {
-        return &packets[iter.packet]->buf[iter.index];
+        return &packets[index / PIXELS_PER_PACKET]->buf[1 + (index % PIXELS_PER_PACKET) * 3];
     }
 };
 
