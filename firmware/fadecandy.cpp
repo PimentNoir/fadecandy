@@ -369,7 +369,7 @@ extern "C" int main()
     while (1) {
         buffers.handleUSB();
 
-        updateDrawBuffer((millis() << 4) & 0xFFFF);
+        updateDrawBuffer((millis() << 2) & 0xFFFF);
         leds.show();
     }
 }
