@@ -54,7 +54,9 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n, int8_t *pResidual)
+static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
+    const uint8_t *pixelPrev, const uint8_t *pixelNext,
+    const uint16_t *lut, int8_t *pResidual)
 {
     /*
      * Update pipeline for one pixel:
@@ -64,18 +66,15 @@ static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n,
      *    3. Dithering
      */
 
-    const uint8_t *pixelPrev = buffers.fbPrev->pixel(n);
-    const uint8_t *pixelNext = buffers.fbNext->pixel(n);
-
     // Per-channel linear interpolation and conversion to 16-bit color.
     int iR = (pixelPrev[0] * icPrev + pixelNext[0] * icNext) >> 16;
     int iG = (pixelPrev[1] * icPrev + pixelNext[1] * icNext) >> 16;
     int iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
 
     // Pass through our color LUT
-    iR = lutInterpolate(&buffers.lutCurrent[0 * 256], iR);
-    iG = lutInterpolate(&buffers.lutCurrent[1 * 256], iG);
-    iB = lutInterpolate(&buffers.lutCurrent[2 * 256], iB);
+    iR = lutInterpolate(&lut[0 * 256], iR);
+    iG = lutInterpolate(&lut[1 * 256], iG);
+    iB = lutInterpolate(&lut[2 * 256], iB);
 
     // Incorporate the residual from last frame
     iR += pResidual[0];
@@ -162,7 +161,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
          * This generates compact and efficient code using the BFI instruction.
          */
 
-        uint32_t p0 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 0, pResidual + LEDS_PER_STRIP * 3 * 0);
+        uint32_t p0 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 0),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 0),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 0);
 
         o5.p0d = p0;
         o5.p0c = p0 >> 1;
@@ -189,7 +191,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p0b = p0 >> 22;
         o0.p0a = p0 >> 23;
 
-        uint32_t p1 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 1, pResidual + LEDS_PER_STRIP * 3 * 1);
+        uint32_t p1 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 1),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 1),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 1);
 
         o5.p1d = p1;
         o5.p1c = p1 >> 1;
@@ -216,7 +221,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p1b = p1 >> 22;
         o0.p1a = p1 >> 23;
 
-        uint32_t p2 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 2, pResidual + LEDS_PER_STRIP * 3 * 2);
+        uint32_t p2 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 2),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 2),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 2);
 
         o5.p2d = p2;
         o5.p2c = p2 >> 1;
@@ -243,7 +251,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p2b = p2 >> 22;
         o0.p2a = p2 >> 23;
 
-        uint32_t p3 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 3, pResidual + LEDS_PER_STRIP * 3 * 3);
+        uint32_t p3 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 3),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 3),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 3);
 
         o5.p3d = p3;
         o5.p3c = p3 >> 1;
@@ -270,7 +281,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p3b = p3 >> 22;
         o0.p3a = p3 >> 23;
 
-        uint32_t p4 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 4, pResidual + LEDS_PER_STRIP * 3 * 4);
+        uint32_t p4 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 4),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 4),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 4);
 
         o5.p4d = p4;
         o5.p4c = p4 >> 1;
@@ -297,7 +311,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p4b = p4 >> 22;
         o0.p4a = p4 >> 23;
 
-        uint32_t p5 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 5, pResidual + LEDS_PER_STRIP * 3 * 5);
+        uint32_t p5 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 5),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 5),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 5);
 
         o5.p5d = p5;
         o5.p5c = p5 >> 1;
@@ -324,7 +341,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p5b = p5 >> 22;
         o0.p5a = p5 >> 23;
 
-        uint32_t p6 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 6, pResidual + LEDS_PER_STRIP * 3 * 6);
+        uint32_t p6 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 6),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 6),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 6);
 
         o5.p6d = p6;
         o5.p6c = p6 >> 1;
@@ -351,7 +371,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         o0.p6b = p6 >> 22;
         o0.p6a = p6 >> 23;
 
-        uint32_t p7 = updatePixel(icPrev, icNext, i + LEDS_PER_STRIP * 7, pResidual + LEDS_PER_STRIP * 3 * 7);
+        uint32_t p7 = updatePixel(icPrev, icNext,
+            buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 7),
+            buffers.fbNext->pixel(i + LEDS_PER_STRIP * 7),
+            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 7);
 
         o5.p7d = p7;
         o5.p7c = p7 >> 1;
