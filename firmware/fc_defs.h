@@ -43,5 +43,3 @@
 
 #define VENDOR_ID               0x1d50    // OpenMoko
 #define PRODUCT_ID              0x607a    // Assigned to Fadecandy project
-
-#define DEBUG_PIN				12

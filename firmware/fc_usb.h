@@ -23,6 +23,7 @@
 
 #pragma once
 #include <string.h>
+#include "WProgram.h"
 #include "usb_dev.h"
 #include "fc_defs.h"
 
@@ -67,7 +68,7 @@ struct fcPacketBuffer
 
 struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 {
-    const uint8_t *pixel(unsigned index)
+    const uint8_t* ALWAYS_INLINE pixel(unsigned index)
     {
         return &packets[index / PIXELS_PER_PACKET]->buf[1 + (index % PIXELS_PER_PACKET) * 3];
     }
@@ -80,7 +81,7 @@ struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 
 struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 {
-    const unsigned entry(unsigned index)
+    const unsigned ALWAYS_INLINE entry(unsigned index)
     {
         const uint8_t *p = &packets[index / LUTENTRIES_PER_PACKET]->buf[2 + (index % LUTENTRIES_PER_PACKET) * 2];
         return *(uint16_t*)p;

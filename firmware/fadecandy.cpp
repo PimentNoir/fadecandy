@@ -38,7 +38,7 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 static int8_t residual[CHANNELS_TOTAL];
 
 
-static uint32_t __attribute__((always_inline)) lutInterpolate(const uint16_t *lut, uint32_t arg)
+static uint32_t ALWAYS_INLINE lutInterpolate(const uint16_t *lut, uint32_t arg)
 {
     /*
      * Using our color LUT for the indicated channel, convert the
@@ -53,7 +53,7 @@ static uint32_t __attribute__((always_inline)) lutInterpolate(const uint16_t *lu
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-static uint32_t __attribute__((always_inline)) updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
+static uint32_t ALWAYS_INLINE updatePixel(uint32_t icPrev, uint32_t icNext, unsigned n)
 {
     /*
      * Update pipeline for one pixel:
@@ -62,8 +62,6 @@ static uint32_t __attribute__((always_inline)) updatePixel(uint32_t icPrev, uint
      *    2. Interpolate LUT
      *    3. Dithering
      */
-
-    digitalWrite(DEBUG_PIN, HIGH);
 
     const uint8_t *pixelPrev = buffers.fbPrev->pixel(n);
     const uint8_t *pixelNext = buffers.fbNext->pixel(n);
@@ -95,8 +93,6 @@ static uint32_t __attribute__((always_inline)) updatePixel(uint32_t icPrev, uint
     pResidual[0] = iR - (r8 * 257);
     pResidual[1] = iG - (g8 * 257);
     pResidual[2] = iB - (b8 * 257);
-
-    digitalWrite(DEBUG_PIN, LOW);
 
     // Pack the result, in GRB order.
     return (g8 << 16) | (r8 << 8) | b8;
@@ -353,7 +349,6 @@ static void updateDrawBuffer(unsigned interpCoefficient)
 extern "C" int main()
 {
     leds.begin();
-    pinMode(DEBUG_PIN, OUTPUT);
 
     while (1) {
         buffers.handleUSB();

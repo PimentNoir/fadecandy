@@ -9,6 +9,9 @@
 
 #define DMAMEM __attribute__ ((section(".dmabuffers"), used))
 
+// Enforce inlining, so we can take advantage of inter-procedural optimization
+#define ALWAYS_INLINE __attribute__ ((always_inline))
+
 #ifdef __cplusplus
 
 uint16_t makeWord(uint16_t w);
