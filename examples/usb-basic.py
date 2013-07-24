@@ -21,9 +21,10 @@ dev.set_configuration()
 
 print "Serial number: %s" % usb.util.get_string(dev, 255, dev.iSerialNumber)
 
-# Disable dithering?
-if 0:
-	dev.write(1, '\x80\x01')
+# Debug flags
+
+flags = 0x00
+dev.write(1, '\x80' + chr(flags) + ('\x00' * 62))
 
 # Set up a default color LUT
 
@@ -55,9 +56,9 @@ while True:
 
 		data = chr(control) + ''.join(chr(random.randrange(256)) for i in range(63))
 		dev.write(1, data)
-		print binascii.b2a_hex(data)
-		#time.sleep(0.1)
+		#print binascii.b2a_hex(data)
 
-	print
-	time.sleep(0.1)
+	#print
+	raw_input()
+	#time.sleep(0.1)
 
