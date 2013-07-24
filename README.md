@@ -1,8 +1,6 @@
 Fadecandy
 =========
 
-This is a **WORK IN PROGRESS**. Not complete, definitely not ready for prime-time yet.
-
 Fadecandy is firmware for the [Teensy 3.0](http://www.pjrc.com/store/teensy3.html), a tiny and inexpensive ARM microcontroller board.
 
 Fadecandy drives addressable LED strips with the WS2811 and WS2812 controllers. These LED strips are common and inexpensive, available from [many suppliers](http://www.aliexpress.com/item/5M-WS2811-LED-digital-strip-60leds-m-with-60pcs-WS2811-built-in-tthe-5050-smd-rgb/635563383.html?tracelog=back_to_detail_a) for around $0.25 per pixel.
@@ -66,6 +64,15 @@ Each pixel goes through the following processing steps in Fadecandy:
 * The final 16-bit value is fed into our temporal dithering algorithm, which results in an 8-bit color
 * These 8-bit colors are converted to the format needed by OctoWS2811's DMA engine
 * In hardware, the converted colors are streamed out to eight LED strings in parallel
+
+Keyframe Interpolation
+----------------------
+
+By default, Fadecandy interprets each frame it receives as a keyframe. In-between these keyframes, Fadecandy will generate smooth intermediate frames using linear interpolation. The interpolation duration is determined by the elapsed time between when the final packet of one frame is received and when the final packet of the next frame is received.
+
+This scheme works well when frames are arriving at a nearly constant rate. If frames suddenly arrive slower than they had been arriving, interpolation will proceed faster than it optimally should, and one keyframe will hold steady until the next keyframe arrives. If frames suddenly arrive faster than they had been arriving, Fadecandy will need to jump ahead in order to avoid falling behind.
+
+This keyframe interpolation is not intended as a substitute for other forms of animation control. It is intended to generate high-framerate video from a source that operates at typical video framerates.
 
 USB Protocol
 ------------
