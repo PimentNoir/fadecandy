@@ -36,6 +36,7 @@ template <unsigned tSize>
 struct fcPacketBuffer
 {
     usb_packet_t *packets[tSize];
+    uint32_t timestamp;
 
     fcPacketBuffer()
     {

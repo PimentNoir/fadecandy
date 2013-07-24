@@ -39,6 +39,29 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 static int8_t residual[CHANNELS_TOTAL];
 
 
+static uint32_t calculateInterpCoefficient()
+{
+    /*
+     * Calculate our interpolation coefficient. This is a value between
+     * 0x0000 and 0x10000, representing some point in between fbPrev and fbNext.
+     *
+     * We timestamp each frame at the moment its final packet has been received.
+     * In other words, fbNew has no valid timestamp yet, and fbPrev/fbNext both
+     * have timestamps in the recent past.
+     *
+     * fbNext's timestamp indicates when both fbPrev and fbNext entered their current
+     * position in the keyframe queue. The difference between fbPrev and fbNext indicate
+     * how long the interpolation between those keyframes should take.
+     */
+
+    uint32_t now = millis();
+    uint32_t tsPrev = buffers.fbPrev->timestamp;
+    uint32_t tsNext = buffers.fbNext->timestamp;
+
+    uint32_t scaled = ((now - tsNext) << 16) / (tsNext - tsPrev);
+    return std::min<uint32_t>(scaled, 0x10000);
+}
+
 ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_t arg)
 {
     /*
@@ -54,7 +77,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
-static inline uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
+static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
     const uint8_t *pixelPrev, const uint8_t *pixelNext,
     const uint16_t *lut, int8_t *pResidual)
 {
@@ -416,8 +439,7 @@ extern "C" int main()
 
     while (1) {
         buffers.handleUSB();
-
-        updateDrawBuffer((millis() << 4) & 0xFFFF);
+        updateDrawBuffer(calculateInterpCoefficient());
         leds.show();
 
         // Optionally disable dithering by clearing our residual buffer every frame.

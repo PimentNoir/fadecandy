@@ -59,5 +59,5 @@ while True:
 		#time.sleep(0.1)
 
 	print
-	time.sleep(2)
+	time.sleep(0.1)
 

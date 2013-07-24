@@ -86,6 +86,7 @@ void fcBuffers::handleUSB()
 void fcBuffers::finalizeFramebuffer()
 {
     fcFramebuffer *recycle = fbPrev;
+    fbNew->timestamp = millis();
     fbPrev = fbNext;
     fbNext = fbNew;
     fbNew = recycle;
