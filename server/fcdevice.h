@@ -22,16 +22,33 @@
  */
 
 #pragma once
+#include "rapidjson/document.h"
+#include "opcsink.h"
 #include <libusb.h>
 
 
 class FCDevice {
 public:
-    FCDevice(libusb_device *device);
+	typedef rapidjson::Value Value;
 
+    FCDevice(libusb_device *device, bool verbose = false);
+    ~FCDevice();
+
+    libusb_device *getDevice() { return mDevice; };
+    bool isFadecandy();
     int open();
 
+    // Valid after open():
+
+    const char *getSerial() { return mSerial; }
+    void setConfiguration(const Value *config);
+    void writeColorCorrection(const Value &color);
+    void writeMessage(const OPCSink::Message &msg);
+
 private:
+	bool mVerbose;
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
+    const Value *mConfig;
+    char mSerial[256];
 };

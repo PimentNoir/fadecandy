@@ -24,9 +24,11 @@
 #pragma once
 #include "rapidjson/document.h"
 #include "opcsink.h"
+#include "fcdevice.h"
 #include "libusbev.h"
 #include <libusb.h>
 #include <sstream>
+#include <vector>
 #include <ev.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -58,10 +60,13 @@ private:
     libusb_context *mUSB;
     LibUSBEventBridge mUSBEvent;
 
+    std::vector<FCDevice*> mFCDevices;
+
     static void cbMessage(OPCSink::Message &msg, void *context);
     static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
     void startUSB(struct ev_loop *loop);
     void usbDeviceArrived(libusb_device *device);
     void usbDeviceLeft(libusb_device *device);
+    const Value *matchFCDevice(const char *serial);
 };

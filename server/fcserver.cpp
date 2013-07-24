@@ -23,6 +23,7 @@
 
 #include "util.h"
 #include "fcserver.h"
+#include "fcdevice.h"
 #include <netdb.h>
 #include <ctype.h>
 #include <iostream>
@@ -70,6 +71,14 @@ FCServer::FCServer(rapidjson::Document &config)
 	} else {
 		mError << "The required 'listen' configuration key must be a [host, port] list.\n";
 	}
+
+	/*
+	 * Minimal validation on 'devices'
+	 */
+
+	if (!mDevices.IsArray()) {
+		mError << "The required 'devices' configuration key must be an array.\n";
+	}
 }
 
 FCServer::~FCServer()
@@ -108,9 +117,16 @@ void FCServer::startUSB(struct ev_loop *loop)
 
 void FCServer::cbMessage(OPCSink::Message &msg, void *context)
 {
+	/*
+	 * Broadcast the OPC message to all configured devices.
+	 */
+
 	FCServer *self = static_cast<FCServer*>(context);
 
-	printf("Msg %d bytes\n", msg.length());
+	for (std::vector<FCDevice*>::iterator i = self->mFCDevices.begin(), e = self->mFCDevices.end(); i != e; ++i) {
+		FCDevice *fcd = *i;
+		fcd->writeMessage(msg);
+	}
 }
 
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
@@ -129,10 +145,110 @@ int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotpl
 
 void FCServer::usbDeviceArrived(libusb_device *device)
 {
-	// New USB device. Is this a device we recognize?
+	/*
+	 * New USB device. Is this a device we recognize?
+     *
+	 * Right now we're only looking for FCDevices, but in the future
+	 * we can look for other types of USB devices here too.
+	 */
+
+	FCDevice *fcd = new FCDevice(device);
+	if (!fcd->isFadecandy()) {
+		// Not a recognized device.
+		delete fcd;
+		return;
+	}
+
+	int r = fcd->open();
+	if (r < 0) {
+		if (mVerbose) {
+			std::clog << "Error opening Fadecandy USB device: " << libusb_strerror(libusb_error(r)) << "\n";
+		}
+		delete fcd;
+		return;
+	}
+
+	// Look for a matching device in the JSON
+	const Value *fcjson = matchFCDevice(fcd->getSerial());
+
+	if (mVerbose) {
+		std::clog << "USB Fadecandy attached, serial: \"" << fcd->getSerial() << "\"";
+		if (fcjson) {
+			std::clog << " (configuration found)\n";
+		} else {
+			std::clog << " (not matched in config file)\n";
+		}
+	}
+
+	if (fcjson) {
+		// Store the configuration, use it for future messages
+		fcd->setConfiguration(fcjson);
+	} else {
+		delete fcd;
+		return;
+	}
+
+	// Send the default color lookup table
+	fcd->writeColorCorrection(mColor);
+
+	// Remember this device for later. It's now active, and we should broadcast messages to it.
+	mFCDevices.push_back(fcd);
 }
 
 void FCServer::usbDeviceLeft(libusb_device *device)
 {
-	
+	/*
+	 * Is this a device we recognize? If so, delete it.
+	 */
+
+	for (std::vector<FCDevice*>::iterator i = mFCDevices.begin(), e = mFCDevices.end(); i != e; ++i) {
+		FCDevice *fcd = *i;
+		if (fcd->getDevice() == device) {
+			if (mVerbose) {
+				std::clog << "USB Fadecandy removed, serial: \"" << fcd->getSerial() << "\"\n";
+			}
+			mFCDevices.erase(i);
+			delete fcd;
+			break;
+		}
+	}
+}
+
+const FCServer::Value *FCServer::matchFCDevice(const char *serial)
+{
+	/*
+	 * Look for a record in mDevices that matches a Fadecandy board with the given serial number.
+	 * Returns 0 if nothing matches.
+	 */
+
+	for (unsigned i = 0; i < mDevices.Size(); ++i) {
+		const Value &v = mDevices[i];
+		const Value &vtype = v["type"];
+		const Value &vserial = v["serial"];
+
+		if (!vtype.IsString() || strcmp(vtype.GetString(), "fadecandy")) {
+			// Wrong type
+			continue;
+		}
+
+		if (!vserial.IsNull()) {
+			// Not a wildcard serial number?
+			// If a serial was not specified, it matches any device.
+
+			if (!vserial.IsString()) {
+				// Non-string serial number. Bad form.
+				continue;
+			}
+
+			if (strcmp(vserial.GetString(), serial)) {
+				// Not a match
+				continue;
+			}
+		}
+
+		// Match
+		return &v;
+	}
+
+	return 0;
 }
