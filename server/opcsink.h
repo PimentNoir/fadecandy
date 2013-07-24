@@ -39,7 +39,7 @@ public:
         uint8_t lenLow;
         uint8_t data[0xFFFF];
 
-        unsigned length() {
+        unsigned length() const {
             return lenLow | (unsigned(lenHigh) << 8);
         }
     };

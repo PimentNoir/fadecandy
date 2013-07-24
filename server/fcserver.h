@@ -34,7 +34,8 @@
 #include <netdb.h>
 
 
-class FCServer {
+class FCServer
+{
 public:
     typedef rapidjson::Value Value;
 

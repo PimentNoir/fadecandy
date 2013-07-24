@@ -25,11 +25,14 @@
 #include "rapidjson/document.h"
 #include "opcsink.h"
 #include <libusb.h>
+#include <set>
 
 
-class FCDevice {
+class FCDevice
+{
 public:
 	typedef rapidjson::Value Value;
+	static const unsigned NUM_PIXELS = 512;
 
     FCDevice(libusb_device *device, bool verbose = false);
     ~FCDevice();
@@ -42,13 +45,52 @@ public:
 
     const char *getSerial() { return mSerial; }
     void setConfiguration(const Value *config);
-    void writeColorCorrection(const Value &color);
+
+ 	// High level OPC message entry point
     void writeMessage(const OPCSink::Message &msg);
 
+    // Write color LUT from parsed JSON
+	void writeColorCorrection(const Value &color);
+
+	// Write current frame contents
+	void writeFramebuffer();
+
+	// Framebuffer accessor
+	uint8_t *fbPixel(unsigned num) {
+		return &mFramebuffer[num / PIXELS_PER_PACKET].data[3 * (num % PIXELS_PER_PACKET)];
+	}
+ 
 private:
+	static const unsigned PIXELS_PER_PACKET = 21;
+	static const unsigned FRAMEBUFFER_PACKETS = 25;
+	static const unsigned OUT_ENDPOINT = 1;
+
+	static const uint8_t TYPE_FRAMEBUFFER = 0x00;
+	static const uint8_t TYPE_LUT = 0x40;
+	static const uint8_t TYPE_CONFIG = 0x80;
+	static const uint8_t FINAL = 0x20;
+
+	struct Packet {
+		uint8_t control;
+		uint8_t data[63];
+	};
+
+	struct Transfer {
+		Transfer(FCDevice *device, void *buffer, int length);
+		~Transfer();
+		libusb_transfer *transfer;
+		FCDevice *device;
+	};
+
 	bool mVerbose;
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
     const Value *mConfig;
+    std::set<Transfer*> mPending;
+
     char mSerial[256];
+    Packet mFramebuffer[FRAMEBUFFER_PACKETS];
+
+    void submitTransfer(Transfer *fct);
+    static void completeTransfer(struct libusb_transfer *transfer);
 };

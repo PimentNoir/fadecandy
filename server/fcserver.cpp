@@ -152,7 +152,7 @@ void FCServer::usbDeviceArrived(libusb_device *device)
 	 * we can look for other types of USB devices here too.
 	 */
 
-	FCDevice *fcd = new FCDevice(device);
+	FCDevice *fcd = new FCDevice(device, mVerbose);
 	if (!fcd->isFadecandy()) {
 		// Not a recognized device.
 		delete fcd;
