@@ -26,9 +26,7 @@ Vitals
 Color Processing
 ----------------
 
-The Fadecandy firmware maintains a color lookup table with 256 8-bit entries for each of the three color channels. The input values to this LUT are the 8-bit colorspace as used in the framebuffer's 24-bit pixel values. The outputs are a 48-bit color which acts as the input for Fadecandy's dithering algorithm.
-
-Why 48-bit color? In combination with our dithering algorithm, this gives a lot more color resolution, especially near the low end of the brightness range where stair-stepping and color shift can be most apparent.
+Fadecandy internally represents colors with 16 bits of precision per channel, or 48 bits per pixel. Why 48-bit color? In combination with our dithering algorithm, this gives a lot more color resolution. It's especially helpful near the low end of the brightness range, where stair-stepping and color *popping* artifacts can be most apparent.
 
 Each pixel goes through the following processing steps in Fadecandy:
 
