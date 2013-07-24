@@ -110,8 +110,8 @@ struct fcBuffers
 
     fcFramebuffer fb[3];        // Triple-buffered video frames
 
-    fcColorLUT lutNew;                   // Partial LUT, not yet finalized
-    uint16_t lutCurrent[LUT_SIZE + 1];   // Active LUT, linearized for efficiency, padded on the end.
+    fcColorLUT lutNew;                      // Partial LUT, not yet finalized
+    uint16_t lutCurrent[LUT_TOTAL_SIZE];    // Active LUT, linearized for efficiency
 
     uint8_t flags;              // Configuration flags
 

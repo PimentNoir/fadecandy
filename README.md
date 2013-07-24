@@ -10,7 +10,7 @@ This firmware is based on Stoffregen's excellent [OctoWS2811](http://www.pjrc.co
 * A high performance USB protocol
 * Zero copy architecture with triple-buffering
 * Interpolation between keyframes
-* Gamma and color correction with per-channel 256-entry lookup tables
+* Gamma and color correction with per-channel lookup tables
 * Temporal dithering
 
 These features add up to give *very smooth* fades and high dynamic range. Ever notice that annoying stair-stepping effect when fading LEDs from off to dim? Fadecandy avoids that using a form of [delta-sigma modulation](http://en.wikipedia.org/wiki/Delta-sigma_modulation). It rapidly wiggles each pixel's value up or down by one 8-bit step, in order to achieve 16-bit resolution for fades.
@@ -21,7 +21,7 @@ Vitals
 * 512 pixels supported per Teensy board (8 strings, 64 pixels per string)
 * Very high hardware frame rate (395 FPS) to support temporal dithering
 * Full-speed (12 Mbps) USB
-* 768-entry 16-bit color lookup table, for gamma correction and color balance
+* 257x3-entry 16-bit color lookup table, for gamma correction and color balance
 
 Color Processing
 ----------------
@@ -38,6 +38,8 @@ Each pixel goes through the following processing steps in Fadecandy:
 * The final 16-bit value is fed into our temporal dithering algorithm, which results in an 8-bit color
 * These 8-bit colors are converted to the format needed by OctoWS2811's DMA engine
 * In hardware, the converted colors are streamed out to eight LED strings in parallel
+
+The color lookup tables can be used to implement gamma correction, brightness and contrast, and white point correction. Each channel (RGB) has a 257 entry table. Each entry is a 16-bit intensity. Entry 0 corresponds to the 16-bit color 0x0000, entry 1 corresponds to 0x0100, etc. The 257th entry corresponds to 0x10000, which is just past the end of the 16-bit intensity space.
 
 Keyframe Interpolation
 ----------------------
@@ -142,7 +144,7 @@ Byte Offset   | Description
 62            | Pixel 20, Green
 63            | Pixel 20, Blue
 
-In a type 1 packet, the USB packet contains up to 31 lookup-table entries. The lookup table is structured as three arrays of 256 entries, starting with the entire red-channel LUT, then the green-channel LUT, then the blue-channel LUT. Each packet is structured as follows:
+In a type 1 packet, the USB packet contains up to 31 lookup-table entries. The lookup table is structured as three arrays of 257 entries, starting with the entire red-channel LUT, then the green-channel LUT, then the blue-channel LUT. Each packet is structured as follows:
 
 Byte Offset   | Description
 ------------- | ------------

@@ -106,10 +106,7 @@ void fcBuffers::finalizeLUT()
      * so this isn't a performance bottleneck.
      */
 
-    for (unsigned i = 0; i < LUT_SIZE; ++i) {
+    for (unsigned i = 0; i < LUT_TOTAL_SIZE; ++i) {
         lutCurrent[i] = lutNew.entry(i);
     }
-
-    // Padding, so that it's okay to read past the end during interpolation
-    lutCurrent[LUT_SIZE] = lutCurrent[LUT_SIZE - 1];
 }

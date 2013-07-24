@@ -75,6 +75,9 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
      * Using our color LUT for the indicated channel, convert the
      * 16-bit intensity "arg" in our input colorspace to a corresponding
      * 16-bit intensity in the device colorspace.
+     *
+     * Remember that our LUT is 257 entries long. The final entry corresponds to an
+     * input of 0x10000, which can't quite be reached.
      */
 
     unsigned index = arg >> 8;
@@ -102,9 +105,9 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
     int iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
 
     // Pass through our color LUT
-    iR = lutInterpolate(&lut[0 * 256], iR);
-    iG = lutInterpolate(&lut[1 * 256], iG);
-    iB = lutInterpolate(&lut[2 * 256], iB);
+    iR = lutInterpolate(&lut[0 * LUT_CH_SIZE], iR);
+    iG = lutInterpolate(&lut[1 * LUT_CH_SIZE], iG);
+    iB = lutInterpolate(&lut[2 * LUT_CH_SIZE], iB);
 
     // Incorporate the residual from last frame
     iR += pResidual[0];
