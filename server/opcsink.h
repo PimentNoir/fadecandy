@@ -22,35 +22,45 @@
  */
 
 #pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
-#include <sstream>
 #include <ev.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netdb.h>
 
 
-class FCServer {
+class OPCSink {
 public:
-    typedef rapidjson::Value Value;
+    struct Message
+    {
+        uint8_t channel;
+        uint8_t command;
+        uint8_t lenHigh;
+        uint8_t lenLow;
+        uint8_t data[0xFFFF];
 
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
+        unsigned length() {
+            return lenLow | (unsigned(lenHigh) << 8);
+        }
+    };
 
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
+    typedef void (*callback_t)(Message &msg, void *context);
 
-    void start(struct ev_loop *loop);
+    OPCSink(callback_t cb, void *context);
+    void start(struct ev_loop *loop, struct addrinfo *listenAddr);
 
 private:
-    std::ostringstream mError;
+    callback_t mCallback;
+    void *mContext;
+    struct ev_io mIOAccept;
 
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
+    struct Client {
+        struct ev_io ioRead;
+        Message buffer;
+        unsigned bufferPos;
+        OPCSink *self;
+    };
 
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
-
-    static void opcCallback(OPCSink::Message &msg, void *context);
+    static void cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents);
+    static void cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents);
 };

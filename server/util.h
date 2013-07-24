@@ -22,35 +22,9 @@
  */
 
 #pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
-#include <sstream>
-#include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
 
+#define offsetof(st, m) __builtin_offsetof(st, m)
 
-class FCServer {
-public:
-    typedef rapidjson::Value Value;
-
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
-
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
-
-    void start(struct ev_loop *loop);
-
-private:
-    std::ostringstream mError;
-
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
-
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
-
-    static void opcCallback(OPCSink::Message &msg, void *context);
-};
+#define container_of(ptr, type, member) ({ \
+    const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+    (type *)( (char *)__mptr - offsetof(type,member) );})

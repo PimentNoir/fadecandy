@@ -21,13 +21,71 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "util.h"
 #include "fcserver.h"
+#include <netdb.h>
+#include <ctype.h>
 
 
 FCServer::FCServer(rapidjson::Document &config)
+	: mListen(config["listen"]),
+	  mColor(config["color"]),
+	  mDevices(config["devices"]),
+	  mListenAddr(0),
+	  mOPCSink(opcCallback, this)
 {
+	/*
+	 * Parse the listen [host, port] list.
+	 */
+
+	if (mListen.IsArray() && mListen.Size() == 2) {
+		const Value &host = mListen[0u];
+		const Value &port = mListen[1];
+		const char *hostStr = 0;
+		std::ostringstream portStr;
+
+		if (host.IsString()) {
+			hostStr = host.GetString();
+		} else if (!host.IsNull()) {
+			mError << "Hostname in 'listen' must be null (any) or a hostname string.\n";
+		}
+
+		if (port.IsUint()) {
+			portStr << port.GetUint();
+		} else {
+			mError << "The 'listen' port must be an integer.\n";
+		}
+
+		struct addrinfo hints;
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = PF_UNSPEC;
+		hints.ai_flags = AI_PASSIVE;
+
+		if (getaddrinfo(hostStr, portStr.str().c_str(), &hints, &mListenAddr) || !mListenAddr) {
+			mError << "Failed to resolve hostname '" << host.GetString() << "'\n";
+		}
+	} else {
+		mError << "The required 'listen' configuration key must be a [host, port] list.\n";
+	}
 }
 
-void FCServer::run()
+FCServer::~FCServer()
 {
+	if (mListenAddr) {
+		freeaddrinfo(mListenAddr);
+	}
 }
+
+void FCServer::start(struct ev_loop *loop)
+{
+	mOPCSink.start(loop, mListenAddr);
+}
+
+
+void FCServer::opcCallback(OPCSink::Message &msg, void *context)
+{
+	FCServer *self = static_cast<FCServer*>(context);
+
+	printf("Msg %d bytes\n", msg.length());
+}
+

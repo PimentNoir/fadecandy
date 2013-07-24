@@ -68,3 +68,4 @@ Prerequisites
 The OPC server has been designed to work smoothly on Mac OS and Linux. With some work, it's possible to get it running on Windows.
 
 Requires [libusb 1.0](http://www.libusb.org/) or later.
+Requires [libev](http://software.schmorp.de/pkg/libev.html).

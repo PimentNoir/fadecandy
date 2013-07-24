@@ -26,6 +26,7 @@
 #include "rapidjson/filestream.h"
 #include "fcserver.h"
 #include <unistd.h>
+#include <signal.h>
 #include <cstdio>
 
 int main(int argc, char **argv)
@@ -64,6 +65,10 @@ int main(int argc, char **argv)
         return 5;
     }
 
-    server.run();
+    struct ev_loop *loop = EV_DEFAULT;
+    server.start(loop);
+    signal(SIGPIPE, SIG_IGN);
+    ev_run(loop, 0);
+
     return 0;
 }

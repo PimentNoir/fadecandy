@@ -2,7 +2,7 @@
 # Environment setup
 
 INCLUDES = -I/usr/local/include/libusb-1.0
-LIBS = -L/usr/local/lib -lm -lusb-1.0 -lstdc++
+LIBS = -L/usr/local/lib -lstdc++ -lm -lusb-1.0 -lev
 
 #######################################################
 
@@ -10,6 +10,7 @@ TARGET := fcserver
 
 CPP_FILES = \
 	main.cpp \
+	opcsink.cpp \
 	fcserver.cpp
 
 # CPPFLAGS = compiler options for C and C++
