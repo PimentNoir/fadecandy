@@ -39,7 +39,7 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 static int8_t residual[CHANNELS_TOTAL];
 
 
-static uint32_t calculateInterpCoefficient()
+static inline uint32_t calculateInterpCoefficient()
 {
     /*
      * Calculate our interpolation coefficient. This is a value between
@@ -62,9 +62,11 @@ static uint32_t calculateInterpCoefficient()
     uint32_t now = millis();
     uint32_t tsPrev = buffers.fbPrev->timestamp;
     uint32_t tsNext = buffers.fbNext->timestamp;
+    uint32_t tsDiff = tsNext - tsPrev;
+    uint32_t tsElapsed = now - tsNext;
 
-    uint32_t scaled = ((now - tsNext) << 16) / (tsNext - tsPrev);
-    return std::min<uint32_t>(scaled, 0x10000);
+    // Careful to avoid overflows if the frames stop coming...
+    return (std::min<uint32_t>(tsElapsed, tsDiff) << 16) / tsDiff;
 }
 
 ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_t arg)
@@ -444,8 +446,11 @@ extern "C" int main()
     leds.begin();
 
     while (1) {
+        uint32_t ic = calculateInterpCoefficient();
+
         buffers.handleUSB();
-        updateDrawBuffer(calculateInterpCoefficient());
+
+        updateDrawBuffer(ic);
         leds.show();
 
         // Optionally disable dithering by clearing our residual buffer every frame.
