@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Glue for using libusb with libev
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -22,13 +22,28 @@
  */
 
 #pragma once
+#include <ev.h>
+#include <libusb.h>
+#include <map>
 
-#ifndef offsetof
-#  define offsetof(st, m) __builtin_offsetof(st, m)
-#endif
+class LibUSBEventBridge
+{
+public:
 
-#ifndef container_of
-#  define container_of(ptr, type, member) ({ \
-     const typeof( ((type *)0)->member ) *__mptr = (ptr); \
-     (type *)( (char *)__mptr - offsetof(type,member) );})
-#endif
+    // Call after libusb_init
+    void init(struct libusb_context *ctx, struct ev_loop *loop);
+
+private:
+    struct Watcher {
+        ev_io io;
+        LibUSBEventBridge *self;
+    };
+
+    struct libusb_context *mCtx;
+    struct ev_loop *mLoop;
+    std::map<int, Watcher*> mWatchers;
+
+    static void cbEvent(struct ev_loop *loop, ev_io *io, int revents);
+    static void cbAdded(int fd, short events, void *user_data);
+    static void cbRemoved(int fd, void *user_data);
+};

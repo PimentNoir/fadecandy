@@ -24,6 +24,8 @@
 #pragma once
 #include "rapidjson/document.h"
 #include "opcsink.h"
+#include "libusbev.h"
+#include <libusb.h>
 #include <sstream>
 #include <ev.h>
 #include <netinet/in.h>
@@ -53,5 +55,9 @@ private:
     struct addrinfo *mListenAddr;
     OPCSink mOPCSink;
 
+    libusb_context *mUSB;
+    LibUSBEventBridge mUSBEvent;
+
     static void opcCallback(OPCSink::Message &msg, void *context);
+    void startUSB(struct ev_loop *loop);
 };

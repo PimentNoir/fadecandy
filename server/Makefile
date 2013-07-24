@@ -11,6 +11,7 @@ TARGET := fcserver
 CPP_FILES = \
 	main.cpp \
 	opcsink.cpp \
+	libusbev.cpp \
 	fcserver.cpp
 
 # CPPFLAGS = compiler options for C and C++

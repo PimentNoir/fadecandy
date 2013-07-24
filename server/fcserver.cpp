@@ -34,7 +34,8 @@ FCServer::FCServer(rapidjson::Document &config)
 	  mDevices(config["devices"]),
 	  mVerbose(config["verbose"].IsTrue()),
 	  mListenAddr(0),
-	  mOPCSink(opcCallback, this, mVerbose)
+	  mOPCSink(opcCallback, this, mVerbose),
+	  mUSB(0)
 {
 	/*
 	 * Parse the listen [host, port] list.
@@ -81,6 +82,17 @@ FCServer::~FCServer()
 void FCServer::start(struct ev_loop *loop)
 {
 	mOPCSink.start(loop, mListenAddr);
+	startUSB(loop);
+}
+
+void FCServer::startUSB(struct ev_loop *loop)
+{	
+	if (libusb_init(&mUSB)) {
+		std::clog << "Error initializing USB library!\n";
+		return;
+	}
+
+	mUSBEvent.init(mUSB, loop);
 }
 
 void FCServer::opcCallback(OPCSink::Message &msg, void *context)
