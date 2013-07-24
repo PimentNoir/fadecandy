@@ -47,6 +47,7 @@ Teensy 3.0 Pin | Function
 21             | Led strip #7
 5              | Led strip #8
 15 & 16        | Connect together
+13 (LED)       | Built-in LED blinks when data is received over USB
 
 Remember that each strip may be up to 64 LEDs long. It's fine to have shorter strips or to leave some outputs unused. These outputs are 3.3V logic signals at 800 kilobits per second. It usually works to connect them directly to the 5V inputs of your WS2811 LED strips, but for the best signal integrity you should really use a level-shifting buffer to convert the 3.3V logic to 5V.
 

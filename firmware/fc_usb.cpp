@@ -44,11 +44,14 @@ void fcBuffers::handleUSB()
      * which we hold until a new packet arrives to replace them.
      */
 
+    bool handledAnyPackets = false;
+
     while (1) {
         usb_packet_t *packet = usb_rx(FC_OUT_ENDPOINT);
         if (!packet) {
-            return;
+            break;
         }
+        handledAnyPackets = true;
 
         unsigned control = packet->buf[0];
         unsigned type = control & TYPE_BITS;
@@ -81,6 +84,9 @@ void fcBuffers::handleUSB()
                 break;
         }
     }
+
+    // Use the built-in LED as a USB activity indicator.
+    digitalWrite(LED_BUILTIN, handledAnyPackets);
 }
 
 void fcBuffers::finalizeFramebuffer()

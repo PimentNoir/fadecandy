@@ -435,6 +435,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
 
 extern "C" int main()
 {
+    pinMode(LED_BUILTIN, OUTPUT);
     leds.begin();
 
     while (1) {
