@@ -208,6 +208,7 @@ void FCDevice::writeColorCorrection(const Value &color)
 
 	Packet *packet = mColorLUT;
 	unsigned byteOffset = 2;
+
 	for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
 		for (unsigned channel = 0; channel < 3; channel++) {
 
@@ -250,9 +251,61 @@ void FCDevice::writeFramebuffer()
 
 void FCDevice::writeMessage(const OPCSink::Message &msg)
 {
-	if (mVerbose) {
-		std::clog << "msg " << msg.length() << "\n";
+	/*
+	 * Dispatch an incoming OPC command
+	 */
+
+	switch (msg.command) {
+
+		case OPCSink::SetPixelColors:
+			opcSetPixelColors(msg);
+			writeFramebuffer();
+			return;
+
+		case OPCSink::SetGlobalColorCorrection:
+			opcSetGlobalColorCorrection(msg);
+			return;
 	}
 
-	writeFramebuffer();
+	if (mVerbose) {
+		std::clog << "Unsupported OPC command: " << msg.command << "\n";
+	}
 }
+
+void FCDevice::opcSetPixelColors(const OPCSink::Message &msg)
+{
+	/*
+	 * Parse through our device's mapping, and store any relevant portions of 'msg'
+	 * in the framebuffer.
+	 */
+}
+
+void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
+{
+	/*
+	 * Parse the message as JSON text, and if successful, write new
+	 * color correction data to the device.
+	 */
+
+	// Mutable NUL-terminated copy of the message string
+	std::string text((char*)msg.data, msg.length());
+
+	// Parse it in-place
+	rapidjson::Document doc;
+	doc.ParseInsitu<0>(&text[0]);
+
+	if (doc.HasParseError()) {
+		if (mVerbose) {
+			std::clog << "Parse error in color correction JSON at character "
+				<< doc.GetErrorOffset() << ": " << doc.GetParseError() << "\n";
+		}
+		return;
+    }
+
+    /*
+     * Successfully parsed the JSON. From here, it's handled identically to
+     * objects that come through the config file.
+     */
+    writeColorCorrection(doc);
+}
+

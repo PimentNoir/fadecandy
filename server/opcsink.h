@@ -31,6 +31,11 @@
 
 class OPCSink {
 public:
+    enum Command {
+        SetPixelColors = 0x00,
+        SetGlobalColorCorrection = 0xF0,
+    };
+
     struct Message
     {
         uint8_t channel;

@@ -59,7 +59,6 @@ public:
 	uint8_t *fbPixel(unsigned num) {
 		return &mFramebuffer[num / PIXELS_PER_PACKET].data[3 * (num % PIXELS_PER_PACKET)];
 	}
-
  
 private:
 	static const unsigned PIXELS_PER_PACKET = 21;
@@ -98,4 +97,7 @@ private:
 
     void submitTransfer(Transfer *fct);
     static void completeTransfer(struct libusb_transfer *transfer);
+
+    void opcSetPixelColors(const OPCSink::Message &msg);
+    void opcSetGlobalColorCorrection(const OPCSink::Message &msg);
 };
