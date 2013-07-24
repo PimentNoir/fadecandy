@@ -33,14 +33,17 @@ for index in range(25):
 	lut[index*64] = index | 0x40
 lut[24*64] |= 0x20
 for channel in range(3):
-	for row in range(256):
-		value = int(pow(row / 256.0, 2.2) * 0x10000)
-		i = (channel << 8) + row
+	for row in range(257):
+		value = min(0xFFFF, int(pow(row / 256.0, 2.2) * 0x10000))
+		i = channel * 257 + row
 		packetNum = i / 31
 		packetIndex = i % 31
+		#print "%d, %d = 0x%04x" % (channel, row, value)
 		lut[packetNum*64 + 2 + packetIndex*2] = value & 0xFF
 		lut[packetNum*64 + 3 + packetIndex*2] = value >> 8
-dev.write(1, ''.join(map(chr, lut)))
+lutPackets = ''.join(map(chr, lut))
+#print binascii.b2a_hex(lutPackets)
+dev.write(1, lutPackets)
 print "LUT programmed"
 
 # Slowly push random frames to the device
@@ -54,7 +57,7 @@ while True:
 		else:
 			control = index
 
-		data = chr(control) + ''.join(chr(random.randrange(256)) for i in range(63))
+		data = chr(control) + ''.join(chr(random.choice([0, 255])) for i in range(63))
 		dev.write(1, data)
 		#print binascii.b2a_hex(data)
 
