@@ -34,7 +34,7 @@ FCServer::FCServer(rapidjson::Document &config)
 	  mDevices(config["devices"]),
 	  mVerbose(config["verbose"].IsTrue()),
 	  mListenAddr(0),
-	  mOPCSink(opcCallback, this, mVerbose),
+	  mOPCSink(cbMessage, this, mVerbose),
 	  mUSB(0)
 {
 	/*
@@ -92,13 +92,34 @@ void FCServer::startUSB(struct ev_loop *loop)
 		return;
 	}
 
+	// Attach to our libev event loop
 	mUSBEvent.init(mUSB, loop);
+
+	// Enumerate all attached devices, and get notified of hotplug events
+	libusb_hotplug_register_callback(mUSB,
+		libusb_hotplug_event(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
+				             LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+		LIBUSB_HOTPLUG_ENUMERATE,
+		LIBUSB_HOTPLUG_MATCH_ANY,
+		LIBUSB_HOTPLUG_MATCH_ANY,
+		LIBUSB_HOTPLUG_MATCH_ANY,
+		cbHotplug, this, 0);
 }
 
-void FCServer::opcCallback(OPCSink::Message &msg, void *context)
+void FCServer::cbMessage(OPCSink::Message &msg, void *context)
 {
 	FCServer *self = static_cast<FCServer*>(context);
 
 	printf("Msg %d bytes\n", msg.length());
 }
+
+int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
+{
+	FCServer *self = static_cast<FCServer*>(user_data);
+
+	printf("Hotplug %d\n", event);
+
+	return false;
+}
+
 

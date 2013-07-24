@@ -42,6 +42,7 @@ void LibUSBEventBridge::cbAdded(int fd, short events, void *user_data)
 	LibUSBEventBridge *self = static_cast<LibUSBEventBridge*>(user_data);
 	Watcher *w = new Watcher();
 
+	w->self = self;
 	ev_io_init(&w->io, cbEvent, fd,
 		((events & POLLIN) ? EV_READ : 0) |
 		((events & POLLOUT) ? EV_WRITE : 0));

@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Fadecandy device interface
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -21,45 +21,4 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
-#include "libusbev.h"
-#include <libusb.h>
-#include <sstream>
-#include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-
-class FCServer {
-public:
-    typedef rapidjson::Value Value;
-
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
-
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
-
-    void start(struct ev_loop *loop);
-
-private:
-    std::ostringstream mError;
-
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
-    bool mVerbose;
-
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
-
-    libusb_context *mUSB;
-    LibUSBEventBridge mUSBEvent;
-
-    static void cbMessage(OPCSink::Message &msg, void *context);
-    static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-
-    void startUSB(struct ev_loop *loop);
-};
+#include "fcdevice.h"

@@ -12,6 +12,7 @@ CPP_FILES = \
 	main.cpp \
 	opcsink.cpp \
 	libusbev.cpp \
+	fcdevice.cpp \
 	fcserver.cpp
 
 # CPPFLAGS = compiler options for C and C++
