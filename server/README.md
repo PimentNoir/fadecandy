@@ -1,8 +1,6 @@
 Open Pixel Control Server
 =========================
 
-**WORK IN PROGRESS. NOT USABLE YET.**
-
 The Fadecandy OPC Server is a daemon which glues one or more [Open Pixel Control](http://openpixelcontrol.org) clients to one or more supported hardware devices.
 
 Clients include:
@@ -13,7 +11,7 @@ Clients include:
 Supported hardware devices:
 
 * Any number of Fadecandy boards, hot-pluggable via USB.
-* [Enttec DMX USB Pro](http://www.enttec.com/?main_menu=Products&pn=70304) or compatible.
+* To do: [Enttec DMX USB Pro](http://www.enttec.com/?main_menu=Products&pn=70304) or compatible.
 
 OPC Commands
 ------------
