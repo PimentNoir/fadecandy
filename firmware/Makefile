@@ -77,4 +77,4 @@ install: $(TARGET).hex
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
 
-.PHONY: clean install objdump
+.PHONY: all clean install objdump
