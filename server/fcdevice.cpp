@@ -43,7 +43,7 @@ FCDevice::FCDevice(libusb_device *device, bool verbose)
 	: mVerbose(verbose),
 	  mDevice(libusb_ref_device(device)),
 	  mHandle(0),
-	  mConfig(0)
+	  mConfigMap(0)
 {
 	mSerial[0] = '\0';
 
@@ -117,9 +117,29 @@ int FCDevice::open()
 	return libusb_get_string_descriptor_ascii(mHandle, dd.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
 }
 
-void FCDevice::setConfiguration(const Value *config)
+void FCDevice::setConfiguration(const Value &config)
 {
-	mConfig = config;
+	/*
+	 * Parse out the portions of our JSON configuration document which matter to us.
+	 */
+
+	if (!config.IsObject()) {
+		if (mVerbose) {
+			std::clog << "Device configuration must be a JSON dictionary object!\n";
+		}
+		return;
+	}
+
+	const Value &map = config["map"];
+	if (map.IsArray()) {
+		// The map is optional, but if it exists it needs to be an array.
+		mConfigMap = &map;
+	} else {
+		mConfigMap = 0;
+		if (!map.IsNull() && mVerbose) {
+			std::clog << "Device configuration 'map' must be an array.\n";
+		}
+	}
 }
 
 void FCDevice::submitTransfer(Transfer *fct)
@@ -280,7 +300,76 @@ void FCDevice::opcSetPixelColors(const OPCSink::Message &msg)
 	 * Parse through our device's mapping, and store any relevant portions of 'msg'
 	 * in the framebuffer.
 	 */
+
+	if (!mConfigMap) {
+		// No mapping defined yet. This device is inactive.
+		return;
+	}
+
+	const Value &map = *mConfigMap;
+	for (unsigned i = 0, e = map.Size(); i != e; i++) {
+		opcMapPixelColors(msg, map[i]);
+	}
 }
+
+void FCDevice::opcMapPixelColors(const OPCSink::Message &msg, const Value &inst)
+{
+	/*
+	 * Parse one JSON mapping instruction, and copy any relevant parts of 'msg'
+	 * into our framebuffer. This looks for any mapping instructions that we
+	 * recognize:
+	 *
+     *   [ OPC Channel, First OPC Pixel, First output pixel, pixel count ]
+	 */
+
+    unsigned msgPixelCount = msg.length() / 3;
+
+    if (inst.IsArray() && inst.Size() == 4) {
+    	// Map a range from an OPC channel to our framebuffer
+
+    	const Value &vChannel = inst[0u];
+    	const Value &vFirstOPC = inst[1];
+    	const Value &vFirstOut = inst[2];
+    	const Value &vCount = inst[3];
+
+    	if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsUint()) {
+    		unsigned channel = vChannel.GetUint();
+    		unsigned firstOPC = vFirstOPC.GetUint();
+    		unsigned firstOut = vFirstOut.GetUint();
+    		unsigned count = vCount.GetUint();
+
+    		if (channel != msg.channel) {
+    			return;
+    		}
+
+    		// Clamping, overflow-safe
+    		firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
+    		firstOut = std::min<unsigned>(firstOut, unsigned(NUM_PIXELS));
+    		count = std::min<unsigned>(count, msgPixelCount - firstOPC);
+    		count = std::min<unsigned>(count, NUM_PIXELS - firstOut);
+
+    		// Copy pixels
+    		const uint8_t *inPtr = msg.data + (firstOPC * 3);
+    		unsigned outIndex = firstOut;
+
+   			while (count--) {
+   				uint8_t *outPtr = fbPixel(outIndex++);
+   				outPtr[0] = inPtr[0];
+   				outPtr[1] = inPtr[1];
+   				outPtr[2] = inPtr[2];
+   				inPtr += 3;
+   			}
+
+   			return;
+    	}
+	}
+
+	// Still haven't found a match?
+    if (mVerbose) {
+    	std::clog << "Unsupported JSON mapping instruction\n";
+    }
+}
+
 
 void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
 {

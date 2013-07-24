@@ -44,7 +44,7 @@ public:
     // Valid after open():
 
     const char *getSerial() { return mSerial; }
-    void setConfiguration(const Value *config);
+    void setConfiguration(const Value &config);
 
  	// High level OPC message entry point
     void writeMessage(const OPCSink::Message &msg);
@@ -88,7 +88,7 @@ private:
 	bool mVerbose;
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
-    const Value *mConfig;
+    const Value *mConfigMap;
     std::set<Transfer*> mPending;
 
     char mSerial[256];
@@ -100,4 +100,5 @@ private:
 
     void opcSetPixelColors(const OPCSink::Message &msg);
     void opcSetGlobalColorCorrection(const OPCSink::Message &msg);
+    void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);
 };

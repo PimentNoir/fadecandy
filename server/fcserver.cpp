@@ -182,7 +182,7 @@ void FCServer::usbDeviceArrived(libusb_device *device)
 
 	if (fcjson) {
 		// Store the configuration, use it for future messages
-		fcd->setConfiguration(fcjson);
+		fcd->setConfiguration(*fcjson);
 	} else {
 		delete fcd;
 		return;
