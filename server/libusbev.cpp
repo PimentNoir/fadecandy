@@ -57,6 +57,7 @@ void LibUSBEventBridge::cbRemoved(int fd, void *user_data)
 	Watcher *w = self->mWatchers[fd];
 
 	ev_io_stop(self->mLoop, &w->io);
+	delete w;
 	self->mWatchers.erase(fd);
 }
 
