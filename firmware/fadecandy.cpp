@@ -446,11 +446,8 @@ extern "C" int main()
     leds.begin();
 
     while (1) {
-        uint32_t ic = calculateInterpCoefficient();
-
         buffers.handleUSB();
-
-        updateDrawBuffer(ic);
+        updateDrawBuffer(calculateInterpCoefficient());
         leds.show();
 
         // Optionally disable dithering by clearing our residual buffer every frame.
