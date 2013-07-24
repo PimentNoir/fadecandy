@@ -152,7 +152,7 @@ void FCDevice::submitTransfer(Transfer *fct)
 	int r = libusb_submit_transfer(fct->transfer);
 
 	if (r < 0) {
-		if (mVerbose) {
+		if (mVerbose && r != LIBUSB_ERROR_PIPE) {
 			std::clog << "Error submitting USB transfer: " << libusb_strerror(libusb_error(r)) << "\n";
 		}
 		delete fct;
