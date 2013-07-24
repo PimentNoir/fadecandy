@@ -135,12 +135,15 @@ Byte Offset   | Description
 62            | LUT entry #30, low byte
 63            | LUT entry #30, high byte
 
-A type 2 packet sets optional device-wide configuration settings. Right now it's just used to disable dithering for debug or side-by-side comparison purposes. Other bytes in this packet are reserved.
+A type 2 packet sets optional device-wide configuration settings:
 
-Byte Offset   | Description
-------------- | ------------
-0             | Control byte
-1             | Flags. Bit 0: Disable dithering
+Byte Offset | Bits   | Description
+----------- | ------ | ------------
+0           | 7 … 0  | Control byte
+1           | 7 … 2  | (reserved)
+1           | 1      | Disable keyframe interpolation
+1           | 0      | Disable dithering
+2 … 63      | 7 … 0  | (reserved)
 
 
 Contact

@@ -95,6 +95,7 @@ struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
  */
 
 #define CFLAG_NO_DITHERING      (1 << 0)
+#define CFLAG_NO_INTERPOLATION  (1 << 1)
 
 
 /*

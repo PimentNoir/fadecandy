@@ -54,6 +54,11 @@ static uint32_t calculateInterpCoefficient()
      * how long the interpolation between those keyframes should take.
      */
 
+    if (buffers.flags & CFLAG_NO_INTERPOLATION) {
+        // Always use fbNext
+        return 0x10000;
+    }
+
     uint32_t now = millis();
     uint32_t tsPrev = buffers.fbPrev->timestamp;
     uint32_t tsNext = buffers.fbNext->timestamp;
