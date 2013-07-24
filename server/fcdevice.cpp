@@ -207,10 +207,11 @@ void FCDevice::writeColorCorrection(const Value &color)
 	 */
 
 	Packet *packet = mColorLUT;
-	unsigned byteOffset = 2;
+	const unsigned firstByteOffset = 1;	 // Skip padding byte
+	unsigned byteOffset = firstByteOffset;
 
-	for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
-		for (unsigned channel = 0; channel < 3; channel++) {
+	for (unsigned channel = 0; channel < 3; channel++) {
+		for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
 
 			/*
 			 * Normalized input value corresponding to this LUT entry.
@@ -230,7 +231,8 @@ void FCDevice::writeColorCorrection(const Value &color)
 			packet->data[byteOffset++] = uint8_t(intValue);
 			packet->data[byteOffset++] = uint8_t(intValue >> 8);
 			if (byteOffset >= sizeof packet->data) {
-				byteOffset = 2;
+				byteOffset = firstByteOffset;
+				packet++;
 			}
 		}
 	}
