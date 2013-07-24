@@ -37,6 +37,7 @@ The following example config file supports two Fadecandy devices with distinct s
 
 	{
 		"listen": ["127.0.0.1", 7890],
+		"verbose": true,
 
 		"color": {
 			"gamma": 2.5,

@@ -26,10 +26,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <iostream>
 
 
-OPCSink::OPCSink(callback_t cb, void *context)
-    : mCallback(cb), mContext(context) {}
+OPCSink::OPCSink(callback_t cb, void *context, bool verbose)
+    : mVerbose(verbose), mCallback(cb), mContext(context) {}
 
 void OPCSink::start(struct ev_loop *loop, struct addrinfo *listenAddr)
 {
@@ -52,6 +54,11 @@ void OPCSink::start(struct ev_loop *loop, struct addrinfo *listenAddr)
     // Get a callback when we're ready to accept a new connection
     ev_io_init(&mIOAccept, cbAccept, sock, EV_READ);
     ev_io_start(loop, &mIOAccept);
+
+    if (mVerbose) {
+        struct sockaddr_in *sin = (struct sockaddr_in*) listenAddr->ai_addr;
+        std::clog << "Listening on " << inet_ntoa(sin->sin_addr) << ":" << ntohs(sin->sin_port) << "\n";
+    }
 }
 
 void OPCSink::cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents)
@@ -72,6 +79,10 @@ void OPCSink::cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
     ev_io_init(&cli->ioRead, cbRead, sock, EV_READ);
     ev_io_start(loop, &cli->ioRead);
+
+    if (self->mVerbose) {
+        std::clog << "Client connected from " << inet_ntoa(clientAddr.sin_addr) << "\n";
+    }
 }
 
 void OPCSink::cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents)
@@ -89,6 +100,11 @@ void OPCSink::cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
     if (r == 0) {
         // Client disconnecting
+
+        if (self->mVerbose) {
+            std::clog << "Client disconnected\n";
+        }
+
         ev_io_stop(loop, watcher);
         delete cli;
         return;

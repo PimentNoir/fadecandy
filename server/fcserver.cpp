@@ -25,14 +25,16 @@
 #include "fcserver.h"
 #include <netdb.h>
 #include <ctype.h>
+#include <iostream>
 
 
 FCServer::FCServer(rapidjson::Document &config)
 	: mListen(config["listen"]),
 	  mColor(config["color"]),
 	  mDevices(config["devices"]),
+	  mVerbose(config["verbose"].IsTrue()),
 	  mListenAddr(0),
-	  mOPCSink(opcCallback, this)
+	  mOPCSink(opcCallback, this, mVerbose)
 {
 	/*
 	 * Parse the listen [host, port] list.
@@ -80,7 +82,6 @@ void FCServer::start(struct ev_loop *loop)
 {
 	mOPCSink.start(loop, mListenAddr);
 }
-
 
 void FCServer::opcCallback(OPCSink::Message &msg, void *context)
 {

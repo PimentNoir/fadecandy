@@ -46,10 +46,11 @@ public:
 
     typedef void (*callback_t)(Message &msg, void *context);
 
-    OPCSink(callback_t cb, void *context);
+    OPCSink(callback_t cb, void *context, bool verbose = false);
     void start(struct ev_loop *loop, struct addrinfo *listenAddr);
 
 private:
+    bool mVerbose;
     callback_t mCallback;
     void *mContext;
     struct ev_io mIOAccept;

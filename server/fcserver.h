@@ -48,6 +48,7 @@ private:
     const Value& mListen;
     const Value& mColor;
     const Value& mDevices;
+    bool mVerbose;
 
     struct addrinfo *mListenAddr;
     OPCSink mOPCSink;
