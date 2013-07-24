@@ -68,5 +68,19 @@ Prerequisites
 
 The OPC server has been designed to work smoothly on Mac OS and Linux. With some work, it's possible to get it running on Windows.
 
-Requires [libusb 1.0](http://www.libusb.org/) or later.
-Requires [libev](http://software.schmorp.de/pkg/libev.html).
+* Requires [libusbx](https://github.com/libusbx/libusbx) version 1.0.16 or later.
+* Requires [libev](http://software.schmorp.de/pkg/libev.html).
+
+On Mac OS, the required packages are easy to install with [Homebrew](http://brew.sh/):
+
+	$ brew install libusbx libev
+
+On Debian or Ubuntu Linux, libev can be installed with apt-get, but currently you must compile libusbx yourself:
+
+	$ sudo apt-get install libev libtool autoconf automake libudev-dev
+	$ git clone https://github.com/libusbx/libusbx.git
+	$ cd libusbx
+	$ ./autogen.sh
+	$ ./configure
+	$ make
+	$ sudo make install
