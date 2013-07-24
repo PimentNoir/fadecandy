@@ -21,13 +21,21 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "fcserver.h"
+#pragma once
+#include "rapidjson/document.h"
+#include <sstream>
 
 
-FCServer::FCServer(rapidjson::Document &config)
-{
-}
+class FCServer {
+public:
+    typedef rapidjson::Value Value;
 
-void FCServer::run()
-{
-}
+    FCServer(rapidjson::Document &config);
+
+    const char *errorText() const { return mError.str().c_str(); }
+    bool hasError() const { return !mError.str().empty(); }
+    void run();
+
+private:
+    std::ostringstream mError;
+};

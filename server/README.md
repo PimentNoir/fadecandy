@@ -1,7 +1,7 @@
 Open Pixel Control Server
 =========================
 
-The Fadecandy OPC Server is a daemon which glues one or more OPC clients to one or more supported hardware devices.
+The Fadecandy OPC Server is a daemon which glues one or more [Open Pixel Control](http://openpixelcontrol.org) clients to one or more supported hardware devices.
 
 Clients include:
 
@@ -34,31 +34,31 @@ The JSON configuration file is a dictionary which contains global configuration 
 The following example config file supports two Fadecandy devices with distinct serial numbers. They both receive data from OPC channel #0. The first 512 pixels map to the first Fadecandy device. The next 64 pixels map to the entire first strand of the second Fadecandy device, and the next 32 pixels map to the beginning of the third strand.
 
 	{
-		'listen': ['127.0.0.1', 7890],
+		"listen": ["127.0.0.1", 7890],
 
-		'color': {
-			'gamma': 2.5,
-			'whitepoint': [0.98, 1.0, 1.0]
+		"color": {
+			"gamma": 2.5,
+			"whitepoint": [0.98, 1.0, 1.0]
 		},
 
-		'devices': {
+		"devices": [
 			{
-				'type': 'fadecandy',
-				'serial': 'FFFFFFFFFFFF00180017200214134D44',
-				'map': [
+				"type": "fadecandy",
+				"serial": "FFFFFFFFFFFF00180017200214134D44",
+				"map": [
 					[ 0, 0, 0, 512 ]
 				]
 			},
 			{
-				'type': 'fadecandy',
-				'serial': 'FFFFFFFFFFFF0021003B200314134D44',
-				'map': [
+				"type": "fadecandy",
+				"serial": "FFFFFFFFFFFF0021003B200314134D44",
+				"map": [
 					[ 0, 512, 0, 64 ],
 					[ 0, 576, 128, 32 ]
 				]
 			}
-		}
-	]
+		]
+	}
 
 Prerequisites
 -------------

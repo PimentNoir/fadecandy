@@ -21,13 +21,49 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "rapidjson/document.h"
+#include "rapidjson/reader.h"
+#include "rapidjson/filestream.h"
 #include "fcserver.h"
+#include <unistd.h>
+#include <cstdio>
 
-
-FCServer::FCServer(rapidjson::Document &config)
+int main(int argc, char **argv)
 {
-}
+    if (argc != 2) {
+        fprintf(stderr,
+            "\n"
+            "Fadecandy Open Pixel Control server\n"
+            "\n"
+            "usage: fcserver <config.json>\n"
+            "\n"
+            "Copyright (c) 2013 Micah Elizabeth Scott <micah@scanlime.org>\n"
+            "https://github.com/scanlime/fadecandy\n"
+            "\n");
+        return 1;
+    }
 
-void FCServer::run()
-{
+    FILE *configFile = fopen(argv[1], "r");
+    if (!configFile) {
+        perror("Error opening config file");
+        return 2;
+    }
+
+    rapidjson::FileStream istr(configFile);
+    rapidjson::Document config;
+    config.ParseStream<0>(istr);
+    if (config.HasParseError()) {
+        fprintf(stderr, "Parse error at character %ld: %s\n",
+            config.GetErrorOffset(), config.GetParseError());
+        return 3;
+    }
+
+    FCServer server(config);
+    if (server.hasError()) {
+        fprintf(stderr, "Configuration errors:\n%s", server.errorText());
+        return 5;
+    }
+
+    server.run();
+    return 0;
 }
