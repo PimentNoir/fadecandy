@@ -65,7 +65,7 @@ For more information, see the [Server README](https://github.com/scanlime/fadeca
 Prerequisites
 -------------
 
-* To install a firmware image, you'l need the Teensy Loader: <http://www.pjrc.com/teensy/loader.html>
+* To install a firmware image, you'll need the Teensy Loader: <http://www.pjrc.com/teensy/loader.html>
 * To recompile the firmware, please use the recommended ARM toolchain from <https://code.launchpad.net/gcc-arm-embedded>
 
 Pin Assignment
