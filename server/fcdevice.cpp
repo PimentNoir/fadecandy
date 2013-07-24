@@ -22,6 +22,7 @@
  */
 
 #include "fcdevice.h"
+#include <math.h>
 #include <iostream>
 
 
@@ -45,13 +46,20 @@ FCDevice::FCDevice(libusb_device *device, bool verbose)
 	  mConfig(0)
 {
 	mSerial[0] = '\0';
-	memset(mFramebuffer, 0, sizeof mFramebuffer);
 
 	// Framebuffer headers
+	memset(mFramebuffer, 0, sizeof mFramebuffer);
 	for (unsigned i = 0; i < FRAMEBUFFER_PACKETS; ++i) {
 		mFramebuffer[i].control = TYPE_FRAMEBUFFER | i;
 	}
 	mFramebuffer[FRAMEBUFFER_PACKETS - 1].control |= FINAL;
+
+	// Color LUT headers
+	memset(mColorLUT, 0, sizeof mColorLUT);
+	for (unsigned i = 0; i < LUT_PACKETS; ++i) {
+		mColorLUT[i].control = TYPE_LUT | i;
+	}
+	mColorLUT[LUT_PACKETS - 1].control |= FINAL;
 }
 
 FCDevice::~FCDevice()
@@ -152,6 +160,82 @@ void FCDevice::completeTransfer(struct libusb_transfer *transfer)
 
 void FCDevice::writeColorCorrection(const Value &color)
 {
+	/*
+	 * Populate the color correction table based on a JSON configuration object,
+	 * and send the new color LUT out over USB.
+	 *
+	 * 'color' may be 'null' to load an identity-mapped LUT, or it may be
+	 * a dictionary of options including 'gamma' and 'whitepoint'.
+	 */
+
+	// Default color LUT parameters
+	double gamma = 1.0;
+	double whitepoint[3] = {1.0, 1.0, 1.0};
+
+	/*
+	 * Parse the JSON object
+	 */
+
+	if (color.IsObject()) {
+		const Value &vGamma = color["gamma"];
+		const Value &vWhitepoint = color["whitepoint"];
+
+		if (vGamma.IsNumber()) {
+			gamma = vGamma.GetDouble();
+		} else if (!vGamma.IsNull() && mVerbose) {
+			std::clog << "Gamma value must be a number.\n";
+		}
+
+		if (vWhitepoint.IsArray() &&
+			vWhitepoint.Size() == 3 &&
+			vWhitepoint[0u].IsNumber() &&
+			vWhitepoint[1].IsNumber() &&
+			vWhitepoint[2].IsNumber()) {
+			whitepoint[0] = vWhitepoint[0u].GetDouble();
+			whitepoint[1] = vWhitepoint[1].GetDouble();
+			whitepoint[2] = vWhitepoint[2].GetDouble();
+		} else if (!vWhitepoint.IsNull() && mVerbose) {
+			std::clog << "Whitepoint value must be a list of 3 numbers.\n";
+		}
+
+	} else if (!color.IsNull() && mVerbose) {
+		std::clog << "Color correction value must be a JSON dictionary object.\n";
+	}
+
+	/*
+	 * Calculate the color LUT, stowing the result in an array of USB packets.
+	 */
+
+	Packet *packet = mColorLUT;
+	unsigned byteOffset = 2;
+	for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
+		for (unsigned channel = 0; channel < 3; channel++) {
+
+			/*
+			 * Normalized input value corresponding to this LUT entry.
+			 * Ranges from 0 to slightly higher than 1. (The last LUT entry
+			 * can't quite be reached.)
+			 */
+			double input = (entry << 8) / 65535.0;
+
+			// Color conversion
+			double output = pow(input * whitepoint[channel], gamma);
+
+			// Round to the nearest integer, and clamp. Overflow-safe.
+			int64_t longValue = (output * 0xFFFF) + 0.5;
+			int intValue = std::max<int64_t>(0, std::min<int64_t>(0xFFFF, longValue));
+
+			// Store LUT entry, little-endian order.
+			packet->data[byteOffset++] = uint8_t(intValue);
+			packet->data[byteOffset++] = uint8_t(intValue >> 8);
+			if (byteOffset >= sizeof packet->data) {
+				byteOffset = 2;
+			}
+		}
+	}
+
+	// Start asynchronously sending the LUT.
+	submitTransfer(new Transfer(this, &mColorLUT, sizeof mColorLUT));
 }
 
 void FCDevice::writeFramebuffer()

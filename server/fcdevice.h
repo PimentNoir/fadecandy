@@ -52,17 +52,21 @@ public:
     // Write color LUT from parsed JSON
 	void writeColorCorrection(const Value &color);
 
-	// Write current frame contents
+	// Send current buffer contents
 	void writeFramebuffer();
 
 	// Framebuffer accessor
 	uint8_t *fbPixel(unsigned num) {
 		return &mFramebuffer[num / PIXELS_PER_PACKET].data[3 * (num % PIXELS_PER_PACKET)];
 	}
+
  
 private:
 	static const unsigned PIXELS_PER_PACKET = 21;
+	static const unsigned LUT_ENTRIES_PER_PACKET = 31;
 	static const unsigned FRAMEBUFFER_PACKETS = 25;
+	static const unsigned LUT_PACKETS = 25;
+	static const unsigned LUT_ENTRIES = 257;
 	static const unsigned OUT_ENDPOINT = 1;
 
 	static const uint8_t TYPE_FRAMEBUFFER = 0x00;
@@ -90,6 +94,7 @@ private:
 
     char mSerial[256];
     Packet mFramebuffer[FRAMEBUFFER_PACKETS];
+    Packet mColorLUT[LUT_PACKETS];
 
     void submitTransfer(Transfer *fct);
     static void completeTransfer(struct libusb_transfer *transfer);
