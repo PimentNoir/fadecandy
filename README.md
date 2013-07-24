@@ -23,6 +23,45 @@ Vitals
 * Full-speed (12 Mbps) USB
 * 768-entry 16-bit color lookup table, for gamma correction and color balance
 
+Color Processing
+----------------
+
+The Fadecandy firmware maintains a color lookup table with 256 8-bit entries for each of the three color channels. The input values to this LUT are the 8-bit colorspace as used in the framebuffer's 24-bit pixel values. The outputs are a 48-bit color which acts as the input for Fadecandy's dithering algorithm.
+
+Why 48-bit color? In combination with our dithering algorithm, this gives a lot more color resolution, especially near the low end of the brightness range where stair-stepping and color shift can be most apparent.
+
+Each pixel goes through the following processing steps in Fadecandy:
+
+* 8 bit per channel framebuffer values are expanded to 16 bits per channel
+* We interpolate smoothly from the old framebuffer values to the new framebuffer values
+* This interpolated 16-bit value goes through the color LUT, which itself is linearly interpolated
+* The final 16-bit value is fed into our temporal dithering algorithm, which results in an 8-bit color
+* These 8-bit colors are converted to the format needed by OctoWS2811's DMA engine
+* In hardware, the converted colors are streamed out to eight LED strings in parallel
+
+Keyframe Interpolation
+----------------------
+
+By default, Fadecandy interprets each frame it receives as a keyframe. In-between these keyframes, Fadecandy will generate smooth intermediate frames using linear interpolation. The interpolation duration is determined by the elapsed time between when the final packet of one frame is received and when the final packet of the next frame is received.
+
+This scheme works well when frames are arriving at a nearly constant rate. If frames suddenly arrive slower than they had been arriving, interpolation will proceed faster than it optimally should, and one keyframe will hold steady until the next keyframe arrives. If frames suddenly arrive faster than they had been arriving, Fadecandy will need to jump ahead in order to avoid falling behind.
+
+This keyframe interpolation is not intended as a substitute for other forms of animation control. It is intended to generate high-framerate video from a source that operates at typical video framerates.
+
+Open Pixel Control Server
+-------------------------
+
+The Fadecandy project includes an [Open Pixel Control](http://openpixelcontrol.org/) server which can drive multiple Fadecandy boards and DMX adaptors. USB devices may be hotplugged while the server is up, and the server uses a JSON configuration file to map OPC messages to individual Fadecandy boards and DMX devices.
+
+Why use Open Pixel Control?
+
+* You can keep your effects code portable among different lighting controllers.
+* OPC includes an OpenGL-based simulator, allowing you to develop effects before the hardware is done.
+* The OPC server manages USB hotplug and multi-device synchronization, so you don't have to.
+* The OPC server loads color-correction data into each Fadecandy board.
+
+For more information, see the [Server README](https://github.com/scanlime/fadecandy/blob/master/server/README.md).
+
 Prerequisites
 -------------
 
@@ -48,31 +87,6 @@ Teensy 3.0 Pin | Function
 13 (LED)       | Built-in LED blinks when data is received over USB
 
 Remember that each strip may be up to 64 LEDs long. It's fine to have shorter strips or to leave some outputs unused. These outputs are 3.3V logic signals at 800 kilobits per second. It usually works to connect them directly to the 5V inputs of your WS2811 LED strips, but for the best signal integrity you should really use a level-shifting buffer to convert the 3.3V logic to 5V.
-
-Color Processing
-----------------
-
-The Fadecandy firmware maintains a color lookup table with 256 8-bit entries for each of the three color channels. The input values to this LUT are the 8-bit colorspace as used in the framebuffer's 24-bit pixel values. The outputs are a 48-bit color which acts as the input for Fadecandy's dithering algorithm.
-
-Why 48-bit color? In combination with our dithering algorithm, this gives a lot more color resolution, especially near the low end of the brightness range where stair-stepping and color shift can be most apparent.
-
-Each pixel goes through the following processing steps in Fadecandy:
-
-* 8 bit per channel framebuffer values are expanded to 16 bits per channel
-* We interpolate smoothly from the old framebuffer values to the new framebuffer values
-* This interpolated 16-bit value goes through the color LUT, which itself is linearly interpolated
-* The final 16-bit value is fed into our temporal dithering algorithm, which results in an 8-bit color
-* These 8-bit colors are converted to the format needed by OctoWS2811's DMA engine
-* In hardware, the converted colors are streamed out to eight LED strings in parallel
-
-Keyframe Interpolation
-----------------------
-
-By default, Fadecandy interprets each frame it receives as a keyframe. In-between these keyframes, Fadecandy will generate smooth intermediate frames using linear interpolation. The interpolation duration is determined by the elapsed time between when the final packet of one frame is received and when the final packet of the next frame is received.
-
-This scheme works well when frames are arriving at a nearly constant rate. If frames suddenly arrive slower than they had been arriving, interpolation will proceed faster than it optimally should, and one keyframe will hold steady until the next keyframe arrives. If frames suddenly arrive faster than they had been arriving, Fadecandy will need to jump ahead in order to avoid falling behind.
-
-This keyframe interpolation is not intended as a substitute for other forms of animation control. It is intended to generate high-framerate video from a source that operates at typical video framerates.
 
 USB Protocol
 ------------
