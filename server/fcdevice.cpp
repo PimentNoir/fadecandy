@@ -266,6 +266,9 @@ void FCDevice::writeFramebuffer()
 	/*
 	 * Asynchronously write the current framebuffer.
 	 * Note that the OS will copy our framebuffer at submit-time.
+	 *
+	 * XXX: To-do, flow control. If more than one frame is pending, we need to be able to
+	 *      tell clients that we're going too fast, *or* we need to drop frames.
 	 */
 
 	submitTransfer(new Transfer(this, &mFramebuffer, sizeof mFramebuffer));
