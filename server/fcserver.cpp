@@ -117,9 +117,22 @@ int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotpl
 {
 	FCServer *self = static_cast<FCServer*>(user_data);
 
-	printf("Hotplug %d\n", event);
+	if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+		self->usbDeviceArrived(device);
+	}
+	if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+		self->usbDeviceLeft(device);
+	}
 
 	return false;
 }
 
+void FCServer::usbDeviceArrived(libusb_device *device)
+{
+	// New USB device. Is this a device we recognize?
+}
 
+void FCServer::usbDeviceLeft(libusb_device *device)
+{
+	
+}

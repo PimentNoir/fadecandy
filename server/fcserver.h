@@ -62,4 +62,6 @@ private:
     static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
     void startUSB(struct ev_loop *loop);
+    void usbDeviceArrived(libusb_device *device);
+    void usbDeviceLeft(libusb_device *device);
 };
