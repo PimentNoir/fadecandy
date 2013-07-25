@@ -16,7 +16,8 @@ CPP_FILES = \
 	fcserver.cpp
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -Wno-tautological-constant-out-of-range-compare -g -Os $(INCLUDES)
+CPPFLAGS = -Wall -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing \
+	-g -Os $(INCLUDES)
 
 # compiler options for C++ only
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
