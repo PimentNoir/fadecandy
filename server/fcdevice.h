@@ -99,6 +99,7 @@ private:
     static void completeTransfer(struct libusb_transfer *transfer);
 
     void opcSetPixelColors(const OPCSink::Message &msg);
+    void opcSysEx(const OPCSink::Message &msg);
     void opcSetGlobalColorCorrection(const OPCSink::Message &msg);
     void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);
 };

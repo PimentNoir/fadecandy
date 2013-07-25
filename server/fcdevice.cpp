@@ -287,14 +287,38 @@ void FCDevice::writeMessage(const OPCSink::Message &msg)
 			writeFramebuffer();
 			return;
 
-		case OPCSink::SetGlobalColorCorrection:
-			opcSetGlobalColorCorrection(msg);
+		case OPCSink::SystemExclusive:
+			opcSysEx(msg);
 			return;
 	}
 
 	if (mVerbose) {
-		std::clog << "Unsupported OPC command: " << msg.command << "\n";
+		std::clog << "Unsupported OPC command: " << unsigned(msg.command) << "\n";
 	}
+}
+
+void FCDevice::opcSysEx(const OPCSink::Message &msg)
+{
+	if (msg.length() < 4) {
+		if (mVerbose) {
+			std::clog << "SysEx message too short!\n";
+		}
+		return;
+	}
+
+	unsigned id = (unsigned(msg.data[0]) << 24) |
+				  (unsigned(msg.data[1]) << 16) |
+				  (unsigned(msg.data[2]) << 8)  |
+				   unsigned(msg.data[3])        ;
+
+	switch (id) {
+
+		case OPCSink::FCSetGlobalColorCorrection:
+			return opcSetGlobalColorCorrection(msg);
+
+	}
+
+	// Quietly ignore unhandled SysEx messages.
 }
 
 void FCDevice::opcSetPixelColors(const OPCSink::Message &msg)
@@ -382,7 +406,10 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
 	 */
 
 	// Mutable NUL-terminated copy of the message string
-	std::string text((char*)msg.data, msg.length());
+	std::string text((char*)msg.data + 4, msg.length() - 4);
+	if (mVerbose) {
+		std::clog << "New global color correction settings: " << text << "\n";
+	}
 
 	// Parse it in-place
 	rapidjson::Document doc;

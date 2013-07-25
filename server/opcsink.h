@@ -33,7 +33,12 @@ class OPCSink {
 public:
     enum Command {
         SetPixelColors = 0x00,
-        SetGlobalColorCorrection = 0xF0,
+        SystemExclusive = 0xFF,
+    };
+
+    // SysEx system and command IDs
+    enum SysEx {
+        FCSetGlobalColorCorrection = 0x00010001,
     };
 
     struct Message

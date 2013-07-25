@@ -16,10 +16,39 @@ Supported hardware devices:
 OPC Commands
 ------------
 
-* Set pixel colors (0x00)
-	* Standard OPC message. Data block is an array of 24-bit pixel colors.
-* Set global color correction (0xF0)
-	* Unofficial OPC message. Data block is JSON text, identical to the contents of the 'color' configuration key.
+All OPC commands follow the same general format. All multi-byte values in Open Pixel Control are in network byte order, high byte followed by low byte.
+
+Channel    | Command   | Length (N) | Data
+---------- | --------- | ---------- | --------------------------
+1 byte     | 1 byte    | 2 bytes    | N bytes of message data
+
+Video data arrives in a **Set Pixel Colors** command:
+
+Byte   | **Set Pixel Colors** command
+------ | --------------------------------
+0      | Channel Number
+1      | Command (0x01)
+2 - 3  | Data length
+4      | Pixel #0, Red
+5      | Pixel #0, Green
+6      | Pixel #0, Blue
+7      | Pixel #1, Red
+8      | Pixel #1, Green
+9      | Pixel #1, Blue
+…      | …
+
+As soon as a complete Set Pixel Colors command is received, a new frame of video will be broadcast simultaneously to all attached Fadecandy devices.
+
+The color correction data (from the 'color' configuration key) can also be changed at runtime, by sending a new blob of JSON text in a Fadecandy-specific command. Fadecandy's 16-bit System ID for Open Pixel Control's System Exclusive (0xFF) command is **0x0001**.
+
+Byte   | **Set Global Color Correction** command
+------ | ------------------------------------------
+0      | Channel Number (0x00, reserved)
+1      | Command (0xFF, System Exclusive)
+2 - 3  | Data length (JSON Length + 4)
+4 - 5  | System ID (0x0001, Fadecandy)
+6 - 7  | SysEx ID (0x0001, Set Global Color Correction)
+8 - …  | JSON Text
 
 
 Configuration

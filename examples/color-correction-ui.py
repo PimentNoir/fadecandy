@@ -18,7 +18,7 @@ print "Connected to OPC server"
 
 def setGlobalColorCorrection(**obj):
 	msg = json.dumps(obj)
-	s.send(struct.pack(">BBH", 0, 0xF0, len(msg)) + msg)
+	s.send(struct.pack(">BBHHH", 0, 0xFF, len(msg) + 4, 0x0001, 0x0001) + msg)
 
 def update(_):
 	setGlobalColorCorrection(
