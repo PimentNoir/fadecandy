@@ -1,0 +1,11 @@
+{
+	"listen": [null, 7890],
+	"devices": [
+		{
+			"type": "fadecandy",
+			"map": [
+				[ 0, 0, 0, 512 ]
+			]
+		}
+	]
+}
