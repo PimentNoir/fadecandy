@@ -102,9 +102,9 @@ On Mac OS, the required packages are easy to install with [Homebrew](http://brew
 
 	$ brew install libusbx libev
 
-On Debian or Ubuntu Linux, libev can be installed with apt-get, but currently you must compile libusbx yourself:
+On Debian or Ubuntu Linux (including the Raspberry Pi) libev can be installed with apt-get, but currently you must compile libusbx yourself:
 
-	$ sudo apt-get install libev libtool autoconf automake libudev-dev
+	$ sudo apt-get install libev-dev libtool autoconf automake libudev-dev
 	$ git clone https://github.com/libusbx/libusbx.git
 	$ cd libusbx
 	$ ./autogen.sh
