@@ -54,8 +54,8 @@ int main(int argc, char **argv)
     rapidjson::Document config;
     config.ParseStream<0>(istr);
     if (config.HasParseError()) {
-        fprintf(stderr, "Parse error at character %ld: %s\n",
-            config.GetErrorOffset(), config.GetParseError());
+        fprintf(stderr, "Parse error at character %d: %s\n",
+            int(config.GetErrorOffset()), config.GetParseError());
         return 3;
     }
 
