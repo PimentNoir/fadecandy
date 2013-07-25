@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <iostream>
 
 
@@ -40,6 +42,9 @@ void OPCSink::start(struct ev_loop *loop, struct addrinfo *listenAddr)
         perror("socket");
         return;
     }
+
+    int arg = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &arg, sizeof arg);
 
     if (bind(sock, listenAddr->ai_addr, listenAddr->ai_addrlen)) {
         perror("bind");
@@ -72,6 +77,9 @@ void OPCSink::cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents)
         perror("accept");
         return;
     }
+
+    int arg = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &arg, sizeof arg);
 
     Client *cli = new Client();
     cli->bufferPos = 0;
