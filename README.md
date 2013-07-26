@@ -15,6 +15,11 @@ This firmware is based on Stoffregen's excellent [OctoWS2811](http://www.pjrc.co
 
 These features add up to give *very smooth* fades and high dynamic range. Ever notice that annoying stair-stepping effect when fading LEDs from off to dim? Fadecandy avoids that using a form of [delta-sigma modulation](http://en.wikipedia.org/wiki/Delta-sigma_modulation). It rapidly wiggles each pixel's value up or down by one 8-bit step, in order to achieve 16-bit resolution for fades.
 
+Example videos:
+
+* [Smooth interpolation](http://youtu.be/JilFl-xTdJ4)
+* [Multiple Fadecandy boards running in unison](http://youtu.be/OXvY6aQAGcs)
+
 Vitals
 ------
 
@@ -72,6 +77,8 @@ Pin Assignment
 --------------
 
 The pin assignment is the same as the original [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) pinout:
+
+![Wiring Diagram](https://raw.github.com/scanlime/fadecandy/master/firmware/wiring-diagram.png)
 
 Teensy 3.0 Pin | Function
 -------------- | --------------
