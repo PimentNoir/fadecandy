@@ -1,5 +1,6 @@
 {
 	"listen": [null, 7890],
+	"verbose": true,
 	"devices": [
 		{
 			"type": "fadecandy",
