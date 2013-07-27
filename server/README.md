@@ -121,7 +121,7 @@ The Fadecandy server is designed to make it easy to drive all your lighting via 
 
 For DMX, `fcserver` supports the common [Enttec DMX USB Pro adapter](http://www.enttec.com/index.php?main_menu=Products&pn=70304). This device attaches over USB, has inputs and outputs for one DMX universe, and it has an LED indicator. With Fadecandy, the LED will flash any time we process a new frame of video.
 
-The Enttec adapter uses an FTDI FT245 USB FIFO chip internally. For the smoothest USB performance and the simplest configuration, we do not use FTDI's serial port emulation driver. Instead, we talk directly to the FT232 chip using libusb. On Linux this happens without any special consideration. On Mac OS, libusb does not support detaching existing drivers from a device. If you've installed the official FTDI driver, you can temporarily unload it until your next reboot by running:
+The Enttec adapter uses an FTDI FT245 USB FIFO chip internally. For the smoothest USB performance and the simplest configuration, we do not use FTDI's serial port emulation driver. Instead, we talk directly to the FTDI chip using libusb. On Linux this happens without any special consideration. On Mac OS, libusb does not support detaching existing drivers from a device. If you've installed the official FTDI driver, you can temporarily unload it until your next reboot by running:
 
 	sudo kextunload -b com.FTDI.driver.FTDIUSBSerialDriver
 
