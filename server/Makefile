@@ -19,7 +19,7 @@ CPP_FILES = \
 
 # CPPFLAGS = compiler options for C and C++
 CPPFLAGS = -Wall -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing \
-	-g -Os $(INCLUDES)
+	-g -Os -MMD $(INCLUDES)
 
 # compiler options for C++ only
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
