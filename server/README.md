@@ -11,7 +11,7 @@ Clients include:
 Supported hardware devices:
 
 * Any number of Fadecandy boards, hot-pluggable via USB.
-* To do: [Enttec DMX USB Pro](http://www.enttec.com/?main_menu=Products&pn=70304) or compatible.
+* [Enttec DMX USB Pro](http://www.enttec.com/?main_menu=Products&pn=70304) or compatible.
 
 OPC Commands
 ------------
