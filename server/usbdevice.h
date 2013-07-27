@@ -39,6 +39,9 @@ public:
     // Must be opened before any other methods are called.
     virtual int open() = 0;
 
+    // Some drivers can't determine whether this is a supported device prior to open()
+    virtual bool probeAfterOpening();
+
     // Check a configuration. If it describes this device, load it and return true. If not, return false.
     virtual bool matchConfiguration(const Value &config) = 0;
 
@@ -55,4 +58,8 @@ protected:
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
 	bool mVerbose;
+
+    // Utilities
+    bool matchConfigurationWithTypeAndSerial(const Value &config, const char *type, const char *serial);
+    const Value *findConfigMap(const Value &config);
 };

@@ -172,6 +172,12 @@ void FCServer::usbDeviceArrived(libusb_device *device)
 		return;
 	}
 
+	if (!dev->probeAfterOpening()) {
+		// We were mistaken, this device isn't actually one we want.
+		delete dev;
+		return;
+	}
+
 	for (unsigned i = 0; i < mDevices.Size(); ++i) {
 		if (dev->matchConfiguration(mDevices[i])) {
 			// Found a matching configuration for this device. We're keeping it!

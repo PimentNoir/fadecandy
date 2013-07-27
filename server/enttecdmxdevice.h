@@ -23,6 +23,7 @@
 
 #pragma once
 #include "usbdevice.h"
+#include <set>
 
 
 class EnttecDMXDevice : public USBDevice
@@ -34,7 +35,44 @@ public:
     static bool probe(libusb_device *device);
 
     virtual int open();
+    virtual bool probeAfterOpening();
     virtual bool matchConfiguration(const Value &config);
     virtual void writeMessage(const OPCSink::Message &msg);
     virtual std::string getName();
+
+    void writeDMXPacket();
+    void setChannel(unsigned n, uint8_t value);
+
+private:
+    static const unsigned OUT_ENDPOINT = 2;
+    static const unsigned START_OF_MESSAGE = 0x7e;
+    static const unsigned END_OF_MESSAGE = 0xe7;
+    static const unsigned SEND_DMX_PACKET = 0x06;
+    static const unsigned START_CODE = 0x00;
+
+    struct Packet {
+        uint8_t start;
+        uint8_t label;
+        uint16_t length;
+        uint8_t data[514];
+    };
+
+    struct Transfer {
+        Transfer(EnttecDMXDevice *device, void *buffer, int length);
+        ~Transfer();
+        libusb_transfer *transfer;
+        EnttecDMXDevice *device;
+    };
+
+    char mSerial[256];
+    bool mFoundEnttecStrings;
+    const Value *mConfigMap;
+    Packet mChannelBuffer;
+    std::set<Transfer*> mPending;
+
+    void submitTransfer(Transfer *fct);
+    static void completeTransfer(struct libusb_transfer *transfer);
+
+    void opcSetPixelColors(const OPCSink::Message &msg);
+    void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);
 };

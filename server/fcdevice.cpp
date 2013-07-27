@@ -111,49 +111,12 @@ int FCDevice::open()
 
 bool FCDevice::matchConfiguration(const Value &config)
 {
-	/*
-	 * Parse out the portions of our JSON configuration document which matter to us.
-	 */
-
-	if (!config.IsObject()) {
-		return false;
+	if (matchConfigurationWithTypeAndSerial(config, "fadecandy", mSerial)) {
+		mConfigMap = findConfigMap(config);
+		return true;
 	}
 
-	const Value &vtype = config["type"];
-	const Value &vserial = config["serial"];
-	const Value &vmap = config["map"];
-
-	if (!vtype.IsString() || strcmp(vtype.GetString(), "fadecandy")) {
-		// Wrong type
-		return false;
-	}
-
-	if (!vserial.IsNull()) {
-		// Not a wildcard serial number?
-		// If a serial was not specified, it matches any device.
-
-		if (!vserial.IsString()) {
-			// Non-string serial number. Bad form.
-			return false;
-		}
-
-		if (strcmp(vserial.GetString(), mSerial)) {
-			// Not a match
-			return false;
-		}
-	}
-
-	if (vmap.IsArray()) {
-		// The map is optional, but if it exists it needs to be an array.
-		mConfigMap = &vmap;
-	} else {
-		mConfigMap = 0;
-		if (!vmap.IsNull() && mVerbose) {
-			std::clog << "Device configuration 'map' must be an array.\n";
-		}
-	}
-
-	return true;
+	return false;
 }
 
 void FCDevice::submitTransfer(Transfer *fct)
@@ -446,7 +409,10 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
 std::string FCDevice::getName()
 {
 	std::ostringstream s;
-	s << "Fadecandy (Serial# " << mSerial << ")";
+	s << "Fadecandy";
+	if (mSerial[0]) {
+		s << " (Serial# " << mSerial << ")";
+	}
 	return s.str();
 }
 	
