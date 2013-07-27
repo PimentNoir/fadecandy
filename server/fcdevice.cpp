@@ -24,6 +24,7 @@
 #include "fcdevice.h"
 #include <math.h>
 #include <iostream>
+#include <sstream>
 
 
 FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length)
@@ -40,9 +41,7 @@ FCDevice::Transfer::~Transfer()
 }
 
 FCDevice::FCDevice(libusb_device *device, bool verbose)
-	: mVerbose(verbose),
-	  mDevice(libusb_ref_device(device)),
-	  mHandle(0),
+	: USBDevice(device, verbose),
 	  mConfigMap(0)
 {
 	mSerial[0] = '\0';
@@ -75,20 +74,13 @@ FCDevice::~FCDevice()
 		libusb_cancel_transfer(fct->transfer);
 		fct->device = 0;
 	}
-
-	if (mHandle) {
-		libusb_close(mHandle);
-	}
-	if (mDevice) {
-		libusb_unref_device(mDevice);
-	}
 }
 
-bool FCDevice::isFadecandy()
+bool FCDevice::probe(libusb_device *device)
 {
 	libusb_device_descriptor dd;
 
-	if (libusb_get_device_descriptor(mDevice, &dd) < 0) {
+	if (libusb_get_device_descriptor(device, &dd) < 0) {
 		// Can't access descriptor?
 		return false;
 	}
@@ -117,29 +109,51 @@ int FCDevice::open()
 	return libusb_get_string_descriptor_ascii(mHandle, dd.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
 }
 
-void FCDevice::setConfiguration(const Value &config)
+bool FCDevice::matchConfiguration(const Value &config)
 {
 	/*
 	 * Parse out the portions of our JSON configuration document which matter to us.
 	 */
 
 	if (!config.IsObject()) {
-		if (mVerbose) {
-			std::clog << "Device configuration must be a JSON dictionary object!\n";
-		}
-		return;
+		return false;
 	}
 
-	const Value &map = config["map"];
-	if (map.IsArray()) {
+	const Value &vtype = config["type"];
+	const Value &vserial = config["serial"];
+	const Value &vmap = config["map"];
+
+	if (!vtype.IsString() || strcmp(vtype.GetString(), "fadecandy")) {
+		// Wrong type
+		return false;
+	}
+
+	if (!vserial.IsNull()) {
+		// Not a wildcard serial number?
+		// If a serial was not specified, it matches any device.
+
+		if (!vserial.IsString()) {
+			// Non-string serial number. Bad form.
+			return false;
+		}
+
+		if (strcmp(vserial.GetString(), mSerial)) {
+			// Not a match
+			return false;
+		}
+	}
+
+	if (vmap.IsArray()) {
 		// The map is optional, but if it exists it needs to be an array.
-		mConfigMap = &map;
+		mConfigMap = &vmap;
 	} else {
 		mConfigMap = 0;
-		if (!map.IsNull() && mVerbose) {
+		if (!vmap.IsNull() && mVerbose) {
 			std::clog << "Device configuration 'map' must be an array.\n";
 		}
 	}
+
+	return true;
 }
 
 void FCDevice::submitTransfer(Transfer *fct)
@@ -397,7 +411,6 @@ void FCDevice::opcMapPixelColors(const OPCSink::Message &msg, const Value &inst)
     }
 }
 
-
 void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
 {
 	/*
@@ -430,3 +443,10 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
     writeColorCorrection(doc);
 }
 
+std::string FCDevice::getName()
+{
+	std::ostringstream s;
+	s << "Fadecandy (Serial# " << mSerial << ")";
+	return s.str();
+}
+	

@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Abstract base class for USB-attached devices.
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -21,52 +21,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
 #include "usbdevice.h"
-#include "libusbev.h"
-#include <libusb.h>
-#include <sstream>
-#include <vector>
-#include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
 
 
-class FCServer
+USBDevice::USBDevice(libusb_device *device, bool verbose)
+	: mDevice(libusb_ref_device(device)),
+      mHandle(0),
+      mVerbose(verbose)
+{}
+
+USBDevice::~USBDevice()
 {
-public:
-    typedef rapidjson::Value Value;
+    if (mHandle) {
+        libusb_close(mHandle);
+    }
+    if (mDevice) {
+        libusb_unref_device(mDevice);
+    }
+}
 
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
-
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
-
-    void start(struct ev_loop *loop);
-
-private:
-    std::ostringstream mError;
-
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
-    bool mVerbose;
-
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
-
-    libusb_context *mUSB;
-    LibUSBEventBridge mUSBEvent;
-
-    std::vector<USBDevice*> mUSBDevices;
-
-    static void cbMessage(OPCSink::Message &msg, void *context);
-    static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-
-    void startUSB(struct ev_loop *loop);
-    void usbDeviceArrived(libusb_device *device);
-    void usbDeviceLeft(libusb_device *device);
-};
+void USBDevice::writeColorCorrection(const Value &color)
+{
+    // Optional. By default, ignore color correction messages.
+}

@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Fadecandy driver for the Enttec DMX USB Pro.
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -22,51 +22,19 @@
  */
 
 #pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
 #include "usbdevice.h"
-#include "libusbev.h"
-#include <libusb.h>
-#include <sstream>
-#include <vector>
-#include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
 
 
-class FCServer
+class EnttecDMXDevice : public USBDevice
 {
 public:
-    typedef rapidjson::Value Value;
+	EnttecDMXDevice(libusb_device *device, bool verbose);
+    virtual ~EnttecDMXDevice();
 
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
+    static bool probe(libusb_device *device);
 
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
-
-    void start(struct ev_loop *loop);
-
-private:
-    std::ostringstream mError;
-
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
-    bool mVerbose;
-
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
-
-    libusb_context *mUSB;
-    LibUSBEventBridge mUSBEvent;
-
-    std::vector<USBDevice*> mUSBDevices;
-
-    static void cbMessage(OPCSink::Message &msg, void *context);
-    static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-
-    void startUSB(struct ev_loop *loop);
-    void usbDeviceArrived(libusb_device *device);
-    void usbDeviceLeft(libusb_device *device);
+    virtual int open();
+    virtual bool matchConfiguration(const Value &config);
+    virtual void writeMessage(const OPCSink::Message &msg);
+    virtual std::string getName();
 };

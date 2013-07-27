@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Abstract base class for USB-attached devices.
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -24,49 +24,35 @@
 #pragma once
 #include "rapidjson/document.h"
 #include "opcsink.h"
-#include "usbdevice.h"
-#include "libusbev.h"
 #include <libusb.h>
-#include <sstream>
-#include <vector>
-#include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <string>
 
 
-class FCServer
+class USBDevice
 {
 public:
-    typedef rapidjson::Value Value;
+	typedef rapidjson::Value Value;
 
-    FCServer(rapidjson::Document &config);
-    ~FCServer();
+	USBDevice(libusb_device *device, bool verbose);
+    virtual ~USBDevice();
 
-    const char *errorText() const { return mError.str().c_str(); }
-    bool hasError() const { return !mError.str().empty(); }
+    // Must be opened before any other methods are called.
+    virtual int open() = 0;
 
-    void start(struct ev_loop *loop);
+    // Check a configuration. If it describes this device, load it and return true. If not, return false.
+    virtual bool matchConfiguration(const Value &config) = 0;
 
-private:
-    std::ostringstream mError;
+ 	// Handle an incoming OPC message
+    virtual void writeMessage(const OPCSink::Message &msg) = 0;
 
-    const Value& mListen;
-    const Value& mColor;
-    const Value& mDevices;
-    bool mVerbose;
+    // Write color LUT from parsed JSON
+	virtual void writeColorCorrection(const Value &color);
 
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
+    virtual std::string getName() = 0;
+    libusb_device *getDevice() { return mDevice; };
 
-    libusb_context *mUSB;
-    LibUSBEventBridge mUSBEvent;
-
-    std::vector<USBDevice*> mUSBDevices;
-
-    static void cbMessage(OPCSink::Message &msg, void *context);
-    static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-
-    void startUSB(struct ev_loop *loop);
-    void usbDeviceArrived(libusb_device *device);
-    void usbDeviceLeft(libusb_device *device);
+protected:
+    libusb_device *mDevice;
+    libusb_device_handle *mHandle;
+	bool mVerbose;
 };

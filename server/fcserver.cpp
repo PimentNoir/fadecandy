@@ -23,7 +23,9 @@
 
 #include "util.h"
 #include "fcserver.h"
+#include "usbdevice.h"
 #include "fcdevice.h"
+#include "enttecdmxdevice.h"
 #include <netdb.h>
 #include <ctype.h>
 #include <iostream>
@@ -123,9 +125,9 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
 
 	FCServer *self = static_cast<FCServer*>(context);
 
-	for (std::vector<FCDevice*>::iterator i = self->mFCDevices.begin(), e = self->mFCDevices.end(); i != e; ++i) {
-		FCDevice *fcd = *i;
-		fcd->writeMessage(msg);
+	for (std::vector<USBDevice*>::iterator i = self->mUSBDevices.begin(), e = self->mUSBDevices.end(); i != e; ++i) {
+		USBDevice *dev = *i;
+		dev->writeMessage(msg);
 	}
 }
 
@@ -147,52 +149,47 @@ void FCServer::usbDeviceArrived(libusb_device *device)
 {
 	/*
 	 * New USB device. Is this a device we recognize?
-     *
-	 * Right now we're only looking for FCDevices, but in the future
-	 * we can look for other types of USB devices here too.
 	 */
 
-	FCDevice *fcd = new FCDevice(device, mVerbose);
-	if (!fcd->isFadecandy()) {
-		// Not a recognized device.
-		delete fcd;
+	USBDevice *dev;
+
+	if (FCDevice::probe(device)) {
+		dev = new FCDevice(device, mVerbose);
+
+	} else if (EnttecDMXDevice::probe(device)) {
+		dev = new EnttecDMXDevice(device, mVerbose);
+
+	} else {
 		return;
 	}
 
-	int r = fcd->open();
+	int r = dev->open();
 	if (r < 0) {
 		if (mVerbose) {
-			std::clog << "Error opening Fadecandy USB device: " << libusb_strerror(libusb_error(r)) << "\n";
+			std::clog << "Error opening " << dev->getName() << ": " << libusb_strerror(libusb_error(r)) << "\n";
 		}
-		delete fcd;
+		delete dev;
 		return;
 	}
 
-	// Look for a matching device in the JSON
-	const Value *fcjson = matchFCDevice(fcd->getSerial());
+	for (unsigned i = 0; i < mDevices.Size(); ++i) {
+		if (dev->matchConfiguration(mDevices[i])) {
+			// Found a matching configuration for this device. We're keeping it!
+
+			dev->writeColorCorrection(mColor);
+			mUSBDevices.push_back(dev);
+
+			if (mVerbose) {
+				std::clog << "USB device " << dev->getName() << " attached.\n";
+			}
+			return;
+		}
+	}
 
 	if (mVerbose) {
-		std::clog << "USB Fadecandy attached, serial: \"" << fcd->getSerial() << "\"";
-		if (fcjson) {
-			std::clog << " (configuration found)\n";
-		} else {
-			std::clog << " (not matched in config file)\n";
-		}
+		std::clog << "USB device " << dev->getName() << " has no matching configuration. Not using it.\n";
 	}
-
-	if (fcjson) {
-		// Store the configuration, use it for future messages
-		fcd->setConfiguration(*fcjson);
-	} else {
-		delete fcd;
-		return;
-	}
-
-	// Send the default color lookup table
-	fcd->writeColorCorrection(mColor);
-
-	// Remember this device for later. It's now active, and we should broadcast messages to it.
-	mFCDevices.push_back(fcd);
+	delete dev;
 }
 
 void FCServer::usbDeviceLeft(libusb_device *device)
@@ -201,54 +198,15 @@ void FCServer::usbDeviceLeft(libusb_device *device)
 	 * Is this a device we recognize? If so, delete it.
 	 */
 
-	for (std::vector<FCDevice*>::iterator i = mFCDevices.begin(), e = mFCDevices.end(); i != e; ++i) {
-		FCDevice *fcd = *i;
-		if (fcd->getDevice() == device) {
+	for (std::vector<USBDevice*>::iterator i = mUSBDevices.begin(), e = mUSBDevices.end(); i != e; ++i) {
+		USBDevice *dev = *i;
+		if (dev->getDevice() == device) {
 			if (mVerbose) {
-				std::clog << "USB Fadecandy removed, serial: \"" << fcd->getSerial() << "\"\n";
+				std::clog << "USB device " << dev->getName() << " removed.\n";
 			}
-			mFCDevices.erase(i);
-			delete fcd;
+			mUSBDevices.erase(i);
+			delete dev;
 			break;
 		}
 	}
-}
-
-const FCServer::Value *FCServer::matchFCDevice(const char *serial)
-{
-	/*
-	 * Look for a record in mDevices that matches a Fadecandy board with the given serial number.
-	 * Returns 0 if nothing matches.
-	 */
-
-	for (unsigned i = 0; i < mDevices.Size(); ++i) {
-		const Value &v = mDevices[i];
-		const Value &vtype = v["type"];
-		const Value &vserial = v["serial"];
-
-		if (!vtype.IsString() || strcmp(vtype.GetString(), "fadecandy")) {
-			// Wrong type
-			continue;
-		}
-
-		if (!vserial.IsNull()) {
-			// Not a wildcard serial number?
-			// If a serial was not specified, it matches any device.
-
-			if (!vserial.IsString()) {
-				// Non-string serial number. Bad form.
-				continue;
-			}
-
-			if (strcmp(vserial.GetString(), serial)) {
-				// Not a match
-				continue;
-			}
-		}
-
-		// Match
-		return &v;
-	}
-
-	return 0;
 }

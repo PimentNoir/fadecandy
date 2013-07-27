@@ -22,35 +22,27 @@
  */
 
 #pragma once
-#include "rapidjson/document.h"
-#include "opcsink.h"
-#include <libusb.h>
+#include "usbdevice.h"
 #include <set>
 
 
-class FCDevice
+class FCDevice : public USBDevice
 {
 public:
-	typedef rapidjson::Value Value;
+	FCDevice(libusb_device *device, bool verbose);
+    virtual ~FCDevice();
+
+    static bool probe(libusb_device *device);
+
+    virtual int open();
+    virtual bool matchConfiguration(const Value &config);
+    virtual void writeMessage(const OPCSink::Message &msg);
+	virtual void writeColorCorrection(const Value &color);
+    virtual std::string getName();
+
 	static const unsigned NUM_PIXELS = 512;
 
-    FCDevice(libusb_device *device, bool verbose = false);
-    ~FCDevice();
-
-    libusb_device *getDevice() { return mDevice; };
-    bool isFadecandy();
-    int open();
-
-    // Valid after open():
-
     const char *getSerial() { return mSerial; }
-    void setConfiguration(const Value &config);
-
- 	// High level OPC message entry point
-    void writeMessage(const OPCSink::Message &msg);
-
-    // Write color LUT from parsed JSON
-	void writeColorCorrection(const Value &color);
 
 	// Send current buffer contents
 	void writeFramebuffer();
@@ -85,9 +77,6 @@ private:
 		FCDevice *device;
 	};
 
-	bool mVerbose;
-    libusb_device *mDevice;
-    libusb_device_handle *mHandle;
     const Value *mConfigMap;
     std::set<Transfer*> mPending;
 
