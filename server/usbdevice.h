@@ -31,9 +31,9 @@
 class USBDevice
 {
 public:
-	typedef rapidjson::Value Value;
+    typedef rapidjson::Value Value;
 
-	USBDevice(libusb_device *device, bool verbose);
+    USBDevice(libusb_device *device, bool verbose);
     virtual ~USBDevice();
 
     // Must be opened before any other methods are called.
@@ -45,11 +45,11 @@ public:
     // Check a configuration. If it describes this device, load it and return true. If not, return false.
     virtual bool matchConfiguration(const Value &config) = 0;
 
- 	// Handle an incoming OPC message
+    // Handle an incoming OPC message
     virtual void writeMessage(const OPCSink::Message &msg) = 0;
 
     // Write color LUT from parsed JSON
-	virtual void writeColorCorrection(const Value &color);
+    virtual void writeColorCorrection(const Value &color);
 
     virtual std::string getName() = 0;
     libusb_device *getDevice() { return mDevice; };
@@ -57,7 +57,7 @@ public:
 protected:
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
-	bool mVerbose;
+    bool mVerbose;
 
     // Utilities
     bool matchConfigurationWithTypeAndSerial(const Value &config, const char *type, const char *serial);

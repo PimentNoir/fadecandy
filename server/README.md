@@ -59,38 +59,38 @@ The JSON configuration file is a dictionary which contains global configuration 
 Supported mapping objects for Fadecandy devices:
 
 * [ *OPC Channel*, *First OPC Pixel*, *First output pixel*, *pixel count* ]
-	* Map a contiguous range of pixels from the specified OPC channel to the current device
-	* For Fadecandy devices, output pixels are numbered from 0 through 511. Strand 1 begins at index 0, strand 2 begins at index 64, etc.
+    * Map a contiguous range of pixels from the specified OPC channel to the current device
+    * For Fadecandy devices, output pixels are numbered from 0 through 511. Strand 1 begins at index 0, strand 2 begins at index 64, etc.
 
 The following example config file supports two Fadecandy devices with distinct serial numbers. They both receive data from OPC channel #0. The first 512 pixels map to the first Fadecandy device. The next 64 pixels map to the entire first strand of the second Fadecandy device, and the next 32 pixels map to the beginning of the third strand.
 
-	{
-		"listen": ["127.0.0.1", 7890],
-		"verbose": true,
+    {
+        "listen": ["127.0.0.1", 7890],
+        "verbose": true,
 
-		"color": {
-			"gamma": 2.5,
-			"whitepoint": [0.98, 1.0, 1.0]
-		},
+        "color": {
+            "gamma": 2.5,
+            "whitepoint": [0.98, 1.0, 1.0]
+        },
 
-		"devices": [
-			{
-				"type": "fadecandy",
-				"serial": "FFFFFFFFFFFF00180017200214134D44",
-				"map": [
-					[ 0, 0, 0, 512 ]
-				]
-			},
-			{
-				"type": "fadecandy",
-				"serial": "FFFFFFFFFFFF0021003B200314134D44",
-				"map": [
-					[ 0, 512, 0, 64 ],
-					[ 0, 576, 128, 32 ]
-				]
-			}
-		]
-	}
+        "devices": [
+            {
+                "type": "fadecandy",
+                "serial": "FFFFFFFFFFFF00180017200214134D44",
+                "map": [
+                    [ 0, 0, 0, 512 ]
+                ]
+            },
+            {
+                "type": "fadecandy",
+                "serial": "FFFFFFFFFFFF0021003B200314134D44",
+                "map": [
+                    [ 0, 512, 0, 64 ],
+                    [ 0, 576, 128, 32 ]
+                ]
+            }
+        ]
+    }
 
 Prerequisites
 -------------
@@ -102,17 +102,17 @@ The OPC server has been designed to work smoothly on Mac OS and Linux. With some
 
 On Mac OS, the required packages are easy to install with [Homebrew](http://brew.sh/):
 
-	$ brew install libusbx libev
+    $ brew install libusbx libev
 
 On Debian or Ubuntu Linux (including the Raspberry Pi) libev can be installed with apt-get, but currently you must compile libusbx yourself:
 
-	$ sudo apt-get install libev-dev libtool autoconf automake libudev-dev
-	$ git clone https://github.com/libusbx/libusbx.git
-	$ cd libusbx
-	$ ./autogen.sh
-	$ ./configure
-	$ make
-	$ sudo make install
+    $ sudo apt-get install libev-dev libtool autoconf automake libudev-dev
+    $ git clone https://github.com/libusbx/libusbx.git
+    $ cd libusbx
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ sudo make install
 
 Using Open Pixel Control with DMX
 ---------------------------------
@@ -123,33 +123,33 @@ For DMX, `fcserver` supports the common [Enttec DMX USB Pro adapter](http://www.
 
 The Enttec adapter uses an FTDI FT245 USB FIFO chip internally. For the smoothest USB performance and the simplest configuration, we do not use FTDI's serial port emulation driver. Instead, we talk directly to the FTDI chip using libusb. On Linux this happens without any special consideration. On Mac OS, libusb does not support detaching existing drivers from a device. If you've installed the official FTDI driver, you can temporarily unload it until your next reboot by running:
 
-	sudo kextunload -b com.FTDI.driver.FTDIUSBSerialDriver
+    sudo kextunload -b com.FTDI.driver.FTDIUSBSerialDriver
 
 Enttec DMX devices can be configured in the same way as a Fadecandy device. For example:
 
-	{
-	        "listen": [null, 7890],
-	        "verbose": true,
+    {
+            "listen": [null, 7890],
+            "verbose": true,
 
-	        "devices": [
-	                {
-	                        "type": "fadecandy",
-	                        "map": [
-	                                [ 0, 0, 0, 512 ]
-	                        ]
-	                },
-	                {
-	                        "type": "enttec",
-	                        "serial": "EN075577",
-	                        "map": [
-	                                [ 0, 0, "r", 1 ],
-	                                [ 0, 0, "g", 2 ],
-	                                [ 0, 0, "b", 3 ],
-	                                [ 0, 1, "l", 4 ]
-	                        ]
-	                }
-	        ]
-	}
+            "devices": [
+                    {
+                            "type": "fadecandy",
+                            "map": [
+                                    [ 0, 0, 0, 512 ]
+                            ]
+                    },
+                    {
+                            "type": "enttec",
+                            "serial": "EN075577",
+                            "map": [
+                                    [ 0, 0, "r", 1 ],
+                                    [ 0, 0, "g", 2 ],
+                                    [ 0, 0, "b", 3 ],
+                                    [ 0, 1, "l", 4 ]
+                            ]
+                    }
+            ]
+    }
 
 Enttec DMX devices use a different format for their mapping objects:
 

@@ -29,7 +29,7 @@
 class EnttecDMXDevice : public USBDevice
 {
 public:
-	EnttecDMXDevice(libusb_device *device, bool verbose);
+    EnttecDMXDevice(libusb_device *device, bool verbose);
     virtual ~EnttecDMXDevice();
 
     static bool probe(libusb_device *device);

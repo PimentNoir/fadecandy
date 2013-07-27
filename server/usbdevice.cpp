@@ -26,7 +26,7 @@
 
 
 USBDevice::USBDevice(libusb_device *device, bool verbose)
-	: mDevice(libusb_ref_device(device)),
+    : mDevice(libusb_ref_device(device)),
       mHandle(0),
       mVerbose(verbose)
 {}

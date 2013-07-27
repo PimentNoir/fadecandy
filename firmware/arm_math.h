@@ -2,12 +2,12 @@
  * Copyright (C) 2010-2011 ARM Limited. All rights reserved.   
  *   
  * $Date:        15. February 2012  
- * $Revision: 	V1.1.0  
+ * $Revision:   V1.1.0  
  *   
- * Project: 	    CMSIS DSP Library   
- * Title:	     	arm_math.h
+ * Project:       CMSIS DSP Library   
+ * Title:       arm_math.h
  *   
- * Description:	 Public header file for CMSIS DSP Library
+ * Description:  Public header file for CMSIS DSP Library
  *   
  * Target Processor: Cortex-M4/Cortex-M3/Cortex-M0
  *  
@@ -258,11 +258,11 @@
 
 // Teensy 3.0
 #include <stdint.h>
-#define __ASM		__asm
-#define __INLINE	inline
-#define __STATIC_INLINE	static inline
-#define __CORTEX_M	4
-#define __FPU_USED	0
+#define __ASM   __asm
+#define __INLINE  inline
+#define __STATIC_INLINE static inline
+#define __CORTEX_M  4
+#define __FPU_USED  0
 #define ARM_MATH_CM4
 #include "core_cmInstr.h"
 #include "core_cm4_simd.h"
@@ -286,7 +286,7 @@
 
 #include "string.h"
 #include "math.h"
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C"
 {
 #endif
@@ -296,27 +296,27 @@ extern "C"
    * @brief Macros required for reciprocal calculation in Normalized LMS
    */
 
-#define DELTA_Q31 			(0x100)
-#define DELTA_Q15 			0x5
-#define INDEX_MASK 			0x0000003F
+#define DELTA_Q31       (0x100)
+#define DELTA_Q15       0x5
+#define INDEX_MASK      0x0000003F
 #ifndef PI
-#define PI					3.14159265358979f
+#define PI          3.14159265358979f
 #endif
 
   /**
    * @brief Macros required for SINE and COSINE Fast math approximations
    */
 
-#define TABLE_SIZE			256
-#define TABLE_SPACING_Q31	0x800000
-#define TABLE_SPACING_Q15	0x80
+#define TABLE_SIZE      256
+#define TABLE_SPACING_Q31 0x800000
+#define TABLE_SPACING_Q15 0x80
 
   /**
    * @brief Macros required for SINE and COSINE Controller functions
    */
   /* 1.31(q31) Fixed value of 2/360 */
   /* -1 to +1 is divided into 360 values so total spacing is (2/360) */
-#define INPUT_SPACING			0xB60B61
+#define INPUT_SPACING     0xB60B61
 
   /**
    * @brief Macro for Unaligned Support
@@ -329,7 +329,7 @@ extern "C"
   #else
     #define ALIGN4 __align(4)
   #endif
-#endif	/*	#ifndef UNALIGNED_SUPPORT_DISABLE	*/
+#endif  /*  #ifndef UNALIGNED_SUPPORT_DISABLE */
 
   /**
    * @brief Error status returned by some functions in the library.
@@ -406,16 +406,16 @@ extern "C"
    */
 #ifndef ARM_MATH_BIG_ENDIAN
 
-#define __PACKq7(v0,v1,v2,v3) ( (((int32_t)(v0) <<  0) & (int32_t)0x000000FF) |	\
-                                (((int32_t)(v1) <<  8) & (int32_t)0x0000FF00) |	\
-							    (((int32_t)(v2) << 16) & (int32_t)0x00FF0000) |	\
-							    (((int32_t)(v3) << 24) & (int32_t)0xFF000000)  )
+#define __PACKq7(v0,v1,v2,v3) ( (((int32_t)(v0) <<  0) & (int32_t)0x000000FF) | \
+                                (((int32_t)(v1) <<  8) & (int32_t)0x0000FF00) | \
+                  (((int32_t)(v2) << 16) & (int32_t)0x00FF0000) | \
+                  (((int32_t)(v3) << 24) & (int32_t)0xFF000000)  )
 #else
 
-#define __PACKq7(v0,v1,v2,v3) ( (((int32_t)(v3) <<  0) & (int32_t)0x000000FF) |	\
-                                (((int32_t)(v2) <<  8) & (int32_t)0x0000FF00) |	\
-							    (((int32_t)(v1) << 16) & (int32_t)0x00FF0000) |	\
-							    (((int32_t)(v0) << 24) & (int32_t)0xFF000000)  )
+#define __PACKq7(v0,v1,v2,v3) ( (((int32_t)(v3) <<  0) & (int32_t)0x000000FF) | \
+                                (((int32_t)(v2) <<  8) & (int32_t)0x0000FF00) | \
+                  (((int32_t)(v1) << 16) & (int32_t)0x00FF0000) | \
+                  (((int32_t)(v0) << 24) & (int32_t)0xFF000000)  )
 
 #endif
 
@@ -1183,11 +1183,11 @@ extern "C"
   /**
    * @brief  Initialization function for the Q31 FIR filter.
    * @param[in,out] *S points to an instance of the Q31 FIR structure.
-   * @param[in] 	numTaps  Number of filter coefficients in the filter.
-   * @param[in] 	*pCoeffs points to the filter coefficients.
-   * @param[in] 	*pState points to the state buffer.
-   * @param[in] 	blockSize number of samples that are processed at a time.
-   * @return 		none.
+   * @param[in]   numTaps  Number of filter coefficients in the filter.
+   * @param[in]   *pCoeffs points to the filter coefficients.
+   * @param[in]   *pState points to the state buffer.
+   * @param[in]   blockSize number of samples that are processed at a time.
+   * @return    none.
    */
   void arm_fir_init_q31(
   arm_fir_instance_q31 * S,
@@ -1213,11 +1213,11 @@ extern "C"
   /**
    * @brief  Initialization function for the floating-point FIR filter.
    * @param[in,out] *S points to an instance of the floating-point FIR filter structure.
-   * @param[in] 	numTaps  Number of filter coefficients in the filter.
-   * @param[in] 	*pCoeffs points to the filter coefficients.
-   * @param[in] 	*pState points to the state buffer.
-   * @param[in] 	blockSize number of samples that are processed at a time.
-   * @return    	none.
+   * @param[in]   numTaps  Number of filter coefficients in the filter.
+   * @param[in]   *pCoeffs points to the filter coefficients.
+   * @param[in]   *pState points to the state buffer.
+   * @param[in]   blockSize number of samples that are processed at a time.
+   * @return      none.
    */
   void arm_fir_init_f32(
   arm_fir_instance_f32 * S,
@@ -1477,7 +1477,7 @@ extern "C"
    * @brief Floating-point matrix transpose.
    * @param[in]  *pSrc points to the input matrix
    * @param[out] *pDst points to the output matrix
-   * @return 	The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
+   * @return  The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
    * or <code>ARM_MATH_SUCCESS</code> based on the outcome of size checking.
    */
 
@@ -1490,7 +1490,7 @@ extern "C"
    * @brief Q15 matrix transpose.
    * @param[in]  *pSrc points to the input matrix
    * @param[out] *pDst points to the output matrix
-   * @return 	The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
+   * @return  The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
    * or <code>ARM_MATH_SUCCESS</code> based on the outcome of size checking.
    */
 
@@ -1502,7 +1502,7 @@ extern "C"
    * @brief Q31 matrix transpose.
    * @param[in]  *pSrc points to the input matrix
    * @param[out] *pDst points to the output matrix
-   * @return 	The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
+   * @return  The function returns either  <code>ARM_MATH_SIZE_MISMATCH</code>
    * or <code>ARM_MATH_SUCCESS</code> based on the outcome of size checking.
    */
 
@@ -1545,7 +1545,7 @@ extern "C"
    * @param[in]       *pSrcA  points to the first input matrix structure
    * @param[in]       *pSrcB  points to the second input matrix structure
    * @param[out]      *pDst   points to output matrix structure
-   * @param[in]		  *pState points to the array for storing intermediate results  
+   * @param[in]     *pState points to the array for storing intermediate results  
    * @return     The function returns either
    * <code>ARM_MATH_SIZE_MISMATCH</code> or <code>ARM_MATH_SUCCESS</code> based on the outcome of size checking.
    */
@@ -1679,7 +1679,7 @@ extern "C"
    * @param[in,out] *S             points to an instance of the floating-point matrix structure.
    * @param[in]     nRows          number of rows in the matrix.
    * @param[in]     nColumns       number of columns in the matrix.
-   * @param[in]     *pData	       points to the matrix data array.
+   * @param[in]     *pData         points to the matrix data array.
    * @return        none
    */
 
@@ -1694,7 +1694,7 @@ extern "C"
    * @param[in,out] *S             points to an instance of the floating-point matrix structure.
    * @param[in]     nRows          number of rows in the matrix.
    * @param[in]     nColumns       number of columns in the matrix.
-   * @param[in]     *pData	       points to the matrix data array.
+   * @param[in]     *pData         points to the matrix data array.
    * @return        none
    */
 
@@ -1709,7 +1709,7 @@ extern "C"
    * @param[in,out] *S             points to an instance of the floating-point matrix structure.
    * @param[in]     nRows          number of rows in the matrix.
    * @param[in]     nColumns       number of columns in the matrix.
-   * @param[in]     *pData	       points to the matrix data array.
+   * @param[in]     *pData         points to the matrix data array.
    * @return        none
    */
 
@@ -2201,7 +2201,7 @@ extern "C"
 
 
   /*----------------------------------------------------------------------
-   *		Internal functions prototypes FFT function
+   *    Internal functions prototypes FFT function
    ----------------------------------------------------------------------*/
 
   /**
@@ -2270,7 +2270,7 @@ extern "C"
    * @brief  Core function for the f32 FFT butterfly process.
    * @param[in, out] *pSrc            points to the in-place buffer of f32 data type.
    * @param[in]      fftLen           length of the FFT.
-   * @param[in]      *pCoef        	  points to Twiddle coefficient buffer.
+   * @param[in]      *pCoef           points to Twiddle coefficient buffer.
    * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table.
    * @return none.
    */
@@ -2282,13 +2282,13 @@ extern "C"
   uint16_t twidCoefModifier);
 
         /**  
-	 * @brief  Core function for the Radix-2 Q31 CFFT butterfly process. 
-	 * @param[in, out] *pSrc            points to the in-place buffer of Q31 data type. 
-	 * @param[in]      fftLen           length of the FFT. 
-	 * @param[in]      *pCoef         	points to Twiddle coefficient buffer.
-	 * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
-	 * @return none. 
-	 */
+   * @brief  Core function for the Radix-2 Q31 CFFT butterfly process. 
+   * @param[in, out] *pSrc            points to the in-place buffer of Q31 data type. 
+   * @param[in]      fftLen           length of the FFT. 
+   * @param[in]      *pCoef           points to Twiddle coefficient buffer.
+   * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
+   * @return none. 
+   */
 
   void arm_radix2_butterfly_q31(
   q31_t * pSrc,
@@ -2297,13 +2297,13 @@ extern "C"
   uint16_t twidCoefModifier);
 
         /**  
-	 * @brief  Core function for the Radix-2 Q15 CFFT butterfly process. 
-	 * @param[in, out] *pSrc            points to the in-place buffer of Q15 data type. 
-	 * @param[in]      fftLen           length of the FFT. 
-	 * @param[in]      *pCoef           points to Twiddle coefficient buffer.
-	 * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
-	 * @return none. 
-	 */
+   * @brief  Core function for the Radix-2 Q15 CFFT butterfly process. 
+   * @param[in, out] *pSrc            points to the in-place buffer of Q15 data type. 
+   * @param[in]      fftLen           length of the FFT. 
+   * @param[in]      *pCoef           points to Twiddle coefficient buffer.
+   * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
+   * @return none. 
+   */
 
   void arm_radix2_butterfly_q15(
   q15_t * pSrc,
@@ -2312,13 +2312,13 @@ extern "C"
   uint16_t twidCoefModifier);
 
         /**  
-	 * @brief  Core function for the Radix-2 Q15 CFFT Inverse butterfly process. 
-	 * @param[in, out] *pSrc            points to the in-place buffer of Q15 data type. 
-	 * @param[in]      fftLen           length of the FFT. 
-	 * @param[in]      *pCoef       	points to Twiddle coefficient buffer.
-	 * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
-	 * @return none. 
-	 */
+   * @brief  Core function for the Radix-2 Q15 CFFT Inverse butterfly process. 
+   * @param[in, out] *pSrc            points to the in-place buffer of Q15 data type. 
+   * @param[in]      fftLen           length of the FFT. 
+   * @param[in]      *pCoef         points to Twiddle coefficient buffer.
+   * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
+   * @return none. 
+   */
 
   void arm_radix2_butterfly_inverse_q15(
   q15_t * pSrc,
@@ -2327,13 +2327,13 @@ extern "C"
   uint16_t twidCoefModifier);
 
         /**  
-	 * @brief  Core function for the Radix-2 Q31 CFFT Inverse butterfly process. 
-	 * @param[in, out] *pSrc            points to the in-place buffer of Q31 data type. 
-	 * @param[in]      fftLen           length of the FFT. 
-	 * @param[in]      *pCoef         	points to Twiddle coefficient buffer.
-	 * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
-	 * @return none. 
-	 */
+   * @brief  Core function for the Radix-2 Q31 CFFT Inverse butterfly process. 
+   * @param[in, out] *pSrc            points to the in-place buffer of Q31 data type. 
+   * @param[in]      fftLen           length of the FFT. 
+   * @param[in]      *pCoef           points to Twiddle coefficient buffer.
+   * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. 
+   * @return none. 
+   */
 
   void arm_radix2_butterfly_inverse_q31(
   q31_t * pSrc,
@@ -2345,9 +2345,9 @@ extern "C"
    * @brief  Core function for the f32 IFFT butterfly process.
    * @param[in, out] *pSrc            points to the in-place buffer of f32 data type.
    * @param[in]      fftLen           length of the FFT.
-   * @param[in]      *pCoef        	  points to Twiddle coefficient buffer.
+   * @param[in]      *pCoef           points to Twiddle coefficient buffer.
    * @param[in]      twidCoefModifier twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table.
-   * @param[in]		 onebyfftLen	  1/fftLenfth
+   * @param[in]    onebyfftLen    1/fftLenfth
    * @return none.
    */
 
@@ -2503,7 +2503,7 @@ extern "C"
    * @param[in]      fftLenReal     length of the FFT.
    * @param[in]      ifftFlagR      flag that selects forward (ifftFlagR=0) or inverse (ifftFlagR=1) transform.
    * @param[in]      bitReverseFlag flag that enables (bitReverseFlag=1) or disables (bitReverseFlag=0) bit reversal of output.
-   * @return		The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
+   * @return    The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
    */
 
   arm_status arm_rfft_init_q15(
@@ -2533,7 +2533,7 @@ extern "C"
    * @param[in]      fftLenReal     length of the FFT.
    * @param[in]      ifftFlagR      flag that selects forward (ifftFlagR=0) or inverse (ifftFlagR=1) transform.
    * @param[in]      bitReverseFlag flag that enables (bitReverseFlag=1) or disables (bitReverseFlag=0) bit reversal of output.
-   * @return		The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
+   * @return    The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
    */
 
   arm_status arm_rfft_init_q31(
@@ -2550,7 +2550,7 @@ extern "C"
    * @param[in]     fftLenReal     length of the FFT.
    * @param[in]     ifftFlagR      flag that selects forward (ifftFlagR=0) or inverse (ifftFlagR=1) transform.
    * @param[in]     bitReverseFlag flag that enables (bitReverseFlag=1) or disables (bitReverseFlag=0) bit reversal of output.
-   * @return		The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
+   * @return    The function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported value.
    */
 
   arm_status arm_rfft_init_f32(
@@ -2596,7 +2596,7 @@ extern "C"
    * @param[in]     N          length of the DCT4.
    * @param[in]     Nby2       half of the length of the DCT4.
    * @param[in]     normalize  normalizing factor.
-   * @return		arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported transform length.
+   * @return    arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>fftLenReal</code> is not a supported transform length.
    */
 
   arm_status arm_dct4_init_f32(
@@ -2643,7 +2643,7 @@ extern "C"
    * @param[in]     N          length of the DCT4.
    * @param[in]     Nby2       half of the length of the DCT4.
    * @param[in]     normalize  normalizing factor.
-   * @return		arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>N</code> is not a supported transform length.
+   * @return    arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>N</code> is not a supported transform length.
    */
 
   arm_status arm_dct4_init_q31(
@@ -2690,7 +2690,7 @@ extern "C"
    * @param[in]     N          length of the DCT4.
    * @param[in]     Nby2       half of the length of the DCT4.
    * @param[in]     normalize  normalizing factor.
-   * @return		arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>N</code> is not a supported transform length.
+   * @return    arm_status function returns ARM_MATH_SUCCESS if initialization is successful or ARM_MATH_ARGUMENT_ERROR if <code>N</code> is not a supported transform length.
    */
 
   arm_status arm_dct4_init_q15(
@@ -3332,11 +3332,11 @@ extern "C"
    */
 
   void arm_conv_fast_q15(
-			  q15_t * pSrcA,
-			 uint32_t srcALen,
-			  q15_t * pSrcB,
-			 uint32_t srcBLen,
-			 q15_t * pDst);
+        q15_t * pSrcA,
+       uint32_t srcALen,
+        q15_t * pSrcB,
+       uint32_t srcBLen,
+       q15_t * pDst);
 
   /**
    * @brief Convolution of Q15 sequences (fast version) for Cortex-M3 and Cortex-M4
@@ -3518,13 +3518,13 @@ extern "C"
    */
 
   arm_status arm_conv_partial_fast_q15(
-				        q15_t * pSrcA,
-				       uint32_t srcALen,
-				        q15_t * pSrcB,
-				       uint32_t srcBLen,
-				       q15_t * pDst,
-				       uint32_t firstIndex,
-				       uint32_t numPoints);
+                q15_t * pSrcA,
+               uint32_t srcALen,
+                q15_t * pSrcB,
+               uint32_t srcBLen,
+               q15_t * pDst,
+               uint32_t firstIndex,
+               uint32_t numPoints);
 
 
   /**
@@ -4715,11 +4715,11 @@ extern "C"
    */
 
   void arm_correlate_fast_q15(
-			       q15_t * pSrcA,
-			      uint32_t srcALen,
-			       q15_t * pSrcB,
-			      uint32_t srcBLen,
-			      q15_t * pDst);
+             q15_t * pSrcA,
+            uint32_t srcALen,
+             q15_t * pSrcB,
+            uint32_t srcBLen,
+            q15_t * pDst);
 
 
 
@@ -5618,8 +5618,8 @@ extern "C"
    * @brief Floating-point Park transform
    * @param[in]       Ialpha input two-phase vector coordinate alpha
    * @param[in]       Ibeta  input two-phase vector coordinate beta
-   * @param[out]      *pId   points to output	rotor reference frame d
-   * @param[out]      *pIq   points to output	rotor reference frame q
+   * @param[out]      *pId   points to output rotor reference frame d
+   * @param[out]      *pIq   points to output rotor reference frame q
    * @param[in]       sinVal sine value of rotation angle theta
    * @param[in]       cosVal cosine value of rotation angle theta
    * @return none.
@@ -5765,7 +5765,7 @@ extern "C"
 
 
   /**
-   * @brief  Inverse Park transform for	Q31 version 
+   * @brief  Inverse Park transform for Q31 version 
    * @param[in]       Id        input coordinate of rotor reference frame d
    * @param[in]       Iq        input coordinate of rotor reference frame q
    * @param[out]      *pIalpha  points to output two-phase orthogonal vector axis alpha
@@ -7557,7 +7557,7 @@ extern "C"
 
 
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 

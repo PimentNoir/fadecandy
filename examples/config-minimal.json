@@ -1,12 +1,12 @@
 {
-	"listen": [null, 7890],
-	"verbose": true,
-	"devices": [
-		{
-			"type": "fadecandy",
-			"map": [
-				[ 0, 0, 0, 512 ]
-			]
-		}
-	]
+    "listen": [null, 7890],
+    "verbose": true,
+    "devices": [
+        {
+            "type": "fadecandy",
+            "map": [
+                [ 0, 0, 0, 512 ]
+            ]
+        }
+    ]
 }

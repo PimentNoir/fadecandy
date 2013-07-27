@@ -15,7 +15,7 @@ import binascii
 
 dev = usb.core.find(idVendor=0x1d50, idProduct=0x607a)
 if not dev:
-	raise IOError("No Fadecandy interfaces found")
+    raise IOError("No Fadecandy interfaces found")
 
 dev.set_configuration()
 
@@ -30,17 +30,17 @@ dev.write(1, '\x80' + chr(flags) + ('\x00' * 62))
 
 lut = [0] * (64 * 25)
 for index in range(25):
-	lut[index*64] = index | 0x40
+    lut[index*64] = index | 0x40
 lut[24*64] |= 0x20
 for channel in range(3):
-	for row in range(257):
-		value = min(0xFFFF, int(pow(row / 256.0, 2.2) * 0x10000))
-		i = channel * 257 + row
-		packetNum = i / 31
-		packetIndex = i % 31
-		#print "%d, %d = 0x%04x" % (channel, row, value)
-		lut[packetNum*64 + 2 + packetIndex*2] = value & 0xFF
-		lut[packetNum*64 + 3 + packetIndex*2] = value >> 8
+    for row in range(257):
+        value = min(0xFFFF, int(pow(row / 256.0, 2.2) * 0x10000))
+        i = channel * 257 + row
+        packetNum = i / 31
+        packetIndex = i % 31
+        #print "%d, %d = 0x%04x" % (channel, row, value)
+        lut[packetNum*64 + 2 + packetIndex*2] = value & 0xFF
+        lut[packetNum*64 + 3 + packetIndex*2] = value >> 8
 lutPackets = ''.join(map(chr, lut))
 #print binascii.b2a_hex(lutPackets)
 dev.write(1, lutPackets)
@@ -50,18 +50,18 @@ print "LUT programmed"
 
 while True:
 
-	for index in range(25):
-		if index == 24:
-			# Final
-			control = index | 0x20
-		else:
-			control = index
+    for index in range(25):
+        if index == 24:
+            # Final
+            control = index | 0x20
+        else:
+            control = index
 
-		data = chr(control) + ''.join(chr(random.choice([0, 255])) for i in range(63))
-		dev.write(1, data)
-		#print binascii.b2a_hex(data)
+        data = chr(control) + ''.join(chr(random.choice([0, 255])) for i in range(63))
+        dev.write(1, data)
+        #print binascii.b2a_hex(data)
 
-	#print
-	raw_input()
-	#time.sleep(0.1)
+    #print
+    raw_input()
+    #time.sleep(0.1)
 

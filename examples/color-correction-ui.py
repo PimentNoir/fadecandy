@@ -17,24 +17,24 @@ s.connect(('localhost', 7890))
 print "Connected to OPC server"
 
 def setGlobalColorCorrection(**obj):
-	msg = json.dumps(obj)
-	s.send(struct.pack(">BBHHH", 0, 0xFF, len(msg) + 4, 0x0001, 0x0001) + msg)
+    msg = json.dumps(obj)
+    s.send(struct.pack(">BBHHH", 0, 0xFF, len(msg) + 4, 0x0001, 0x0001) + msg)
 
 def update(_):
-	setGlobalColorCorrection(
-		gamma = gamma.get(),
-		whitepoint = [
-			red.get(),
-			green.get(),
-			blue.get(),
-		])
+    setGlobalColorCorrection(
+        gamma = gamma.get(),
+        whitepoint = [
+            red.get(),
+            green.get(),
+            blue.get(),
+        ])
 
 def slider(name, from_, to):
-	s = tk.Scale(root, label=name, from_=from_, to=to, resolution=0.01,
-		showvalue='yes', orient='horizontal', length=400, command=update)
-	s.set(1.0)
-	s.pack()
-	return s
+    s = tk.Scale(root, label=name, from_=from_, to=to, resolution=0.01,
+        showvalue='yes', orient='horizontal', length=400, command=update)
+    s.set(1.0)
+    s.pack()
+    return s
 
 root = tk.Tk()
 root.title("Fadecandy Color Correction Example")
