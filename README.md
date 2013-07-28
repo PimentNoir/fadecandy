@@ -78,7 +78,7 @@ Pin Assignment
 
 The pin assignment is the same as the original [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) pinout:
 
-![Wiring Diagram](https://raw.github.com/scanlime/fadecandy/master/firmware/wiring-diagram.png)
+![Wiring Diagram](https://raw.github.com/scanlime/fadecandy/master/tools/wiring-diagram.png)
 
 Teensy 3.0 Pin | Function
 -------------- | --------------
