@@ -39,6 +39,7 @@ public:
     // SysEx system and command IDs
     enum SysEx {
         FCSetGlobalColorCorrection = 0x00010001,
+        FCSetFirmwareConfiguration = 0x00010002
     };
 
     struct Message

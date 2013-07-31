@@ -25,6 +25,7 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
 
 
 FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length)
@@ -45,6 +46,9 @@ FCDevice::FCDevice(libusb_device *device, bool verbose)
       mConfigMap(0)
 {
     mSerial[0] = '\0';
+
+    memset(&mFirmwareConfig, 0, sizeof mFirmwareConfig);
+    mFirmwareConfig.control = TYPE_CONFIG;
 
     // Framebuffer headers
     memset(mFramebuffer, 0, sizeof mFramebuffer);
@@ -293,6 +297,9 @@ void FCDevice::opcSysEx(const OPCSink::Message &msg)
         case OPCSink::FCSetGlobalColorCorrection:
             return opcSetGlobalColorCorrection(msg);
 
+        case OPCSink::FCSetFirmwareConfiguration:
+            return opcSetFirmwareConfiguration(msg);
+
     }
 
     // Quietly ignore unhandled SysEx messages.
@@ -404,6 +411,30 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
      * objects that come through the config file.
      */
     writeColorCorrection(doc);
+}
+
+void FCDevice::opcSetFirmwareConfiguration(const OPCSink::Message &msg)
+{
+    /*
+     * Raw firmware configuration packet
+     */
+
+    memcpy(mFirmwareConfig.data, msg.data + 4, std::min<size_t>(sizeof mFirmwareConfig.data, msg.length() - 4));
+    submitTransfer(new Transfer(this, &mFirmwareConfig, sizeof mFirmwareConfig));
+
+    if (mVerbose) {
+        std::clog << "New Fadecandy firmware configuration:";
+        for (unsigned i = 0; i < sizeof mFirmwareConfig.data; i++) {
+            if (!(i & 31)) {
+                std::clog << "\n";
+            }
+
+            char hex[4];
+            sprintf(hex, " %02x", mFirmwareConfig.data[i]);
+            std::clog << hex;
+        }
+        std::clog << "\n";
+    }
 }
 
 std::string FCDevice::getName()

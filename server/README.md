@@ -50,6 +50,13 @@ Byte   | **Set Global Color Correction** command
 6 - 7  | SysEx ID (0x0001, Set Global Color Correction)
 8 - …  | JSON Text
 
+Full list of SysEx commands:
+
+SysEx ID | Description
+-------- | ------------
+0x0001   | Set global color correction
+0x0002   | Set firmware configuration
+
 
 Configuration
 -------------

@@ -83,6 +83,7 @@ private:
     char mSerial[256];
     Packet mFramebuffer[FRAMEBUFFER_PACKETS];
     Packet mColorLUT[LUT_PACKETS];
+    Packet mFirmwareConfig;
 
     void submitTransfer(Transfer *fct);
     static void completeTransfer(struct libusb_transfer *transfer);
@@ -90,5 +91,6 @@ private:
     void opcSetPixelColors(const OPCSink::Message &msg);
     void opcSysEx(const OPCSink::Message &msg);
     void opcSetGlobalColorCorrection(const OPCSink::Message &msg);
+    void opcSetFirmwareConfiguration(const OPCSink::Message &msg);
     void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);
 };
