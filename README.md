@@ -110,7 +110,7 @@ Vendor ID       | 0x1d50
 Product ID      | 0x607a
 Manufacturer    | "scanlime"
 Product         | "Fadecandy"
-Serial          | Unique 128-bit ID, as a hexadecimal string
+Serial          | Unique ID string
 Device Class    | Vendor-specific
 Configurations  | 1
 Endpoints       | 1

@@ -10,14 +10,14 @@
     "devices": [
         {
             "type": "fadecandy",
-            "serial": "FFFFFFFFFFFF00180017200214134D44",
+            "serial": "LXJNACKAPTQLQVMF",
             "map": [
                 [ 0, 0, 0, 512 ]
             ]
         },
         {
             "type": "fadecandy",
-            "serial": "FFFFFFFFFFFF0021003B200314134D44",
+            "serial": "ELWQLXUWZPYTKTIB",
             "map": [
                 [ 0, 512, 0, 64 ],
                 [ 0, 576, 128, 32 ]
@@ -25,7 +25,7 @@
         },
         {
             "type": "fadecandy",
-            "serial": "FFFFFFFFFFFF0044004E200114134D44",
+            "serial": "JZJZCONXXJOHSTCH",
             "map": [
                 [ 0, 0, 0, 512 ]
             ]
