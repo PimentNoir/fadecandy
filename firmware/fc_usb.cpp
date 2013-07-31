@@ -85,8 +85,13 @@ void fcBuffers::handleUSB()
         }
     }
 
-    // Use the built-in LED as a USB activity indicator.
-    digitalWrite(LED_BUILTIN, handledAnyPackets);
+    if (flags & CFLAG_NO_ACTIVITY_LED) {
+        // LED under manual control
+        digitalWrite(LED_BUILTIN, flags & CFLAG_LED_CONTROL);
+    } else {
+        // Use the built-in LED as a USB activity indicator.
+        digitalWrite(LED_BUILTIN, handledAnyPackets);
+    }
 }
 
 void fcBuffers::finalizeFramebuffer()

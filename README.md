@@ -173,6 +173,8 @@ Byte Offset | Bits   | Description
 ----------- | ------ | ------------
 0           | 7 … 0  | Control byte
 1           | 7 … 2  | (reserved)
+1           | 3      | Manual LED control bit
+1           | 2      | 0 = LED shows USB activity, 1 = LED under manual control
 1           | 1      | Disable keyframe interpolation
 1           | 0      | Disable dithering
 2 … 63      | 7 … 0  | (reserved)
