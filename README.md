@@ -93,7 +93,11 @@ Teensy 3.0 Pin | Function
 15 & 16        | Connect together
 13 (LED)       | Built-in LED blinks when data is received over USB
 
-Remember that each strip may be up to 64 LEDs long. It's fine to have shorter strips or to leave some outputs unused. These outputs are 3.3V logic signals at 800 kilobits per second. It usually works to connect them directly to the 5V inputs of your WS2811 LED strips, but for the best signal integrity you should really use a level-shifting buffer to convert the 3.3V logic to 5V.
+Remember that each strip may be up to 64 LEDs long. It's fine to have shorter strips or to leave some outputs unused. These outputs are 3.3V logic signals at 800 kilobits per second.
+
+It usually works to connect them directly to the 5V inputs of your WS2811 LED strips, but better signal integrity can be had quite easily by adding a series resistor (47 to 220 ohms) near the Teensy 3.0 board. And for the best signal integrity, you can use a level-shifting buffer (like the 74HCT245) to convert the 3.3V logic to 5V. For more information, see the [OctoWS2811 web site](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html).
+
+Running these control signals over long distances is tricky, and not recommended unless you're using some kind of purpose-built line driver like an RS-485 transmitter/receiver pair. For large installations, it's usually easier to run the USB signals long distances and place the Teensy boards close to your LEDs.
 
 USB Protocol
 ------------
