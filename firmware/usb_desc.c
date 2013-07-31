@@ -177,30 +177,48 @@ struct usb_string_descriptor_struct usb_string_product_name_default = {
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
 struct usb_string_descriptor_struct usb_string_serial_number_default = {
-        2 + 32 * 2,
+        2 + 16 * 2,
         3,
         {0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,
          0,0,0,0,0,0,0,0}
 };
 
-static void toHexWide(uint32_t value, uint16_t *buffer)
-{
-    static const uint8_t digits[] = "0123456789ABCDEF";
-    unsigned i;
-    for (i = 0; i < 8; i++) {
-        buffer[i] = digits[value >> 28];
-        value <<= 4;
-    }
-}
-
 void usb_init_serialnumber(void)
 {
-    toHexWide(SIM_UIDH,  usb_string_serial_number_default.wString + 8*0);
-    toHexWide(SIM_UIDMH, usb_string_serial_number_default.wString + 8*1);
-    toHexWide(SIM_UIDML, usb_string_serial_number_default.wString + 8*2);
-    toHexWide(SIM_UIDL,  usb_string_serial_number_default.wString + 8*3);
+    /*
+     * The CPU has a 128-bit unique serial number. But it seems to encode
+     * some manufacturing information in a way that makes it hard to visually
+     * parse. Distinct devices may have very similar-looking serial numbers.
+     *
+     * To make this more user-friendly, we mix up the serial number using
+     * an FNV hash and alphabetically encode it.
+     */
+
+    union {
+        uint8_t bytes[16];
+        struct {
+            uint32_t a, b, c, d;
+        };
+    } serial;
+
+    unsigned i;
+    uint32_t hash = 0x811c9dc5;
+
+    serial.d = SIM_UIDH;
+    serial.c = SIM_UIDMH;
+    serial.b = SIM_UIDML;
+    serial.a = SIM_UIDL;
+
+    // Initial hash
+    for (i = 0; i < 16; ++i) {
+        hash = (hash ^ serial.bytes[i]) * 0x1000193;
+    }
+
+    // Output letters
+    for (i = 0; i < 16; ++i) {
+        hash = (hash ^ serial.bytes[i]) * 0x1000193;
+        usb_string_serial_number_default.wString[i] = 'A' + (hash % 26);
+    }
 }
 
 
