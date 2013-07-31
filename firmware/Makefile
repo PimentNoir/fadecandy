@@ -72,7 +72,7 @@ clean:
 
 install: $(TARGET).hex
 	$(abspath $(TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))
-	$(abspath $(TOOLSPATH))/teensy_reboot
+	python ../tools/usb-bootloader.py
 
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<

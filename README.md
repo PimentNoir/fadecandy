@@ -70,8 +70,8 @@ For more information, see the [Server README](https://github.com/scanlime/fadeca
 Prerequisites
 -------------
 
-* To install a firmware image, you'll need the Teensy Loader: <http://www.pjrc.com/teensy/loader.html>
-* To recompile the firmware, please use the recommended ARM toolchain from <https://code.launchpad.net/gcc-arm-embedded>
+* To install a firmware image, you'll need the [Teensy Loader](http://www.pjrc.com/teensy/loader.html) or the [command line version](http://www.pjrc.com/teensy/loader_cli.html).
+* To recompile the firmware (only needed if you want to modify it), please use the [recommended ARM toolchain](https://code.launchpad.net/gcc-arm-embedded).
 
 Pin Assignment
 --------------
@@ -177,6 +177,11 @@ Byte Offset | Bits   | Description
 1           | 0      | Disable dithering
 2 … 63      | 7 … 0  | (reserved)
 
+Control transfers supported on EP0:
+
+bmRequestType  | bRequest | wValue | wIndex | wLength | Description
+-------------- | -------- | ------ | ------ | ------- | ---------------------------------------------
+0x40           | 1        | 0      | 0      | 0       | Reboot to Teensy 3.0 bootloader
 
 Contact
 -------

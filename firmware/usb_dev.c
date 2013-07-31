@@ -31,6 +31,7 @@
 #include "mk20dx128.h"
 #include "usb_dev.h"
 #include "usb_mem.h"
+#include "usb_desc.h"
 
 // buffer descriptor table
 
@@ -336,6 +337,13 @@ static void usb_setup(void)
         break;
       // case 0xC940:
 #endif
+
+#ifdef USB_FADECANDY
+      case 0x0140:      // Reboot to bootloader
+        usb_reboot_timer = 5;
+        break;
+#endif
+
       default:
         endpoint0_stall();
         return;
