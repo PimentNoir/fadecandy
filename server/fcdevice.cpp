@@ -94,8 +94,7 @@ bool FCDevice::probe(libusb_device *device)
 
 int FCDevice::open()
 {
-    libusb_device_descriptor dd;
-    int r = libusb_get_device_descriptor(mDevice, &dd);
+    int r = libusb_get_device_descriptor(mDevice, &mDD);
     if (r < 0) {
         return r;
     }
@@ -110,7 +109,7 @@ int FCDevice::open()
         return r;
     }
 
-    return libusb_get_string_descriptor_ascii(mHandle, dd.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
+    return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
 }
 
 bool FCDevice::matchConfiguration(const Value &config)
@@ -442,7 +441,9 @@ std::string FCDevice::getName()
     std::ostringstream s;
     s << "Fadecandy";
     if (mSerial[0]) {
-        s << " (Serial# " << mSerial << ")";
+        unsigned major = mDD.bcdDevice >> 8;
+        unsigned minor = mDD.bcdDevice & 0xFF;
+        s << " (Serial# " << mSerial << ", Version " << major << "." << minor << ")";
     }
     return s.str();
 }

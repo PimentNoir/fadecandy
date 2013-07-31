@@ -81,6 +81,7 @@ private:
     std::set<Transfer*> mPending;
 
     char mSerial[256];
+    libusb_device_descriptor mDD;
     Packet mFramebuffer[FRAMEBUFFER_PACKETS];
     Packet mColorLUT[LUT_PACKETS];
     Packet mFirmwareConfig;
