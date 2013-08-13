@@ -65,6 +65,11 @@ private:
     static const uint8_t TYPE_CONFIG = 0x80;
     static const uint8_t FINAL = 0x20;
 
+    static const uint8_t CFLAG_NO_DITHERING     = (1 << 0);
+    static const uint8_t CFLAG_NO_INTERPOLATION = (1 << 1);
+    static const uint8_t CFLAG_NO_ACTIVITY_LED  = (1 << 2);
+    static const uint8_t CFLAG_LED_CONTROL      = (1 << 3);
+
     struct Packet {
         uint8_t control;
         uint8_t data[63];
@@ -87,6 +92,8 @@ private:
     Packet mFirmwareConfig;
 
     void submitTransfer(Transfer *fct);
+    void configureDevice(const Value &config);
+    void writeFirmwareConfiguration();
     static void completeTransfer(struct libusb_transfer *transfer);
 
     void opcSetPixelColors(const OPCSink::Message &msg);

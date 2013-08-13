@@ -116,10 +116,31 @@ bool FCDevice::matchConfiguration(const Value &config)
 {
     if (matchConfigurationWithTypeAndSerial(config, "fadecandy", mSerial)) {
         mConfigMap = findConfigMap(config);
+        configureDevice(config);
         return true;
     }
 
     return false;
+}
+
+void FCDevice::configureDevice(const Value &config)
+{
+    /*
+     * Send a device configuration settings packet, using the default values in our
+     * JSON config file. This can be overridden over OPC later on.
+     */
+
+    const Value &led = config["led"];
+
+    if (!(led.IsTrue() || led.IsFalse() || led.IsNull())) {
+        std::clog << "LED configuration must be true (always on), false (always off), or null (default).\n";
+    }
+
+    mFirmwareConfig.data[0] =
+        (led.IsNull() ? 0 : CFLAG_NO_ACTIVITY_LED) |
+        (led.IsTrue() ? CFLAG_LED_CONTROL : 0)     ;
+
+    writeFirmwareConfiguration();
 }
 
 void FCDevice::submitTransfer(Transfer *fct)
@@ -419,6 +440,15 @@ void FCDevice::opcSetFirmwareConfiguration(const OPCSink::Message &msg)
      */
 
     memcpy(mFirmwareConfig.data, msg.data + 4, std::min<size_t>(sizeof mFirmwareConfig.data, msg.length() - 4));
+    writeFirmwareConfiguration();
+}
+
+void FCDevice::writeFirmwareConfiguration()
+{
+    /*
+     * Write mFirmwareConfig to the device, and log it.
+     */
+
     submitTransfer(new Transfer(this, &mFirmwareConfig, sizeof mFirmwareConfig));
 
     if (mVerbose) {
