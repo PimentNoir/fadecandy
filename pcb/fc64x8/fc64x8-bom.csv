@@ -1,0 +1,15 @@
+Qty,Refs,Mfg. Part,Description,Package,Supplier,Supplier Part,$ single,$ qty 100,URL,Extended $ single,Extended $ qty 100,,
+1,U1,MK20DX128VLF50,ARM Cortex-M4 microcontroller,LQFP-48,Digi-Key,MK20DX128VLF50-ND,$4.78,$2.66,http://www.digikey.com/product-detail/en/MK20DX128VLF5/MK20DX128VLF50-ND/3507511,$4.78,$2.6568,Total qty 1:,$8.78
+1,X1,TSX-3225 16.0000MF18X-AC3,16 MHz crystal,custom,Digi-Key,SER3636CT-ND,$0.63,$0.42,http://www.digikey.com/product-detail/en/TSX-3225%2016.0000MF18X-AC3/SER3636CT-ND/1825448,$0.63,$0.42,Total qty 100:,$4.64142
+5,"C2,3,4,6,11",CL10F104ZA8NNNC,0.1uF ceramic cap,SMT 0603,Digi-Key,1276-1011-1-ND,$0.10,$0.01,http://www.digikey.com/product-detail/en/CL10F104ZA8NNNC/1276-1011-1-ND/3889097,$0.5,$0.038,Retail estimate:,$13.92426
+3,"C1,5,10",CC0603ZRY5V5BB225,2.2uF ceramic cap,SMT 0603,Digi-Key,311-1452-1-ND,$0.11,$0.04,http://www.digikey.com/product-detail/en/CC0603ZRY5V5BB225/311-1452-1-ND/2833758,$0.33,$0.108,,
+1,U2,AAT3110IGU-5.0-T1,5V switched cap boost converter,SOT23-6,Digi-Key,863-1505-1-ND,$0.30,$0.26,http://www.digikey.com/product-detail/en/AAT3110IGU-5.0-T1/863-1505-1-ND/4246120,$0.3,$0.26,,
+1,J1,10118194-0001LF,"Micro USB, SMT, 4 DIP legs",custom,Digi-Key,609-4618-1-ND,$0.46,$0.30,http://www.digikey.com/product-detail/en/10118194-0001LF/609-4618-1-ND/2785382,$0.46,$0.3032,,
+2,"FB1,2",ACML-0603-060-T,"Ferrite bead, 1A",SMT 0603,Digi-Key,ACML-0603-060-TCT-ND,$0.05,$0.03,http://www.digikey.com/product-detail/en/ACML-0603-060-T/ACML-0603-060-TCT-ND/3060012,$0.1,$0.066,,
+2,"R1,2",RMCF0603JT33R0,"33 ohm resistor, 1/10 W 5%",SMT 0603,Digi-Key,RMCF0603JT33R0CT-ND,$0.02,$0.01,http://www.digikey.com/product-detail/en/RMCF0603JT33R0/RMCF0603JT33R0CT-ND/1943151,$0.04,$0.014,,
+1,U3,SN74HCT245PWR,Octal buffer,TSSOP-20,Digi-Key,296-8404-1-ND,$0.51,$0.32,http://www.digikey.com/product-detail/en/SN74HCT245PWR/296-8404-1-ND/376682,$0.51,$0.3245,,
+1,R3,RMCF0603JT180R,"180 ohm resistor, 1/10 W 5%",SMT 0603,Digi-Key,RMCF0603JT180RCT-ND,$0.02,$0.01,http://www.digikey.com/product-detail/en/RMCF0603JT180R/RMCF0603JT180RCT-ND/1943160,$0.02,$0.007,,
+1,D1,LY Q976-P1S2-36,Yellow LED,SMT 0603,Digi-Key,475-2558-1-ND,$0.09,$0.06,http://www.digikey.com/product-detail/en/LY%20Q976-P1S2-36/475-2558-1-ND/1802685,$0.09,$0.0575,,
+2,"C7,8",T491A106K010AT,"10uF tantalum cap, 10V",SMT 1206,Digi-Key,399-3684-1-ND,$0.38,$0.17,http://www.digikey.com/product-detail/en/T491A106K010AT/399-3684-1-ND/819009,$0.76,$0.3368,,
+1,C9,CC0603ZRY5V6BB105,1uF ceramic cap,SMT 0603,Digi-Key,311-1357-1-ND,$0.10,$0.02,http://www.digikey.com/product-detail/en/CC0603ZRY5V6BB105/311-1357-1-ND/2103141,$0.1,$0.0189,,
+8,R4-11,RMCF0603JT75R0,"75 ohm resistor, 1/10 W 5%",SMT 0603,Digi-Key,RMCF0603JT75R0CT-ND,$0.02,$0.00,http://www.digikey.com/product-detail/en/RMCF0603JT75R0/RMCF0603JT75R0CT-ND/1943155,$0.16,$0.03072,,
