@@ -13,3 +13,5 @@ Qty,Refs,Mfg. Part,Description,Package,Supplier,Supplier Part,$ single,$ qty 100
 2,"C7,8",T491A106K010AT,"10uF tantalum cap, 10V",SMT 1206,Digi-Key,399-3684-1-ND,$0.38,$0.17,http://www.digikey.com/product-detail/en/T491A106K010AT/399-3684-1-ND/819009,$0.76,$0.3368,,
 1,C9,CC0603ZRY5V6BB105,1uF ceramic cap,SMT 0603,Digi-Key,311-1357-1-ND,$0.10,$0.02,http://www.digikey.com/product-detail/en/CC0603ZRY5V6BB105/311-1357-1-ND/2103141,$0.1,$0.0189,,
 8,R4-11,RMCF0603JT75R0,"75 ohm resistor, 1/10 W 5%",SMT 0603,Digi-Key,RMCF0603JT75R0CT-ND,$0.02,$0.00,http://www.digikey.com/product-detail/en/RMCF0603JT75R0/RMCF0603JT75R0CT-ND/1943155,$0.16,$0.03072,,
+1,J2-1,68602-116HLF,"Header 8x2 0.1"" gold plated","0.1"" 8x2 TH",Digi-Key,609-3364-ND,$0.46,$0.34,http://www.digikey.com/product-detail/en/68602-116HLF/609-3364-ND/1878523,,,,
+1,J2-2,101-166,"IDC socket 8x2 0.1""",IDC,Digi-Key,ED10502-ND,$0.33,$0.22,http://www.digikey.com/product-detail/en/101-166/ED10502-ND/2794214,,,,
