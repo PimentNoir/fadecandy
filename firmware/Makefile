@@ -2,7 +2,7 @@
 # Environment setup
 
 # Teensy loader tools (for 'make install')
-TOOLSPATH = /Applications/Arduino.app/Contents/Resources/Java/hardware/tools
+TEENSY_TOOLSPATH = /Applications/Arduino.app/Contents/Resources/Java/hardware/tools
 
 # toolchain
 CC = arm-none-eabi-gcc
@@ -70,9 +70,9 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 clean:
 	rm -f *.d *.o $(TARGET).elf $(TARGET).hex
 
-install: $(TARGET).hex
-	$(abspath $(TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))
-	python ../tools/usb-bootloader.py
+install-teensy: $(TARGET).hex
+	$(abspath $(TEENSY_TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))
+	python ../tools/teensy-bootloader-mode.py
 
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
