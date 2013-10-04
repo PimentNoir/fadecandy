@@ -123,7 +123,7 @@ static uint8_t ep0_tx_data_toggle = 0;
 uint8_t usb_rx_memory_needed = 0;
 
 volatile uint8_t usb_configuration = 0;
-volatile uint8_t usb_reboot_timer = 0;
+volatile uint8_t usb_teensy_reboot_timer = 0;
 
 
 static void endpoint0_stall(void)
@@ -339,8 +339,8 @@ static void usb_setup(void)
 #endif
 
 #ifdef USB_FADECANDY
-      case 0x0140:      // Reboot to bootloader
-        usb_reboot_timer = 5;
+      case 0x0140:      // Reboot to Teensy 3.0 bootloader
+        usb_teensy_reboot_timer = 5;
         break;
 #endif
 
@@ -438,19 +438,6 @@ static void usb_control(uint32_t stat)
         // first IN after Setup is always DATA1
         ep0_tx_data_toggle = 1;
 
-#if 0
-        serial_print("bmRequestType:");
-        serial_phex(setup.bmRequestType);
-        serial_print(", bRequest:");
-        serial_phex(setup.bRequest);
-        serial_print(", wValue:");
-        serial_phex16(setup.wValue);
-        serial_print(", wIndex:");
-        serial_phex16(setup.wIndex);
-        serial_print(", len:");
-        serial_phex16(setup.wLength);
-        serial_print("\n");
-#endif
         // actually "do" the setup request
         usb_setup();
         // unfreeze the USB, now that we're ready
@@ -459,34 +446,6 @@ static void usb_control(uint32_t stat)
     case 0x01:  // OUT transaction received from host
     case 0x02:
         //serial_print("PID=OUT\n");
-#ifdef CDC_STATUS_INTERFACE
-        if (setup.wRequestAndType == 0x2021 /*CDC_SET_LINE_CODING*/) {
-            int i;
-            uint8_t *dst = (uint8_t *)usb_cdc_line_coding;
-            //serial_print("set line coding ");
-            for (i=0; i<7; i++) {
-                //serial_phex(*buf);
-                *dst++ = *buf++;
-            }
-            //serial_phex32(usb_cdc_line_coding[0]);
-            //serial_print("\n");
-            if (usb_cdc_line_coding[0] == 134) usb_reboot_timer = 15;
-            endpoint0_transmit(NULL, 0);
-        }
-#endif
-#ifdef KEYBOARD_INTERFACE
-        if (setup.word1 == 0x02000921 && setup.word2 == ((1<<16)|KEYBOARD_INTERFACE)) {
-            keyboard_leds = buf[0];
-            endpoint0_transmit(NULL, 0);
-        }
-#endif
-#ifdef SEREMU_INTERFACE
-        if (setup.word1 == 0x03000921 && setup.word2 == ((4<<16)|SEREMU_INTERFACE)
-          && buf[0] == 0xA9 && buf[1] == 0x45 && buf[2] == 0xC2 && buf[3] == 0x6B) {
-            usb_reboot_timer = 5;
-            endpoint0_transmit(NULL, 0);
-        }
-#endif
         // give the buffer back
         b->desc = BDT_DESC(EP0_SIZE, DATA1);
         break;
@@ -710,9 +669,9 @@ void usb_isr(void)
 
     if ((status & USB_INTEN_SOFTOKEN /* 04 */ )) {
         if (usb_configuration) {
-            t = usb_reboot_timer;
+            t = usb_teensy_reboot_timer;
             if (t) {
-                usb_reboot_timer = --t;
+                usb_teensy_reboot_timer = --t;
                 if (!t) _reboot_Teensyduino_();
             }
         }
