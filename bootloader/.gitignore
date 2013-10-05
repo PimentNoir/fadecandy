@@ -1,0 +1,12 @@
+*.elf
+*.hex
+*.o
+*.a
+*.d
+
+# IDA Pro
+*.id0
+*.id1
+*.nam
+*.til
+*.idb

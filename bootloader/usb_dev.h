@@ -38,7 +38,6 @@ extern "C" {
 #endif
 
 void usb_init(void);
-void usb_init_serialnumber(void);
 void usb_isr(void);
 
 extern volatile uint8_t usb_configuration;

@@ -21,8 +21,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "usb_dev.h"
+
 extern "C" int main()
 {
+    usb_init();
+
     while (1) {
     }
 }

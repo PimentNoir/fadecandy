@@ -69,7 +69,7 @@ clean:
 
 # Install with OpenOCD. (No code protection!)
 install: $(TARGET).hex
-	openocd -f openocd.cfg -c "program $(TARGET).hex"
+	openocd -f openocd.cfg -c "program $(TARGET).hex verify reset"
 
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
