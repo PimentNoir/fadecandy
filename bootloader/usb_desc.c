@@ -63,21 +63,9 @@ static uint8_t device_descriptor[] = {
         18,                                     // bLength
         1,                                      // bDescriptorType
         0x00, 0x02,                             // bcdUSB
-#ifdef DEVICE_CLASS
         DEVICE_CLASS,                           // bDeviceClass
-#else
-        0,
-#endif
-#ifdef DEVICE_SUBCLASS
         DEVICE_SUBCLASS,                        // bDeviceSubClass
-#else
-        0,
-#endif
-#ifdef DEVICE_PROTOCOL
-        DEVICE_PROTOCOL,                        // bDeviceProtocol
-#else
-        0,
-#endif
+        0x00,                                   // bDeviceProtocol
         EP0_SIZE,                               // bMaxPacketSize0
         LSB(VENDOR_ID), MSB(VENDOR_ID),         // idVendor
         LSB(PRODUCT_ID), MSB(PRODUCT_ID),       // idProduct
@@ -103,34 +91,33 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         // configuration descriptor, USB spec 9.6.3, page 264-266, Table 9-10
         9,                                      // bLength;
         2,                                      // bDescriptorType;
-        LSB(CONFIG_DESC_SIZE),                 // wTotalLength
+        LSB(CONFIG_DESC_SIZE),                  // wTotalLength
         MSB(CONFIG_DESC_SIZE),
         NUM_INTERFACE,                          // bNumInterfaces
         1,                                      // bConfigurationValue
-        0,                                      // iConfiguration
+        2,                                      // iConfiguration
         0x80,                                   // bmAttributes
         50,                                     // bMaxPower
 
-#ifdef FC_INTERFACE
-        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+        // interface descriptor, DFU Mode (DFU spec Table 4.4)
         9,                                      // bLength
         4,                                      // bDescriptorType
-        FC_INTERFACE,                           // bInterfaceNumber
+        DFU_INTERFACE,                          // bInterfaceNumber
         0,                                      // bAlternateSetting
-        1,                                      // bNumEndpoints
-        0xff,                                   // bInterfaceClass (Vendor specific)
-        0x00,                                   // bInterfaceSubClass
+        0,                                      // bNumEndpoints
+        DEVICE_CLASS,                           // bInterfaceClass
+        DEVICE_SUBCLASS,                        // bInterfaceSubClass
         0x00,                                   // bInterfaceProtocol
-        0,                                      // iInterface
-        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
-        7,                                      // bLength
-        5,                                      // bDescriptorType
-        FC_OUT_ENDPOINT,                        // bEndpointAddress
-        0x02,                                   // bmAttributes (0x02=bulk)
-        FC_OUT_SIZE, 0,                         // wMaxPacketSize
-        0,                                      // bInterval
-#endif // FC_INTERFACE
+        2,                                      // iInterface
 
+        // DFU Functional Descriptor (DFU spec TAble 4.2)
+        7,                                      // bLength
+        0x21,                                   // bDescriptorType
+        0x01,                                   // bmAttributes: Download only, must be reset
+        LSB(DFU_DETACH_TIMEOUT),                // wDetachTimeOut
+        MSB(DFU_DETACH_TIMEOUT),
+        LSB(DFU_TRANSFER_SIZE),                 // wTransferSize
+        MSB(DFU_TRANSFER_SIZE),
 };
 
 

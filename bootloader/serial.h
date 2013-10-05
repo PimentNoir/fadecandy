@@ -28,36 +28,35 @@
  * SOFTWARE.
  */
 
-#ifndef _usb_desc_h_
-#define _usb_desc_h_
+#ifndef HardwareSerial_h
+#define HardwareSerial_h
 
-#include <stdint.h>
-#include <stddef.h>
+#include "mk20dx128.h"
+#include <inttypes.h>
 
-#define NUM_USB_BUFFERS           8
-#define VENDOR_ID                 0x1d50    // OpenMoko
-#define PRODUCT_ID                0x607a    // Assigned to Fadecandy project
-#define DEVICE_VER                0x0100    // Bootloader version
-#define DEVICE_CLASS              0xfe      // Application specific
-#define DEVICE_SUBCLASS			  0x01      // Device Firmware Update
-#define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
-#define MANUFACTURER_NAME_LEN     8
-#define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y',' ','B','o','o','t','l','o','a','d','e','r'}
-#define PRODUCT_NAME_LEN          20
-#define EP0_SIZE                  64
-#define NUM_INTERFACE             1
-#define DFU_INTERFACE             0
-#define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
-#define DFU_TRANSFER_SIZE		  1024		// Equal to flash erase block size
-#define CONFIG_DESC_SIZE          (9+9+7)
+#define BAUD2DIV(baud)  (((F_CPU * 2) + ((baud) >> 1)) / (baud))
 
-typedef struct {
-    uint16_t  wValue;
-    uint16_t  wIndex;
-    const uint8_t *addr;
-    uint16_t  length;
-} usb_descriptor_list_t;
+// C language implementation
+//
+#ifdef __cplusplus
+extern "C" {
+#endif
+void serial_begin(uint32_t divisor);
+void serial_end(void);
+void serial_putchar(uint8_t c);
+void serial_write(const void *buf, unsigned int count);
+void serial_flush(void);
+int serial_available(void);
+int serial_getchar(void);
+int serial_peek(void);
+void serial_clear(void);
+void serial_print(const char *p);
+void serial_phex(uint32_t n);
+void serial_phex16(uint32_t n);
+void serial_phex32(uint32_t n);
 
-extern const usb_descriptor_list_t usb_descriptor_list[];
+#ifdef __cplusplus
+}
+#endif
 
 #endif

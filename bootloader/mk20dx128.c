@@ -182,10 +182,6 @@ void (* const gVectors[])(void) =
     software_isr,                   // 61 Software interrupt
 };
 
-//void usb_isr(void)
-//{
-//}
-
 __attribute__ ((section(".flashconfig"), used))
 const uint8_t flashconfigbytes[16] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

@@ -20,10 +20,11 @@ OPTIONS = -DF_CPU=48000000
 C_FILES = \
 	mk20dx128.c \
 	usb_desc.c \
-	usb_dev.c
+	usb_dev.c \
+	serial.c \
+	bootloader.c
 
-CPP_FILES = \
-	bootloader.cpp
+CPP_FILES =
 
 # Headers
 INCLUDES = -I.
