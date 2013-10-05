@@ -109,7 +109,7 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         NUM_INTERFACE,                          // bNumInterfaces
         1,                                      // bConfigurationValue
         0,                                      // iConfiguration
-        0xC0,                                   // bmAttributes
+        0x80,                                   // bmAttributes
         50,                                     // bMaxPower
 
 #ifdef FC_INTERFACE
