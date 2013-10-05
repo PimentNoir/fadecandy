@@ -22,7 +22,8 @@ C_FILES = \
 	usb_desc.c \
 	usb_dev.c \
 	serial.c \
-	bootloader.c
+	bootloader.c \
+	dfu.c
 
 CPP_FILES =
 

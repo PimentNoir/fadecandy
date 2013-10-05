@@ -207,6 +207,50 @@ static void usb_setup(void)
         endpoint0_stall();
         return;
 
+      case 0x0141: // DFU_DNLOAD
+        if (setup.wIndex > 0) {
+            endpoint0_stall();
+            return;
+        }
+        // Data comes in the OUT phase.
+        break;
+
+      case 0x03a1: // DFU_GETSTATUS
+        if (setup.wIndex > 0) {
+            endpoint0_stall();
+            return;
+        }
+        dfu_getstatus(reply_buffer);
+        data = reply_buffer;
+        datalen = 6;
+        break;
+
+      case 0x0421: // DFU_CLRSTATUS
+        if (setup.wIndex > 0) {
+            endpoint0_stall();
+            return;
+        }
+        dfu_clrstatus();
+        break;
+
+      case 0x05a1: // DFU_GETSTATE
+        if (setup.wIndex > 0) {
+            endpoint0_stall();
+            return;
+        }
+        reply_buffer[0] = dfu_getstate();
+        data = reply_buffer;
+        datalen = 1;
+        break;
+
+      case 0x0621: // DFU_ABORT
+        if (setup.wIndex > 0) {
+            endpoint0_stall();
+            return;
+        }
+        dfu_abort();
+        break;
+
       default:
         endpoint0_stall();
         return;
@@ -272,14 +316,17 @@ static void usb_control(uint32_t stat)
 
     case 0x01:  // OUT transaction received from host
     case 0x02:
+
+        if (setup.wRequestAndType == 0x0141 && setup.wIndex == 0) {
+            // DFU_DNLOAD
+            dfu_download(setup.wValue, setup.wLength, (uint8_t*) b->addr);
+        }
+
         // give the buffer back
         b->desc = BDT_DESC(EP0_SIZE, DATA1);
         break;
 
     case 0x09: // IN transaction completed to host
-        //serial_print("PID=IN:");
-        //serial_phex(stat);
-        //serial_print("\n");
 
         // send remaining data, if any...
         data = ep0_tx_ptr;
@@ -294,9 +341,6 @@ static void usb_control(uint32_t stat)
 
         if (setup.bRequest == 5 && setup.bmRequestType == 0) {
             setup.bRequest = 0;
-            //serial_print("set address: ");
-            //serial_phex16(setup.wValue);
-            //serial_print("\n");
             USB0_ADDR = setup.wValue;
         }
 
