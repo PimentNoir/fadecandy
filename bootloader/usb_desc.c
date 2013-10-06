@@ -63,8 +63,8 @@ static uint8_t device_descriptor[] = {
         18,                                     // bLength
         1,                                      // bDescriptorType
         0x00, 0x02,                             // bcdUSB
-        DEVICE_CLASS,                           // bDeviceClass
-        DEVICE_SUBCLASS,                        // bDeviceSubClass
+        0x00,                                   // bDeviceClass
+        0x00,                                   // bDeviceSubClass
         0x00,                                   // bDeviceProtocol
         EP0_SIZE,                               // bMaxPacketSize0
         LSB(VENDOR_ID), MSB(VENDOR_ID),         // idVendor
@@ -105,19 +105,20 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         DFU_INTERFACE,                          // bInterfaceNumber
         0,                                      // bAlternateSetting
         0,                                      // bNumEndpoints
-        DEVICE_CLASS,                           // bInterfaceClass
-        DEVICE_SUBCLASS,                        // bInterfaceSubClass
-        DFU_INTERFACE_PROTOCOL,                 // bInterfaceProtocol
+        0xFE,                                   // bInterfaceClass
+        0x01,                                   // bInterfaceSubClass
+        0x02,                                   // bInterfaceProtocol
         2,                                      // iInterface
 
         // DFU Functional Descriptor (DFU spec TAble 4.2)
-        7,                                      // bLength
+        9,                                      // bLength
         0x21,                                   // bDescriptorType
         0x01,                                   // bmAttributes: Download only, must be reset
         LSB(DFU_DETACH_TIMEOUT),                // wDetachTimeOut
         MSB(DFU_DETACH_TIMEOUT),
         LSB(DFU_TRANSFER_SIZE),                 // wTransferSize
         MSB(DFU_TRANSFER_SIZE),
+        0x01,0x01,                              // bcdDFUVersion
 };
 
 

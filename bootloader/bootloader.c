@@ -66,7 +66,7 @@ bool test_banner_echo()
 		}
 	}
 
-	//serial_end();
+	serial_end();
 	return matched == bannerLength;
 }
 
@@ -79,6 +79,7 @@ int main()
 		led_on();
 //	}
 
+    dfu_init();
     usb_init();
 
     while (1) {

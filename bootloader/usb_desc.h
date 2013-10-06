@@ -38,8 +38,6 @@
 #define VENDOR_ID                 0x1d50    // OpenMoko
 #define PRODUCT_ID                0x607a    // Assigned to Fadecandy project
 #define DEVICE_VER                0x0100    // Bootloader version
-#define DEVICE_CLASS              0xfe      // Application specific
-#define DEVICE_SUBCLASS			  0x01      // Device Firmware Update
 #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
 #define MANUFACTURER_NAME_LEN     8
 #define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y',' ','B','o','o','t','l','o','a','d','e','r'}
@@ -47,10 +45,9 @@
 #define EP0_SIZE                  64
 #define NUM_INTERFACE             1
 #define DFU_INTERFACE             0
-#define DFU_INTERFACE_PROTOCOL	  0x02		// DFU Mode
 #define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
-#define DFU_TRANSFER_SIZE		  1024		// Equal to flash erase block size
-#define CONFIG_DESC_SIZE          (9+9+7)
+#define DFU_TRANSFER_SIZE		  EP0_SIZE
+#define CONFIG_DESC_SIZE          (9+9+9)
 
 typedef struct {
     uint16_t  wValue;

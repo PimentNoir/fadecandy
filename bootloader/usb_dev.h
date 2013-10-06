@@ -40,13 +40,6 @@ extern "C" {
 void usb_init(void);
 void usb_isr(void);
 
-// Callbacks for implementing DFU mode
-void dfu_download(unsigned blockNum, unsigned length, const uint8_t *data);
-void dfu_getstatus(uint8_t *status);
-void dfu_clrstatus();
-uint8_t dfu_getstate();
-void dfu_abort();
-
 extern volatile uint8_t usb_configuration;
 
 #ifdef __cplusplus

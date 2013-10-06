@@ -35,6 +35,7 @@
 #include "mk20dx128.h"
 #include "usb_dev.h"
 #include "usb_desc.h"
+#include "dfu.h"
 
 // buffer descriptor table
 

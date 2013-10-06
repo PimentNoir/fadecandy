@@ -21,8 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "usb_dev.h"
-#include "serial.h"
+#pragma once
 
 typedef enum {
 	appIDLE = 0,
@@ -58,46 +57,9 @@ typedef enum {
 } dfu_status_t;
 
 
-static dfu_state_t dfu_state = dfuIDLE;
-static dfu_status_t dfu_status = OK;
-static unsigned dfu_poll_timeout = 1;
-
-
-void dfu_init()
-{
-    serial_begin(BAUD2DIV(115200));
-    serial_print("Hello from DFU!\n");
-}
-
-void dfu_download(unsigned blockNum, unsigned length, const uint8_t *data)
-{
-	serial_putchar('.');
-}
-
-void dfu_getstatus(uint8_t *status)
-{
-	serial_putchar('B');
-	status[0] = dfu_status;
-	status[1] = dfu_poll_timeout >> 16;
-	status[2] = dfu_poll_timeout >> 8;
-	status[3] = dfu_poll_timeout;
-	status[4] = dfu_state;
-	status[5] = 0;  // iString
-}
-
-void dfu_clrstatus()
-{
-	if (dfu_state == dfuERROR) {
-		dfu_state = dfuIDLE;
-	}
-}
-
-uint8_t dfu_getstate()
-{
-	return dfu_state;
-}
-
-void dfu_abort()
-{
-	dfu_state = dfuIDLE;
-}
+void dfu_init();
+void dfu_download(unsigned blockNum, unsigned length, const uint8_t *data);
+void dfu_getstatus(uint8_t *status);
+void dfu_clrstatus();
+uint8_t dfu_getstate();
+void dfu_abort();
