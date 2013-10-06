@@ -2,7 +2,7 @@
  * Serial pass-through adapter.
  *
  * This bridges the Teensy's USB serial port to the Fadecandy board's serial
- * interface at 9600 baud. When the green button is held, we implement a simple
+ * interface at 115200 baud. When the green button is held, we implement a simple
  * serial port loopback which will put the Fadecandy into bootloader mode.
  */
 
@@ -13,11 +13,13 @@ const unsigned ledPin = 13;
 
 HardwareSerial Uart = HardwareSerial();
 
+#define BAUD 115200
+
 void setup()
 {
 	pinMode(ledPin, OUTPUT);
 	pinMode(buttonPin, INPUT_PULLUP);
-	Serial.begin(9600);
+	Serial.begin(BAUD);
 }
 
 void passthroughMode()
@@ -26,7 +28,9 @@ void passthroughMode()
 	pinMode(txPin, OUTPUT);
 	digitalWrite(ledPin, HIGH);
 
-	// Input-to-output latency must be less than one character for the bootloader to detect this.
+	// This is only slow 9600 baud, but input-to-output latency must be less
+	// than one character for the bootloader to detect the loopback.
+
 	while (digitalRead(buttonPin) == LOW) {
 		digitalWrite(txPin, digitalRead(rxPin));
 	}
@@ -36,7 +40,7 @@ void passthroughMode()
 
 void loopbackMode()
 {
-	Uart.begin(9600);
+	Uart.begin(BAUD);
 
 	while (digitalRead(buttonPin) == HIGH) {
 		if (Serial.available()) {
