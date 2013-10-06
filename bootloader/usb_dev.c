@@ -299,8 +299,6 @@ static void usb_control(uint32_t stat)
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
-        if (ep0_tx_data_toggle) {
-        }
         table[index(0, TX, EVEN)].desc = 0;
         table[index(0, TX, ODD)].desc = 0;
 
@@ -309,9 +307,6 @@ static void usb_control(uint32_t stat)
 
         // actually "do" the setup request
         usb_setup();
-
-        // unfreeze the USB, now that we're ready
-        USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
         break;
 
     case 0x01:  // OUT transaction received from host
@@ -319,7 +314,7 @@ static void usb_control(uint32_t stat)
 
         if (setup.wRequestAndType == 0x0141 && setup.wIndex == 0) {
             // DFU_DNLOAD
-            dfu_download(setup.wValue, setup.wLength, (uint8_t*) b->addr);
+            dfu_download(setup.wValue, setup.wLength, buf);
         }
 
         // give the buffer back

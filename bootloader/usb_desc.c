@@ -107,7 +107,7 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         0,                                      // bNumEndpoints
         DEVICE_CLASS,                           // bInterfaceClass
         DEVICE_SUBCLASS,                        // bInterfaceSubClass
-        0x00,                                   // bInterfaceProtocol
+        DFU_INTERFACE_PROTOCOL,                 // bInterfaceProtocol
         2,                                      // iInterface
 
         // DFU Functional Descriptor (DFU spec TAble 4.2)

@@ -47,6 +47,7 @@
 #define EP0_SIZE                  64
 #define NUM_INTERFACE             1
 #define DFU_INTERFACE             0
+#define DFU_INTERFACE_PROTOCOL	  0x02		// DFU Mode
 #define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
 #define DFU_TRANSFER_SIZE		  1024		// Equal to flash erase block size
 #define CONFIG_DESC_SIZE          (9+9+7)

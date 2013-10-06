@@ -24,27 +24,76 @@
 #include "usb_dev.h"
 #include "serial.h"
 
+typedef enum {
+	appIDLE = 0,
+	appDETACH,
+	dfuIDLE,
+	dfuDNLOAD_SYNC,
+	dfuDNBUSY,
+	dfuDNLOAD_IDLE,
+	dfuMANIFEST_SYNC,
+	dfuMANIFEST,
+	dfuMANIFEST_WAIT_RESET,
+	dfuUPLOAD_IDLE,
+	dfuERROR
+} dfu_state_t;
+
+typedef enum {
+	OK = 0,
+	errTARGET,
+	errFILE,
+	errWRITE,
+	errERASE,
+	errCHECK_ERASED,
+	errPROG,
+	errVERIFY,
+	errADDRESS,
+	errNOTDONE,
+	errFIRMWARE,
+	errVENDOR,
+	errUSBR,
+	errPOR,
+	errUNKNOWN,
+	errSTALLEDPKT,
+} dfu_status_t;
+
+
+static dfu_state_t dfu_state = dfuIDLE;
+static dfu_status_t dfu_status = OK;
+static unsigned dfu_poll_timeout = 1;
+
+
 void dfu_download(unsigned blockNum, unsigned length, const uint8_t *data)
 {
-
+	serial_phex32(blockNum);
+	serial_putchar(' ');
+	serial_phex32(length);
+	serial_putchar('\n');
 }
 
 void dfu_getstatus(uint8_t *status)
 {
-
+	status[0] = dfu_status;
+	status[1] = dfu_poll_timeout >> 16;
+	status[2] = dfu_poll_timeout >> 8;
+	status[3] = dfu_poll_timeout;
+	status[4] = dfu_state;
+	status[5] = 0;  // iString
 }
 
 void dfu_clrstatus()
 {
-
+	if (dfu_state == dfuERROR) {
+		dfu_state = dfuIDLE;
+	}
 }
 
 uint8_t dfu_getstate()
 {
-	return 0;
+	return dfu_state;
 }
 
 void dfu_abort()
 {
-	
+	dfu_state = dfuIDLE;
 }
