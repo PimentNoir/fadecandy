@@ -207,7 +207,7 @@ static void usb_setup(void)
         endpoint0_stall();
         return;
 
-      case 0x0141: // DFU_DNLOAD
+      case 0x0121: // DFU_DNLOAD
         if (setup.wIndex > 0) {
             endpoint0_stall();
             return;
@@ -311,10 +311,12 @@ static void usb_control(uint32_t stat)
 
     case 0x01:  // OUT transaction received from host
     case 0x02:
-
-        if (setup.wRequestAndType == 0x0141 && setup.wIndex == 0) {
+        if (setup.wRequestAndType == 0x0121 && setup.wIndex == 0) {
             // DFU_DNLOAD
             dfu_download(setup.wValue, setup.wLength, buf);
+
+            // Acknowledge with a zero-length IN packet.
+            endpoint0_transmit(reply_buffer, 0);
         }
 
         // give the buffer back
@@ -408,7 +410,6 @@ restart:
     }
 
     if ((status & USB_ISTAT_STALL /* 80 */ )) {
-        //serial_print("stall:\n");
         USB0_ENDPT0 = USB_ENDPT_EPRXEN | USB_ENDPT_EPTXEN | USB_ENDPT_EPHSHK;
         USB0_ISTAT = USB_ISTAT_STALL;
     }
