@@ -129,6 +129,12 @@ static void endpoint0_transmit(const void *data, uint32_t len)
     ep0_tx_bdt_bank ^= 1;
 }
 
+static void endpoint0_rx_release(bdt_t *b)
+{
+    // Return an RX buffer to the SIE. We keep even/odd buffers in sync with data toggle.
+    b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
+}
+
 static uint8_t reply_buffer[8];
 
 static void usb_setup(void)
@@ -222,18 +228,26 @@ static void usb_setup(void)
             endpoint0_stall();
             return;
         }
-        dfu_getstatus(reply_buffer);
-        data = reply_buffer;
-        datalen = 6;
-        break;
+        if (dfu_getstatus(reply_buffer)) {
+            data = reply_buffer;
+            datalen = 6;
+            break;
+        } else {
+            endpoint0_stall();
+            return;
+        }
 
       case 0x0421: // DFU_CLRSTATUS
         if (setup.wIndex > 0) {
             endpoint0_stall();
             return;
         }
-        dfu_clrstatus();
-        break;
+        if (dfu_clrstatus()) {
+            break;
+        } else {
+            endpoint0_stall();
+            return;
+        }
 
       case 0x05a1: // DFU_GETSTATE
         if (setup.wIndex > 0) {
@@ -250,8 +264,12 @@ static void usb_setup(void)
             endpoint0_stall();
             return;
         }
-        dfu_abort();
-        break;
+        if (dfu_abort()) {
+            break;
+        } else {
+            endpoint0_stall();
+            return;
+        }
 
       default:
         endpoint0_stall();
@@ -296,8 +314,7 @@ static void usb_control(uint32_t stat)
         setup.word1 = *(uint32_t *)(buf);
         setup.word2 = *(uint32_t *)(buf + 4);
 
-        // give the buffer back
-        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
+        endpoint0_rx_release(b);
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
@@ -322,23 +339,22 @@ static void usb_control(uint32_t stat)
             size = setup.wLength - ep0_rx_offset;
             if (size > EP0_SIZE) size = EP0_SIZE;
 
-            dfu_download(setup.wValue,   // blockNum
-                         setup.wLength,  // blockLength
-                         ep0_rx_offset,  // packetOffset
-                         size,           // packetLength
-                         buf);           // data
+            if (dfu_download(setup.wValue,   // blockNum
+                             setup.wLength,  // blockLength
+                             ep0_rx_offset,  // packetOffset
+                             size,           // packetLength
+                             buf)) {         // data
 
-            ep0_rx_offset += size;
-            if (ep0_rx_offset >= setup.wLength) {
-                // End of transaction, acknowledge with a zero-length IN                
-               endpoint0_transmit(reply_buffer, 0);
+                ep0_rx_offset += size;
+                if (ep0_rx_offset >= setup.wLength) {
+                    // End of transaction, acknowledge with a zero-length IN                
+                   endpoint0_transmit(reply_buffer, 0);
+                }
+            } else {
+                endpoint0_stall();
             }
         }
-        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
-        break;
-
-    case 0x02:  // ACK
-        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
+        endpoint0_rx_release(b);
         break;
 
     case 0x09: // IN transaction completed to host
