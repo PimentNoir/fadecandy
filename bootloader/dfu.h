@@ -22,6 +22,8 @@
  */
 
 #pragma once
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef enum {
 	appIDLE = 0,
@@ -61,12 +63,15 @@ typedef enum {
 #define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
 #define DFU_TRANSFER_SIZE		  1024		// Flash sector size
 
-
+// Main thread
 void dfu_init();
-void dfu_debug();
-void dfu_getstatus(uint8_t *status);
-void dfu_clrstatus();
+
+// USB entry points. Always successful.
 uint8_t dfu_getstate();
-void dfu_abort();
-void dfu_download(unsigned blockNum, unsigned blockLength,
+
+// USB entry points. True on success, false for stall.
+bool dfu_getstatus(uint8_t *status);
+bool dfu_clrstatus();
+bool dfu_abort();
+bool dfu_download(unsigned blockNum, unsigned blockLength,
 	unsigned packetOffset, unsigned packetLength, const uint8_t *data);

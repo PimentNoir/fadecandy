@@ -70,6 +70,7 @@ bool test_banner_echo()
 	return matched == bannerLength;
 }
 
+uint32_t debug;
 
 int main()
 {
@@ -82,7 +83,13 @@ int main()
     dfu_init();
     usb_init();
 
+    serial_begin(BAUD2DIV(115200));
+    serial_print("Hello from DFU!\n");
+
     while (1) {
-    	dfu_debug();
+    	serial_phex32(dfu_getstate());
+    	serial_putchar(' ');
+    	serial_phex32(debug);
+    	serial_putchar('\n');
     }
 }

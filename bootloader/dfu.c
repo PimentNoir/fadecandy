@@ -22,15 +22,15 @@
  */
 
 #include <stdbool.h>
+#include "mk20dx128.h"
 #include "usb_dev.h"
-#include "serial.h"
 #include "dfu.h"
 
 static dfu_state_t dfu_state = dfuIDLE;
 static dfu_status_t dfu_status = OK;
 static unsigned dfu_poll_timeout = 1;
 
-static uint32_t debug_a, debug_b, debug_c;
+extern uint32_t debug;
 
 // Programming buffer in MK20DX128 FlexRAM, where the flash controller can quickly access it.
 static __attribute__ ((section(".flexram"))) uint8_t dfu_buffer[DFU_TRANSFER_SIZE];
@@ -79,22 +79,14 @@ void dfu_init()
 {
 	// Use FlexRAM (dfu_buffer) as normal RAM.
 	ftfl_set_flexram_function(0xFF);
-
-    serial_begin(BAUD2DIV(115200));
-    serial_print("Hello from DFU!\n");
 }
 
-void dfu_debug()
+uint8_t dfu_getstate()
 {
-	serial_phex32(debug_a);
-	serial_putchar(' ');
-	serial_phex32(debug_b);
-	serial_putchar(' ');
-	serial_phex32(debug_c);
-	serial_putchar('\n');
+	return dfu_state;
 }
 
-void dfu_download(unsigned blockNum, unsigned blockLength,
+bool dfu_download(unsigned blockNum, unsigned blockLength,
 	unsigned packetOffset, unsigned packetLength, const uint8_t *data)
 {
 	if (packetOffset + packetLength > DFU_TRANSFER_SIZE ||
@@ -103,45 +95,100 @@ void dfu_download(unsigned blockNum, unsigned blockLength,
 		// Overflow!
 		dfu_state = dfuERROR;
 		dfu_status = errADDRESS;
-		return;
+		return false;
 	}
 
-	debug_a = blockNum;
-	debug_b = packetOffset;
-	debug_c = blockLength;
-
+	// Store more data...
 	memcpy(dfu_buffer + packetOffset, data, packetLength);
 
-	if (packetOffset + packetLength == blockLength) {
-		// Full block received
-		dfu_state = dfuDNLOAD_SYNC;
-		dfu_status = OK;
+	if (packetOffset + packetLength != blockLength) {
+		// Still waiting for more data.
+		return true;
 	}
+
+	// Full block received.
+
+	switch (dfu_state) {
+
+		case dfuIDLE:
+		case dfuDNLOAD_IDLE:
+
+			if (blockLength) {
+				// Full block received
+				dfu_state = dfuDNLOAD_SYNC;
+				dfu_status = OK;
+				return true;
+
+			} else {
+				// End of download
+				dfu_state = dfuMANIFEST_SYNC;
+				dfu_status = OK;
+				return true;
+			}
+
+		default:
+			dfu_state = dfuERROR;
+			dfu_status = errSTALLEDPKT;
+			return false;
+	}
+
+	return true;
 }
 
-void dfu_getstatus(uint8_t *status)
+bool dfu_getstatus(uint8_t *status)
 {
+	debug++;
+
+	switch (dfu_state) {
+
+		case dfuDNLOAD_SYNC:
+		case dfuDNBUSY:
+			if (ftfl_busy()) {
+				dfu_state = dfuDNBUSY;
+			} else {
+				dfu_state = dfuDNLOAD_IDLE;
+			}
+			break;
+
+		case dfuMANIFEST_SYNC:
+			dfu_state = dfuMANIFEST;
+			break;
+
+		default:
+			break;
+	}
+
 	status[0] = dfu_status;
-	status[1] = dfu_poll_timeout >> 16;
+	status[1] = dfu_poll_timeout;
 	status[2] = dfu_poll_timeout >> 8;
-	status[3] = dfu_poll_timeout;
+	status[3] = dfu_poll_timeout >> 16;
 	status[4] = dfu_state;
 	status[5] = 0;  // iString
+
+	return true;
 }
 
-void dfu_clrstatus()
+bool dfu_clrstatus()
 {
-	if (dfu_state == dfuERROR) {
-		dfu_state = dfuIDLE;
+	switch (dfu_state) {
+
+		case dfuERROR:
+			// Clear an error
+			dfu_state = dfuIDLE;
+			dfu_status = OK;
+			return true;
+
+		default:
+			// Unexpected request
+			dfu_state = dfuERROR;
+			dfu_status = errSTALLEDPKT;
+			return false;
 	}
 }
 
-uint8_t dfu_getstate()
-{
-	return dfu_state;
-}
-
-void dfu_abort()
+bool dfu_abort()
 {
 	dfu_state = dfuIDLE;
+	dfu_status = OK;
+	return true;
 }
