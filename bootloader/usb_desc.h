@@ -37,7 +37,7 @@
 
 #define NUM_USB_BUFFERS           8
 #define VENDOR_ID                 0x1d50    // OpenMoko
-#define PRODUCT_ID                0x607a    // Assigned to Fadecandy project
+#define PRODUCT_ID                0x6082    // Assigned to Fadecandy project for DFU Bootloader
 #define DEVICE_VER                0x0100    // Bootloader version
 #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
 #define MANUFACTURER_NAME_LEN     8
