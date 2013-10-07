@@ -57,9 +57,16 @@ typedef enum {
 } dfu_status_t;
 
 
+#define DFU_INTERFACE             0
+#define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
+#define DFU_TRANSFER_SIZE		  1024		// Flash sector size
+
+
 void dfu_init();
-void dfu_download(unsigned blockNum, unsigned length, const uint8_t *data);
+void dfu_debug();
 void dfu_getstatus(uint8_t *status);
 void dfu_clrstatus();
 uint8_t dfu_getstate();
 void dfu_abort();
+void dfu_download(unsigned blockNum, unsigned blockLength,
+	unsigned packetOffset, unsigned packetLength, const uint8_t *data);

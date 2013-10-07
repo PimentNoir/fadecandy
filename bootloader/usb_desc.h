@@ -33,6 +33,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "dfu.h"
 
 #define NUM_USB_BUFFERS           8
 #define VENDOR_ID                 0x1d50    // OpenMoko
@@ -44,9 +45,6 @@
 #define PRODUCT_NAME_LEN          20
 #define EP0_SIZE                  64
 #define NUM_INTERFACE             1
-#define DFU_INTERFACE             0
-#define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
-#define DFU_TRANSFER_SIZE		  EP0_SIZE
 #define CONFIG_DESC_SIZE          (9+9+9)
 
 typedef struct {

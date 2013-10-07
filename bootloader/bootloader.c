@@ -83,5 +83,6 @@ int main()
     usb_init();
 
     while (1) {
+    	dfu_debug();
     }
 }

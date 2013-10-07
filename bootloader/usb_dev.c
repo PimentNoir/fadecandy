@@ -108,6 +108,7 @@ static uint8_t ep0_rx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_rx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static const uint8_t *ep0_tx_ptr = NULL;
 static uint16_t ep0_tx_len;
+static uint16_t ep0_rx_offset;
 static uint8_t ep0_tx_bdt_bank = 0;
 static uint8_t ep0_tx_data_toggle = 0;
 
@@ -296,7 +297,7 @@ static void usb_control(uint32_t stat)
         setup.word2 = *(uint32_t *)(buf + 4);
 
         // give the buffer back
-        b->desc = BDT_DESC(EP0_SIZE, DATA1);
+        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
@@ -306,22 +307,38 @@ static void usb_control(uint32_t stat)
         // first IN after Setup is always DATA1
         ep0_tx_data_toggle = 1;
 
+        // If we're receiving, start at the beginning
+        ep0_rx_offset = 0;
+
         // actually "do" the setup request
         usb_setup();
         break;
 
     case 0x01:  // OUT transaction received from host
-    case 0x02:
-        if (setup.wRequestAndType == 0x0121 && setup.wIndex == 0) {
-            // DFU_DNLOAD
-            dfu_download(setup.wValue, setup.wLength, buf);
+        // The only control OUT request we have now, DFU_DNLOAD
+        if (setup.wRequestAndType == 0x0121 && setup.wIndex == 0 &&
+            ep0_rx_offset <= setup.wLength) {
 
-            // Acknowledge with a zero-length IN packet.
-            endpoint0_transmit(reply_buffer, 0);
+            size = setup.wLength - ep0_rx_offset;
+            if (size > EP0_SIZE) size = EP0_SIZE;
+
+            dfu_download(setup.wValue,   // blockNum
+                         setup.wLength,  // blockLength
+                         ep0_rx_offset,  // packetOffset
+                         size,           // packetLength
+                         buf);           // data
+
+            ep0_rx_offset += size;
+            if (ep0_rx_offset >= setup.wLength) {
+                // End of transaction, acknowledge with a zero-length IN                
+               endpoint0_transmit(reply_buffer, 0);
+            }
         }
+        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
+        break;
 
-        // give the buffer back
-        b->desc = BDT_DESC(EP0_SIZE, DATA1);
+    case 0x02:  // ACK
+        b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
         break;
 
     case 0x09: // IN transaction completed to host
@@ -381,7 +398,7 @@ restart:
         // set up buffers to receive Setup and OUT packets
         table[index(0, RX, EVEN)].desc = BDT_DESC(EP0_SIZE, 0);
         table[index(0, RX, EVEN)].addr = ep0_rx0_buf;
-        table[index(0, RX, ODD)].desc = BDT_DESC(EP0_SIZE, 0);
+        table[index(0, RX, ODD)].desc = BDT_DESC(EP0_SIZE, 1);
         table[index(0, RX, ODD)].addr = ep0_rx1_buf;
         table[index(0, TX, EVEN)].desc = 0;
         table[index(0, TX, ODD)].desc = 0;
