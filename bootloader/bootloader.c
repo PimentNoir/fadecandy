@@ -84,12 +84,12 @@ int main()
     usb_init();
 
     serial_begin(BAUD2DIV(115200));
-    serial_print("Hello from DFU!\n");
+    serial_print("Hello from DFU!\r\n");
 
     while (1) {
     	serial_phex32(dfu_getstate());
     	serial_putchar(' ');
     	serial_phex32(debug);
-    	serial_putchar('\n');
+    	serial_print("\r\n");
     }
 }

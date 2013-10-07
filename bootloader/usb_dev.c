@@ -58,6 +58,11 @@ static bdt_t table[4];  // EP0 only
                 | ((data) ? BDT_DATA1 : BDT_DATA0) \
                 | ((count) << 16))
 
+// No DTS, we want to accept either DATA0 or DATA1 for RX.
+// This makes buffer management way less awful for EP0 OUT with
+// multiple packets per transaction.
+#define BDT_DESC_RX(count)      (BDT_OWN | ((count) << 16))
+
 #define TX   1
 #define RX   0
 #define ODD  1
@@ -112,6 +117,8 @@ static uint16_t ep0_rx_offset;
 static uint8_t ep0_tx_bdt_bank = 0;
 static uint8_t ep0_tx_data_toggle = 0;
 
+static uint8_t reply_buffer[8];
+
 volatile uint8_t usb_configuration = 0;
 
 
@@ -120,7 +127,6 @@ static void endpoint0_stall(void)
     USB0_ENDPT0 = USB_ENDPT_EPSTALL | USB_ENDPT_EPRXEN | USB_ENDPT_EPTXEN | USB_ENDPT_EPHSHK;
 }
 
-
 static void endpoint0_transmit(const void *data, uint32_t len)
 {
     table[index(0, TX, ep0_tx_bdt_bank)].addr = (void *)data;
@@ -128,14 +134,6 @@ static void endpoint0_transmit(const void *data, uint32_t len)
     ep0_tx_data_toggle ^= 1;
     ep0_tx_bdt_bank ^= 1;
 }
-
-static void endpoint0_rx_release(bdt_t *b)
-{
-    // Return an RX buffer to the SIE. We keep even/odd buffers in sync with data toggle.
-    b->desc = BDT_DESC(EP0_SIZE, ((uint32_t)b & 8) ? DATA1 : DATA0);
-}
-
-static uint8_t reply_buffer[8];
 
 static void usb_setup(void)
 {
@@ -275,7 +273,7 @@ static void usb_setup(void)
         endpoint0_stall();
         return;
     }
-    send:
+ send:
 
     if (datalen > setup.wLength) datalen = setup.wLength;
     size = datalen;
@@ -314,14 +312,15 @@ static void usb_control(uint32_t stat)
         setup.word1 = *(uint32_t *)(buf);
         setup.word2 = *(uint32_t *)(buf + 4);
 
-        endpoint0_rx_release(b);
+        // Give the buffer back
+        b->desc = BDT_DESC_RX(EP0_SIZE);
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
         table[index(0, TX, EVEN)].desc = 0;
         table[index(0, TX, ODD)].desc = 0;
 
-        // first IN after Setup is always DATA1
+        // first IN or OUT after Setup is always DATA1
         ep0_tx_data_toggle = 1;
 
         // If we're receiving, start at the beginning
@@ -335,16 +334,21 @@ static void usb_control(uint32_t stat)
         // The only control OUT request we have now, DFU_DNLOAD
         if (setup.wRequestAndType == 0x0121 && setup.wIndex == 0 &&
             ep0_rx_offset <= setup.wLength) {
+            bool success;
 
             size = setup.wLength - ep0_rx_offset;
             if (size > EP0_SIZE) size = EP0_SIZE;
 
-            if (dfu_download(setup.wValue,   // blockNum
-                             setup.wLength,  // blockLength
-                             ep0_rx_offset,  // packetOffset
-                             size,           // packetLength
-                             buf)) {         // data
+            success = dfu_download(setup.wValue,   // blockNum
+                                   setup.wLength,  // blockLength
+                                   ep0_rx_offset,  // packetOffset
+                                   size,           // packetLength
+                                   buf);           // data
 
+            // Give the buffer back
+            b->desc = BDT_DESC_RX(EP0_SIZE);
+
+            if (success) {
                 ep0_rx_offset += size;
                 if (ep0_rx_offset >= setup.wLength) {
                     // End of transaction, acknowledge with a zero-length IN                
@@ -353,12 +357,13 @@ static void usb_control(uint32_t stat)
             } else {
                 endpoint0_stall();
             }
+        } else {
+            // Give the buffer back
+            b->desc = BDT_DESC_RX(EP0_SIZE);
         }
-        endpoint0_rx_release(b);
         break;
 
     case 0x09: // IN transaction completed to host
-
         // send remaining data, if any...
         data = ep0_tx_ptr;
         if (data) {
@@ -374,7 +379,6 @@ static void usb_control(uint32_t stat)
             setup.bRequest = 0;
             USB0_ADDR = setup.wValue;
         }
-
         break;
     }
     USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
@@ -412,9 +416,9 @@ restart:
         ep0_tx_bdt_bank = 0;
 
         // set up buffers to receive Setup and OUT packets
-        table[index(0, RX, EVEN)].desc = BDT_DESC(EP0_SIZE, 0);
+        table[index(0, RX, EVEN)].desc = BDT_DESC_RX(EP0_SIZE);
         table[index(0, RX, EVEN)].addr = ep0_rx0_buf;
-        table[index(0, RX, ODD)].desc = BDT_DESC(EP0_SIZE, 1);
+        table[index(0, RX, ODD)].desc = BDT_DESC_RX(EP0_SIZE);
         table[index(0, RX, ODD)].addr = ep0_rx1_buf;
         table[index(0, TX, EVEN)].desc = 0;
         table[index(0, TX, ODD)].desc = 0;

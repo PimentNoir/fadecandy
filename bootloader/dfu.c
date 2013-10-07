@@ -26,11 +26,11 @@
 #include "usb_dev.h"
 #include "dfu.h"
 
+extern uint32_t debug;
+
 static dfu_state_t dfu_state = dfuIDLE;
 static dfu_status_t dfu_status = OK;
 static unsigned dfu_poll_timeout = 1;
-
-extern uint32_t debug;
 
 // Programming buffer in MK20DX128 FlexRAM, where the flash controller can quickly access it.
 static __attribute__ ((section(".flexram"))) uint8_t dfu_buffer[DFU_TRANSFER_SIZE];
@@ -101,6 +101,8 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 	// Store more data...
 	memcpy(dfu_buffer + packetOffset, data, packetLength);
 
+debug++;
+
 	if (packetOffset + packetLength != blockLength) {
 		// Still waiting for more data.
 		return true;
@@ -137,8 +139,6 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 
 bool dfu_getstatus(uint8_t *status)
 {
-	debug++;
-
 	switch (dfu_state) {
 
 		case dfuDNLOAD_SYNC:
