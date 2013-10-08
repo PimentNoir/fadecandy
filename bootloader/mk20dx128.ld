@@ -30,15 +30,9 @@
 
 MEMORY
 {
-    /* Boot and application partitions in flash */
     BOOT_FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 4K
     APP_FLASH (rx) : ORIGIN = 0x00001000, LENGTH = 124K
-
-    /* Boot and application partitions in RAM */
-    BOOT_RAM (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 256
-    APP_RAM  (rwx) : ORIGIN = 0x1FFFE100, LENGTH = 16128
-
-    /* Special RAM used for programming flash */
+    RAM (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 16K
     FLEXRAM (rwx) : ORIGIN = 0x14000000, LENGTH = 2K
 }
 
@@ -52,44 +46,28 @@ SECTIONS
         KEEP(*(.flashconfig*))
         *(.text*)
         *(.rodata*)
-        . = ALIGN(4);
-        KEEP(*(.init))
-        . = ALIGN(4);
-        __preinit_array_start = .;
-        KEEP (*(.preinit_array))
-        __preinit_array_end = .;
-        __init_array_start = .;
-        KEEP (*(SORT(.init_array.*)))
-        KEEP (*(.init_array))
-        __init_array_end = .;
     } > BOOT_FLASH = 0xFF
     _etext = .;
 
     .apptext : {
-        . = 0;
+        . = ORIGIN(APP_FLASH);
         *(.appvectors)
     } > APP_FLASH = 0xFF
 
-    .bootram (NOLOAD) : {
-        . = 0;
-        *(.bootram)
-    } > BOOT_RAM
-
     .usbdescriptortable (NOLOAD) : {
-        /* . = ORIGIN(RAM); */
         . = ALIGN(512);
         *(.usbdescriptortable*)
-    } > APP_RAM
+    } > RAM
 
     .dmabuffers (NOLOAD) : {
         . = ALIGN(4);
         *(.dmabuffers*)
-    } > APP_RAM
+    } > RAM
 
     .usbbuffers (NOLOAD) : {
         . = ALIGN(4);
         *(.usbbuffers*)
-    } > APP_RAM
+    } > RAM
 
     .flexram (NOLOAD) : {
         . = ALIGN(4);
@@ -102,11 +80,11 @@ SECTIONS
         *(.data*)
         . = ALIGN(4);
         _edata = .; 
-    } > APP_RAM
+    } > RAM
 
     .noinit (NOLOAD) : {
         *(.noinit*)
-    } > APP_RAM
+    } > RAM
 
     .bss : {
         . = ALIGN(4);
@@ -116,9 +94,10 @@ SECTIONS
         . = ALIGN(4);
         _ebss = .;
         __bss_end = .;
-    } > APP_RAM
+    } > RAM
 
-    _estack = ORIGIN(APP_RAM) + LENGTH(APP_RAM);
+    _estack = ORIGIN(RAM) + LENGTH(RAM) - 4;
+    boot_token = _estack;
 }
 
 
