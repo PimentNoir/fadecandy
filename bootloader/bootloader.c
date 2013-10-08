@@ -116,8 +116,8 @@ int main()
 
         // We're doing DFU mode!
         led_on();
-        dfu_init();
-        usb_init();
+//        dfu_init();
+//        usb_init();
 
         // XXX debug
         serial_begin(BAUD2DIV(115200));
@@ -125,8 +125,11 @@ int main()
         serial_phex32(WDOG_RSTCNT);
 
         while (1) {
+            serial_print("foo");
+            serial_flush();
+
             __disable_irq();
-            watchdog_refresh();
+            //watchdog_refresh();
             __enable_irq();
         }
     }

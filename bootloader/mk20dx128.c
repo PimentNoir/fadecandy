@@ -194,35 +194,37 @@ void ResetHandler(void)
 {
     uint32_t *src = &_etext;
     uint32_t *dest = &_sdata;
+    const uint32_t watchdog_timeout = F_BUS / 100;  // 10ms
 
-    // Enable watchdog timer. Allow settings to be changed later, in case the
-    // application firmware wants to adjust its settings or disable it.
+    /*
+     * Enable watchdog timer. Allow settings to be changed later, in case the
+     * application firmware wants to adjust its settings or disable it.
+     *
+     * Originally I tried using the 1 kHz low-power oscillator here, but that seemed to
+     * run into an issue where refreshes weren't taking effect. It seems similar to
+     * this problem on the Freescale forums, which didn't really have a satisfactory
+     * solution:
+     *
+     *  https://community.freescale.com/thread/309519
+     *
+     * As a workaround, I'm using the "alternate" system clock.
+     */
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     asm volatile ("nop");
+    asm volatile ("nop");
     WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
-        WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN;
+        WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
     WDOG_PRESC = 0;
-    WDOG_TOVALH = 0;
-    WDOG_TOVALL = 10;   // Milliseconds (1 kHz LPO clock)
+    WDOG_TOVALH = watchdog_timeout >> 16;
+    WDOG_TOVALL = watchdog_timeout;
 
     // enable clocks to always-used peripherals
     SIM_SCGC5 = 0x00043F82;     // clocks active to all GPIO
     SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-    // if the RTC oscillator isn't enabled, get it started early
-    if (!(RTC_CR & RTC_CR_OSCE)) {
-        RTC_SR = 0;
-        RTC_CR = RTC_CR_SC16P | RTC_CR_SC4P | RTC_CR_OSCE;
-    }
 
     // release I/O pins hold, if we woke up from VLLS mode
     if (PMC_REGSC & PMC_REGSC_ACKISO) PMC_REGSC |= PMC_REGSC_ACKISO;
-
-    // TODO: do this while the PLL is waiting to lock....
-    while (dest < &_edata) *dest++ = *src++;
-    dest = &_sbss;
-    while (dest < &_ebss) *dest++ = 0;
-    SCB_VTOR = 0;   // use vector table in flash
 
     // start in FEI mode
     // enable capacitors for crystal
@@ -242,6 +244,13 @@ void ResetHandler(void)
     MCG_C5 = MCG_C5_PRDIV0(3);
     // config PLL for 96 MHz output
     MCG_C6 = MCG_C6_PLLS | MCG_C6_VDIV0(0);
+
+    // Copy data segment while we're waiting on the PLL
+    while (dest < &_edata) *dest++ = *src++;
+    dest = &_sbss;
+    while (dest < &_ebss) *dest++ = 0;
+    SCB_VTOR = 0;   // use vector table in flash
+
     // wait for PLL to start using xtal as its input
     while (!(MCG_S & MCG_S_PLLST)) ;
     // wait for PLL to lock

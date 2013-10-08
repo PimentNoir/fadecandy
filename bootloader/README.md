@@ -17,7 +17,7 @@ This section describes the programming interface that exists between the bootloa
 
 The bootloader uses the smallest possible protected region on the MK20DX128's flash, a 4KB block. It uses a tiny amount of RAM for a "token" which is used to force entry into the bootloader on system reset.
 
-When entering the application firmware, the system clocks will already be configured, and the watchdog timer is already enabled with a 10ms timeout, as timed by the system low-power oscillator. The application may disable the watchdog timer if desired.
+When entering the application firmware, the system clocks will already be configured, and the watchdog timer is already enabled with a 10ms timeout. The application may disable the watchdog timer if desired.
 
 The bootloader normally transfers control to the application early in boot, before setting up the USB controller. It will skip this step and run the DFU implementation if any of the following conditions are true:
 
