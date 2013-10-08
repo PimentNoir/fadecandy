@@ -65,13 +65,27 @@ static void ftfl_launch_command()
 
 static void ftfl_set_flexram_function(uint8_t control_code)
 {
-	// Issue a Set FlexRAM Function command
+	// Issue a Set FlexRAM Function command. Busy-waits until the command is done.
 	
 	ftfl_busy_wait();
 	FTFL_FCCOB0 = 0x81;
 	FTFL_FCCOB1 = control_code;
 	ftfl_launch_command();
 	ftfl_busy_wait();
+}
+
+static void ftfl_begin_erase_sector(uint32_t address)
+{
+	FTFL_FCCOB0 = 0x09;
+	FTFL_FCCOB1 = address >> 16;
+	FTFL_FCCOB2 = address >> 8;
+	FTFL_FCCOB3 = address;
+	ftfl_launch_command();
+}
+
+static uint32_t address_for_block(unsigned blockNum)
+{
+	return (blockNum + 1) << 12;
 }
 
 void dfu_init()
@@ -105,32 +119,35 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 		return true;
 	}
 
-	// Full block received.
-
-	switch (dfu_state) {
-
-		case dfuIDLE:
-		case dfuDNLOAD_IDLE:
-
-			if (blockLength) {
-				// Full block received
-				dfu_state = dfuDNLOAD_SYNC;
-				dfu_status = OK;
-				return true;
-
-			} else {
-				// End of download
-				dfu_state = dfuMANIFEST_SYNC;
-				dfu_status = OK;
-				return true;
-			}
-
-		default:
-			dfu_state = dfuERROR;
-			dfu_status = errSTALLEDPKT;
-			return false;
+	if (dfu_state != dfuIDLE && dfu_state != dfuDNLOAD_IDLE) {
+		// Wrong state! Oops.
+		dfu_state = dfuERROR;
+		dfu_status = errSTALLEDPKT;
+		return false;
 	}
 
+	if (ftfl_busy()) {
+		// Flash controller shouldn't be busy now!
+		dfu_state = dfuERROR;
+		dfu_status = errUNKNOWN;
+		return false;		
+	}
+
+	if (!blockLength) {
+		// End of download
+		dfu_state = dfuMANIFEST_SYNC;
+		dfu_status = OK;
+		return true;
+	}
+
+	/*
+	 * Start programming a block by erasing the corresponding flash sector
+ 	 */
+
+	//ftfl_begin_erase_sector(address_for_block(blockNum));
+
+	dfu_state = dfuDNLOAD_SYNC;
+	dfu_status = OK;
 	return true;
 }
 

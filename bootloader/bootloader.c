@@ -108,7 +108,7 @@ static void app_launch()
 }
 
 __attribute__ ((section(".startup")))
-int main()
+void main()
 {
     if (test_banner_echo() || test_app_missing() || test_boot_token()) {
 

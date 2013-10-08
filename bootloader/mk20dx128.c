@@ -270,5 +270,5 @@ void ResetHandler(void)
     SIM_SOPT2 = SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TRACECLKSEL | SIM_SOPT2_CLKOUTSEL(6);
 
     __enable_irq();
-    return main();
+    main();
 }
