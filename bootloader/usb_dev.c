@@ -317,8 +317,6 @@ static void usb_control(uint32_t stat)
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
-        table[index(0, TX, EVEN)].desc = 0;
-        table[index(0, TX, ODD)].desc = 0;
 
         // first IN or OUT after Setup is always DATA1
         ep0_tx_data_toggle = 1;
