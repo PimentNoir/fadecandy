@@ -123,7 +123,6 @@ static uint8_t ep0_tx_data_toggle = 0;
 uint8_t usb_rx_memory_needed = 0;
 
 volatile uint8_t usb_configuration = 0;
-volatile uint8_t usb_teensy_reboot_timer = 0;
 
 
 static void endpoint0_stall(void)
@@ -134,14 +133,6 @@ static void endpoint0_stall(void)
 
 static void endpoint0_transmit(const void *data, uint32_t len)
 {
-#if 0
-    serial_print("tx0:");
-    serial_phex32((uint32_t)data);
-    serial_print(",");
-    serial_phex16(len);
-    serial_print(ep0_tx_bdt_bank ? ", odd" : ", even");
-    serial_print(ep0_tx_data_toggle ? ", d1\n" : ", d0\n");
-#endif
     table[index(0, TX, ep0_tx_bdt_bank)].addr = (void *)data;
     table[index(0, TX, ep0_tx_bdt_bank)].desc = BDT_DESC(len, ep0_tx_data_toggle);
     ep0_tx_data_toggle ^= 1;
@@ -165,7 +156,6 @@ static void usb_setup(void)
       case 0x0500: // SET_ADDRESS
         break;
       case 0x0900: // SET_CONFIGURATION
-        //serial_print("configure\n");
         usb_configuration = setup.wValue;
         reg = &USB0_ENDPT1;
         cfg = usb_endpoint_config_table;
@@ -249,7 +239,6 @@ static void usb_setup(void)
         break;
       case 0x0082: // GET_STATUS (endpoint)
         if (setup.wIndex > NUM_ENDPOINTS) {
-            // TODO: do we need to handle IN vs OUT here?
             endpoint0_stall();
             return;
         }
@@ -262,32 +251,23 @@ static void usb_setup(void)
       case 0x0102: // CLEAR_FEATURE (endpoint)
         i = setup.wIndex & 0x7F;
         if (i > NUM_ENDPOINTS || setup.wValue != 0) {
-            // TODO: do we need to handle IN vs OUT here?
             endpoint0_stall();
             return;
         }
         (*(uint8_t *)(&USB0_ENDPT0 + setup.wIndex * 4)) &= ~0x02;
-        // TODO: do we need to clear the data toggle here?
         break;
       case 0x0302: // SET_FEATURE (endpoint)
         i = setup.wIndex & 0x7F;
         if (i > NUM_ENDPOINTS || setup.wValue != 0) {
-            // TODO: do we need to handle IN vs OUT here?
             endpoint0_stall();
             return;
         }
         (*(uint8_t *)(&USB0_ENDPT0 + setup.wIndex * 4)) |= 0x02;
-        // TODO: do we need to clear the data toggle here?
         break;
       case 0x0680: // GET_DESCRIPTOR
       case 0x0681:
-        //serial_print("desc:");
-        //serial_phex16(setup.wValue);
-        //serial_print("\n");
         for (list = usb_descriptor_list; 1; list++) {
             if (list->addr == NULL) break;
-            //if (setup.wValue == list->wValue && 
-            //(setup.wIndex == list->wIndex) || ((setup.wValue >> 8) == 3)) {
             if (setup.wValue == list->wValue && setup.wIndex == list->wIndex) {
                 data = list->addr;
                 if ((setup.wValue >> 8) == 3) {
@@ -298,62 +278,17 @@ static void usb_setup(void)
                 } else {
                     datalen = list->length;
                 }
-#if 0
-                serial_print("Desc found, ");
-                serial_phex32((uint32_t)data);
-                serial_print(",");
-                serial_phex16(datalen);
-                serial_print(",");
-                serial_phex(data[0]);
-                serial_phex(data[1]);
-                serial_phex(data[2]);
-                serial_phex(data[3]);
-                serial_phex(data[4]);
-                serial_phex(data[5]);
-                serial_print("\n");
-#endif
                 goto send;
             }
         }
-        //serial_print("desc: not found\n");
         endpoint0_stall();
         return;
-#if defined(CDC_STATUS_INTERFACE)
-      case 0x2221: // CDC_SET_CONTROL_LINE_STATE
-        usb_cdc_line_rtsdtr = setup.wValue;
-        //serial_print("set control line state\n");
-        break;
-      case 0x2021: // CDC_SET_LINE_CODING
-        //serial_print("set coding, waiting...\n");
-        return;
-#endif
-
-// TODO: this does not work... why?
-#if defined(SEREMU_INTERFACE) || defined(KEYBOARD_INTERFACE)
-      case 0x0921: // HID SET_REPORT
-        //serial_print(":)\n");
-        return;
-      case 0x0A21: // HID SET_IDLE
-        break;
-      // case 0xC940:
-#endif
-
-#ifdef USB_FADECANDY
-      case 0x0140:      // Reboot to Teensy 3.0 bootloader
-        usb_teensy_reboot_timer = 5;
-        break;
-#endif
 
       default:
         endpoint0_stall();
         return;
     }
-    send:
-    //serial_print("setup send ");
-    //serial_phex32(data);
-    //serial_print(",");
-    //serial_phex16(datalen);
-    //serial_print("\n");
+send:
 
     if (datalen > setup.wLength) datalen = setup.wLength;
     size = datalen;
@@ -402,39 +337,20 @@ static void usb_control(uint32_t stat)
 
     b = stat2bufferdescriptor(stat);
     pid = BDT_PID(b->desc);
-    //count = b->desc >> 16;
     buf = b->addr;
-    //serial_print("pid:");
-    //serial_phex(pid);
-    //serial_print(", count:");
-    //serial_phex(count);
-    //serial_print("\n");
 
     switch (pid) {
     case 0x0D: // Setup received from host
-        //serial_print("PID=Setup\n");
-        //if (count != 8) ; // panic?
         // grab the 8 byte setup info
         setup.word1 = *(uint32_t *)(buf);
         setup.word2 = *(uint32_t *)(buf + 4);
 
         // give the buffer back
         b->desc = BDT_DESC(EP0_SIZE, DATA1);
-        //table[index(0, RX, EVEN)].desc = BDT_DESC(EP0_SIZE, 1);
-        //table[index(0, RX, ODD)].desc = BDT_DESC(EP0_SIZE, 1);
 
         // clear any leftover pending IN transactions
         ep0_tx_ptr = NULL;
-        if (ep0_tx_data_toggle) {
-        }
-        //if (table[index(0, TX, EVEN)].desc & 0x80) {
-            //serial_print("leftover tx even\n");
-        //}
-        //if (table[index(0, TX, ODD)].desc & 0x80) {
-            //serial_print("leftover tx odd\n");
-        //}
-        table[index(0, TX, EVEN)].desc = 0;
-        table[index(0, TX, ODD)].desc = 0;
+
         // first IN after Setup is always DATA1
         ep0_tx_data_toggle = 1;
 
@@ -443,18 +359,13 @@ static void usb_control(uint32_t stat)
         // unfreeze the USB, now that we're ready
         USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
         break;
+
     case 0x01:  // OUT transaction received from host
-    case 0x02:
-        //serial_print("PID=OUT\n");
         // give the buffer back
         b->desc = BDT_DESC(EP0_SIZE, DATA1);
         break;
 
     case 0x09: // IN transaction completed to host
-        //serial_print("PID=IN:");
-        //serial_phex(stat);
-        //serial_print("\n");
-
         // send remaining data, if any...
         data = ep0_tx_ptr;
         if (data) {
@@ -468,24 +379,13 @@ static void usb_control(uint32_t stat)
 
         if (setup.bRequest == 5 && setup.bmRequestType == 0) {
             setup.bRequest = 0;
-            //serial_print("set address: ");
-            //serial_phex16(setup.wValue);
-            //serial_print("\n");
             USB0_ADDR = setup.wValue;
         }
 
         break;
-    //default:
-        //serial_print("PID=unknown:");
-        //serial_phex(pid);
-        //serial_print("\n");
     }
     USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
 }
-
-
-
-
 
 
 usb_packet_t *usb_rx(uint32_t endpoint)
@@ -498,11 +398,6 @@ usb_packet_t *usb_rx(uint32_t endpoint)
     if (ret) rx_first[endpoint] = ret->next;
     usb_rx_byte_count_data[endpoint] -= ret->len;
     __enable_irq();
-    //serial_print("rx, epidx=");
-    //serial_phex(endpoint);
-    //serial_print(", packet=");
-    //serial_phex32(ret);
-    //serial_print("\n");
     return ret;
 }
 
@@ -565,7 +460,6 @@ void usb_rx_memory(usb_packet_t *packet)
     const uint8_t *cfg;
 
     cfg = usb_endpoint_config_table;
-    //serial_print("rx_mem:");
     __disable_irq();
     for (i=1; i <= NUM_ENDPOINTS; i++) {
         if (*cfg++ & USB_ENDPT_EPRXEN) {
@@ -574,8 +468,6 @@ void usb_rx_memory(usb_packet_t *packet)
                 table[index(i, RX, EVEN)].desc = BDT_DESC(64, 0);
                 usb_rx_memory_needed--;
                 __enable_irq();
-                //serial_phex(i);
-                //serial_print(",even\n");
                 return;
             }
             if (table[index(i, RX, ODD)].desc == 0) {
@@ -583,13 +475,12 @@ void usb_rx_memory(usb_packet_t *packet)
                 table[index(i, RX, ODD)].desc = BDT_DESC(64, 1);
                 usb_rx_memory_needed--;
                 __enable_irq();
-                //serial_phex(i);
-                //serial_print(",odd\n");
                 return;
             }
         }
     }
     __enable_irq();
+
     // we should never reach this point.  If we get here, it means
     // usb_rx_memory_needed was set greater than zero, but no memory
     // was actually needed.  
@@ -609,9 +500,7 @@ void usb_tx(uint32_t endpoint, usb_packet_t *packet)
     endpoint--;
     if (endpoint >= NUM_ENDPOINTS) return;
     __disable_irq();
-    //serial_print("txstate=");
-    //serial_phex(tx_state[endpoint]);
-    //serial_print("\n");
+
     switch (tx_state[endpoint]) {
       case TX_STATE_BOTH_FREE_EVEN_FIRST:
         next = TX_STATE_ODD_FREE;
@@ -644,70 +533,32 @@ void usb_tx(uint32_t endpoint, usb_packet_t *packet)
 }
 
 
-
-
-
-
-void _reboot_Teensyduino_(void)
-{
-    // TODO: initialize R0 with a code....
-    asm volatile("bkpt");
-}
-
-
-
 void usb_isr(void)
 {
-    uint8_t status, stat, t;
+    uint8_t status, stat;
 
-    //serial_print("isr");
-    //status = USB0_ISTAT;
-    //serial_phex(status);
-    //serial_print("\n");
-    restart:
+restart:
     status = USB0_ISTAT;
 
     if ((status & USB_INTEN_SOFTOKEN /* 04 */ )) {
-        if (usb_configuration) {
-            t = usb_teensy_reboot_timer;
-            if (t) {
-                usb_teensy_reboot_timer = --t;
-                if (!t) _reboot_Teensyduino_();
-            }
-        }
         USB0_ISTAT = USB_INTEN_SOFTOKEN;
     }
 
     if ((status & USB_ISTAT_TOKDNE /* 08 */ )) {
         uint8_t endpoint;
         stat = USB0_STAT;
-        //serial_print("token: ep=");
-        //serial_phex(stat >> 4);
-        //serial_print(stat & 0x08 ? ",tx" : ",rx");
-        //serial_print(stat & 0x04 ? ",odd\n" : ",even\n");
         endpoint = stat >> 4;
         if (endpoint == 0) {
             usb_control(stat);
         } else {
             bdt_t *b = stat2bufferdescriptor(stat);
             usb_packet_t *packet = (usb_packet_t *)((uint8_t *)(b->addr) - 8);
-#if 0
-            serial_print("ep:");
-            serial_phex(endpoint);
-            serial_print(", pid:");
-            serial_phex(BDT_PID(b->desc));
-            serial_print(((uint32_t)b & 8) ? ", odd" : ", even");
-            serial_print(", count:");
-            serial_phex(b->desc >> 16);
-            serial_print("\n");
-#endif
             endpoint--; // endpoint is index to zero-based arrays
 
             if (stat & 0x08) { // transmit
                 usb_free(packet);
                 packet = tx_first[endpoint];
                 if (packet) {
-                    //serial_print("tx packet\n");
                     tx_first[endpoint] = packet->next;
                     b->addr = packet->buf;
                     switch (tx_state[endpoint]) {
@@ -728,7 +579,6 @@ void usb_isr(void)
                     }
                     b->desc = BDT_DESC(packet->len, ((uint32_t)b & 8) ? DATA1 : DATA0);
                 } else {
-                    //serial_print("tx no packet\n");
                     switch (tx_state[endpoint]) {
                       case TX_STATE_BOTH_FREE_EVEN_FIRST:
                       case TX_STATE_BOTH_FREE_ODD_FIRST:
@@ -751,18 +601,8 @@ void usb_isr(void)
                     packet->index = 0;
                     packet->next = NULL;
                     if (rx_first[endpoint] == NULL) {
-                        //serial_print("rx 1st, epidx=");
-                        //serial_phex(endpoint);
-                        //serial_print(", packet=");
-                        //serial_phex32((uint32_t)packet);
-                        //serial_print("\n");
                         rx_first[endpoint] = packet;
                     } else {
-                        //serial_print("rx Nth, epidx=");
-                        //serial_phex(endpoint);
-                        //serial_print(", packet=");
-                        //serial_phex32((uint32_t)packet);
-                        //serial_print("\n");
                         rx_last[endpoint]->next = packet;
                     }
                     rx_last[endpoint] = packet;
@@ -775,9 +615,6 @@ void usb_isr(void)
                         b->addr = packet->buf;
                         b->desc = BDT_DESC(64, ((uint32_t)b & 8) ? DATA1 : DATA0);
                     } else {
-                        //serial_print("starving ");
-                        //serial_phex(endpoint + 1);
-                        //serial_print(((uint32_t)b & 8) ? ",odd\n" : ",even\n");
                         b->desc = 0;
                         usb_rx_memory_needed++;
                     }
@@ -794,10 +631,7 @@ void usb_isr(void)
         goto restart;
     }
 
-
-
     if (status & USB_ISTAT_USBRST /* 01 */ ) {
-        //serial_print("reset\n");
 
         // initialize BDT toggle bits
         USB0_CTL = USB_CTL_ODDRST;
@@ -835,36 +669,26 @@ void usb_isr(void)
         return;
     }
 
-
     if ((status & USB_ISTAT_STALL /* 80 */ )) {
-        //serial_print("stall:\n");
         USB0_ENDPT0 = USB_ENDPT_EPRXEN | USB_ENDPT_EPTXEN | USB_ENDPT_EPHSHK;
         USB0_ISTAT = USB_ISTAT_STALL;
     }
     if ((status & USB_ISTAT_ERROR /* 02 */ )) {
         uint8_t err = USB0_ERRSTAT;
         USB0_ERRSTAT = err;
-        //serial_print("err:");
-        //serial_phex(err);
-        //serial_print("\n");
         USB0_ISTAT = USB_ISTAT_ERROR;
     }
 
     if ((status & USB_ISTAT_SLEEP /* 10 */ )) {
-        //serial_print("sleep\n");
         USB0_ISTAT = USB_ISTAT_SLEEP;
     }
 
 }
 
 
-
 void usb_init(void)
 {
     int i;
-
-    //serial_begin(BAUD2DIV(115200));
-    //serial_print("usb_init\n");
 
     usb_init_serialnumber();
 
