@@ -26,7 +26,6 @@
 #include "usb_dev.h"
 #include "dfu.h"
 
-extern uint32_t debug;
 
 static dfu_state_t dfu_state = dfuIDLE;
 static dfu_status_t dfu_status = OK;
@@ -197,6 +196,4 @@ bool dfu_abort()
 
 void dfu_usb_reset()
 {
-	debug++;
-//	watchdog_reboot();
 }
