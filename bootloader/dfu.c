@@ -26,6 +26,13 @@
 #include "usb_dev.h"
 #include "dfu.h"
 
+// Internal flash-programming state machine
+static unsigned fl_current_addr = 0;
+static enum {
+	flsIDLE = 0,
+	flsERASING,
+	flsPROGRAMMING
+} fl_state;
 
 static dfu_state_t dfu_state = dfuIDLE;
 static dfu_status_t dfu_status = OK;
@@ -83,6 +90,17 @@ static void ftfl_begin_erase_sector(uint32_t address)
 	ftfl_launch_command();
 }
 
+static void ftfl_begin_program_section(uint32_t address, uint32_t numLWords)
+{
+	FTFL_FCCOB0 = 0x0B;
+	FTFL_FCCOB1 = address >> 16;
+	FTFL_FCCOB2 = address >> 8;
+	FTFL_FCCOB3 = address;
+	FTFL_FCCOB4 = numLWords >> 8;
+	FTFL_FCCOB5 = numLWords;
+	ftfl_launch_command();
+}
+
 static uint32_t address_for_block(unsigned blockNum)
 {
 	return (blockNum + 1) << 12;
@@ -126,7 +144,7 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 		return false;
 	}
 
-	if (ftfl_busy()) {
+	if (ftfl_busy() || fl_state != flsIDLE) {
 		// Flash controller shouldn't be busy now!
 		dfu_state = dfuERROR;
 		dfu_status = errUNKNOWN;
@@ -140,15 +158,84 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 		return true;
 	}
 
-	/*
-	 * Start programming a block by erasing the corresponding flash sector
- 	 */
-
-	//ftfl_begin_erase_sector(address_for_block(blockNum));
+	// Start programming a block by erasing the corresponding flash sector
+	fl_state = flsERASING;
+	fl_current_addr = address_for_block(blockNum);
+	ftfl_begin_erase_sector(fl_current_addr);
 
 	dfu_state = dfuDNLOAD_SYNC;
 	dfu_status = OK;
 	return true;
+}
+
+static bool fl_handle_status(uint8_t fstat, unsigned specificError)
+{
+	/*
+	 * Handle common errors from an FSTAT register value.
+	 * The indicated "specificError" is used for reporting a command-specific
+	 * error from MGSTAT0.
+	 *
+	 * Returns true if handled, false if not.
+	 */
+
+
+	if (0 == (fstat & FTFL_FSTAT_CCIF)) {
+		// Still working...
+		return true;
+	}
+
+	if (fstat & FTFL_FSTAT_RDCOLERR) {
+		// Bus collision. We did something wrong internally.
+		dfu_state = dfuERROR;
+		dfu_status = errUNKNOWN;
+		fl_state = flsIDLE;
+		return true;
+	}
+
+	if (fstat & (FTFL_FSTAT_FPVIOL | FTFL_FSTAT_ACCERR)) {
+		// Address or protection error
+		dfu_state = dfuERROR;
+		dfu_status = errADDRESS;
+		fl_state = flsIDLE;
+		return true;
+	}
+
+	if (fstat & FTFL_FSTAT_MGSTAT0) {
+		// Command-specifid error
+		dfu_state = dfuERROR;
+		dfu_status = specificError;
+		fl_state = flsIDLE;
+		return true;
+	}
+
+	return false;
+}
+
+static void fl_state_poll()
+{
+	// Try to advance the state of our own flash programming state machine.
+
+	uint8_t fstat = FTFL_FSTAT;
+	switch (fl_state) {
+
+		case flsIDLE:
+			break;
+
+		case flsERASING:
+			if (!fl_handle_status(fstat, errERASE)) {
+				// Done! Move on to programming the sector.
+				fl_state = flsPROGRAMMING;
+				ftfl_begin_program_section(fl_current_addr, DFU_TRANSFER_SIZE/4);
+			}
+			break;
+
+		case flsPROGRAMMING:
+			if (!fl_handle_status(fstat, errVERIFY)) {
+				// Done!
+				fl_state = flsIDLE;
+			}
+			break;
+	}
 }
 
 bool dfu_getstatus(uint8_t *status)
@@ -157,10 +244,15 @@ bool dfu_getstatus(uint8_t *status)
 
 		case dfuDNLOAD_SYNC:
 		case dfuDNBUSY:
-			if (ftfl_busy()) {
-				dfu_state = dfuDNBUSY;
-			} else {
+			// Programming operation in progress. Advance our private flash state machine.
+			fl_state_poll();
+
+			if (dfu_state == dfuERROR) {
+				// An error occurred inside fl_state_poll();
+			} else if (fl_state == flsIDLE) {
 				dfu_state = dfuDNLOAD_IDLE;
+			} else {
+				dfu_state = dfuDNBUSY;
 			}
 			break;
 

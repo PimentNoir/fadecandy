@@ -58,7 +58,6 @@ typedef enum {
 	errSTALLEDPKT,
 } dfu_status_t;
 
-
 #define DFU_INTERFACE             0
 #define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
 #define DFU_TRANSFER_SIZE		  1024		// Flash sector size

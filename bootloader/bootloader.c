@@ -99,9 +99,6 @@ static void app_launch()
     // Clear the boot token, so we don't repeatedly enter DFU mode.
     boot_token = 0;
 
-    // XXX Enter application code.
-    serial_print("\r\nApp launch time!\r\n");
-
     while (1) {
         watchdog_refresh();
     }
@@ -115,11 +112,6 @@ int main()
         led_on();
         dfu_init();
         usb_init();
-
-        // XXX debug
-        serial_begin(BAUD2DIV(115200));
-        serial_print("\r\nHELLOES!\r\n");
-        serial_phex32(WDOG_RSTCNT);
 
         while (1) {
             watchdog_refresh();
