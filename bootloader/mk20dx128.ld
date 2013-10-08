@@ -26,7 +26,7 @@ SECTIONS
     } > BOOT_FLASH = 0xFF
     _eflash = .;
 
-    .apptext : {
+    .apptext (NOLOAD) : {
         . = ORIGIN(APP_FLASH);
         *(.appvectors)
     } > APP_FLASH = 0xFF
