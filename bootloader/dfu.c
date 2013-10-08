@@ -103,7 +103,7 @@ static void ftfl_begin_program_section(uint32_t address, uint32_t numLWords)
 
 static uint32_t address_for_block(unsigned blockNum)
 {
-	return (blockNum + 1) << 12;
+	return 0x1000 + (blockNum << 10);
 }
 
 void dfu_init()
