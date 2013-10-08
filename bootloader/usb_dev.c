@@ -38,14 +38,13 @@
 #include "dfu.h"
 
 // buffer descriptor table
-
 typedef struct {
     uint32_t desc;
     void * addr;
 } bdt_t;
 
 __attribute__ ((section(".usbdescriptortable"), used))
-static bdt_t table[4];  // EP0 only
+static bdt_t table[64];  // BDT page (512 bytes)
 
 #define BDT_OWN     0x80
 #define BDT_DATA1   0x40
@@ -74,36 +73,36 @@ static bdt_t table[4];  // EP0 only
 
 
 static union {
- struct {
-  union {
-   struct {
-    uint8_t bmRequestType;
-    uint8_t bRequest;
-   };
-    uint16_t wRequestAndType;
-  };
-    uint16_t wValue;
-    uint16_t wIndex;
-    uint16_t wLength;
- };
- struct {
-    uint32_t word1;
-    uint32_t word2;
- };
+    struct {
+        union {
+            struct {
+                uint8_t bmRequestType;
+                uint8_t bRequest;
+            };
+            uint16_t wRequestAndType;
+        };
+        uint16_t wValue;
+        uint16_t wIndex;
+        uint16_t wLength;
+    };
+    struct {
+        uint32_t word1;
+        uint32_t word2;
+    };
 } setup;
 
 
-#define GET_STATUS      0
+#define GET_STATUS          0
 #define CLEAR_FEATURE       1
-#define SET_FEATURE     3
-#define SET_ADDRESS     5
+#define SET_FEATURE         3
+#define SET_ADDRESS         5
 #define GET_DESCRIPTOR      6
 #define SET_DESCRIPTOR      7
 #define GET_CONFIGURATION   8
 #define SET_CONFIGURATION   9
 #define GET_INTERFACE       10
 #define SET_INTERFACE       11
-#define SYNCH_FRAME     12
+#define SYNCH_FRAME         12
 
 // SETUP always uses a DATA0 PID for the data field of the SETUP transaction.
 // transactions in the data phase start with DATA1 and toggle (figure 8-12, USB1.1)
@@ -134,6 +133,7 @@ static void endpoint0_transmit(const void *data, uint32_t len)
     ep0_tx_data_toggle ^= 1;
     ep0_tx_bdt_bank ^= 1;
 }
+
 
 static void usb_setup(void)
 {
@@ -218,7 +218,12 @@ static void usb_setup(void)
             endpoint0_stall();
             return;
         }
-        // Data comes in the OUT phase.
+        // Data comes in the OUT phase. But if it's a zero-length request, handle it now.
+        if (setup.wLength == 0) {
+            if (!dfu_download(setup.wValue, 0, 0, 0, NULL)) {
+                endpoint0_stall();
+            }
+        }
         break;
 
       case 0x03a1: // DFU_GETSTATUS
@@ -329,36 +334,35 @@ static void usb_control(uint32_t stat)
         break;
 
     case 0x01:  // OUT transaction received from host
+
         // The only control OUT request we have now, DFU_DNLOAD
-        if (setup.wRequestAndType == 0x0121 && setup.wIndex == 0 &&
-            ep0_rx_offset <= setup.wLength) {
-            bool success;
+        if (setup.wRequestAndType == 0x0121) {
 
-            size = setup.wLength - ep0_rx_offset;
-            if (size > EP0_SIZE) size = EP0_SIZE;
-
-            success = dfu_download(setup.wValue,   // blockNum
-                                   setup.wLength,  // blockLength
-                                   ep0_rx_offset,  // packetOffset
-                                   size,           // packetLength
-                                   buf);           // data
-
-            // Give the buffer back
-            b->desc = BDT_DESC_RX(EP0_SIZE);
-
-            if (success) {
-                ep0_rx_offset += size;
-                if (ep0_rx_offset >= setup.wLength) {
-                    // End of transaction, acknowledge with a zero-length IN                
-                   endpoint0_transmit(reply_buffer, 0);
-                }
-            } else {
+            if (setup.wIndex != 0 && ep0_rx_offset > setup.wLength) {
                 endpoint0_stall();
+            } else {
+                size = setup.wLength - ep0_rx_offset;
+                if (size > EP0_SIZE) size = EP0_SIZE;
+
+                if (dfu_download(setup.wValue,   // blockNum
+                                 setup.wLength,  // blockLength
+                                 ep0_rx_offset,  // packetOffset
+                                 size,           // packetLength
+                                 buf)) {         // data
+
+                    ep0_rx_offset += size;
+                    if (ep0_rx_offset >= setup.wLength) {
+                        // End of transaction, acknowledge with a zero-length IN                
+                       endpoint0_transmit(reply_buffer, 0);
+                    }
+                } else {
+                    endpoint0_stall();
+                }
             }
-        } else {
-            // Give the buffer back
-            b->desc = BDT_DESC_RX(EP0_SIZE);
         }
+
+        // Give the buffer back
+        b->desc = BDT_DESC_RX(EP0_SIZE);
         break;
 
     case 0x09: // IN transaction completed to host
@@ -381,7 +385,6 @@ static void usb_control(uint32_t stat)
     }
     USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
 }
-
 
 
 void usb_isr(void)
@@ -442,6 +445,8 @@ restart:
 
         // is this necessary?
         USB0_CTL = USB_CTL_USBENSOFEN;
+
+        dfu_usb_reset();
         return;
     }
 
@@ -460,7 +465,6 @@ restart:
         USB0_ISTAT = USB_ISTAT_SLEEP;
     }
 }
-
 
 
 void usb_init(void)

@@ -101,8 +101,6 @@ bool dfu_download(unsigned blockNum, unsigned blockLength,
 	// Store more data...
 	memcpy(dfu_buffer + packetOffset, data, packetLength);
 
-debug++;
-
 	if (packetOffset + packetLength != blockLength) {
 		// Still waiting for more data.
 		return true;
@@ -191,4 +189,9 @@ bool dfu_abort()
 	dfu_state = dfuIDLE;
 	dfu_status = OK;
 	return true;
+}
+
+void dfu_usb_reset()
+{
+	debug++;
 }

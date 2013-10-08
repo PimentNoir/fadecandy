@@ -113,7 +113,7 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         // DFU Functional Descriptor (DFU spec TAble 4.2)
         9,                                      // bLength
         0x21,                                   // bDescriptorType
-        0x01,                                   // bmAttributes: Download only, must be reset
+        0x0D,                                   // bmAttributes
         LSB(DFU_DETACH_TIMEOUT),                // wDetachTimeOut
         MSB(DFU_DETACH_TIMEOUT),
         LSB(DFU_TRANSFER_SIZE),                 // wTransferSize
