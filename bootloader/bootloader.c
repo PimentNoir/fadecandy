@@ -26,8 +26,11 @@
 #include "serial.h"
 #include "mk20dx128.h"
 
+extern uint32_t boot_token;
+static __attribute__ ((section(".appvectors"))) uint32_t appVectors[64];
 
-void led_on()
+
+static void led_on()
 {
     // Set the status LED on PC5, as an indication that we're in bootloading mode.
     PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
@@ -35,8 +38,29 @@ void led_on()
     GPIOC_PDOR = 1 << 5;
 }
 
+static bool test_boot_token()
+{
+    /*
+     * If we find a valid boot token in RAM, the application is asking us explicitly
+     * to enter DFU mode. This is used to implement the DFU_DETACH command when the app
+     * is running.
+     */
 
-bool test_banner_echo()
+    return boot_token == 0x74624346;
+}
+
+static bool test_app_missing()
+{
+    /*
+     * If there doesn't seem to be a valid application installed, we always go to
+     * bootloader mode.
+     */
+
+    uint32_t entry = appVectors[1];
+    return entry < 0x00001000 || entry >= 128 * 1024;
+}
+
+static bool test_banner_echo()
 {
     /*
      * At startup we print this banner out to the serial port.
@@ -70,28 +94,42 @@ bool test_banner_echo()
     return matched == bannerLength;
 }
 
-uint32_t debug;
-
-int main()
+static void app_launch()
 {
-    // Say hello!
+    // Clear the boot token, so we don't repeatedly enter DFU mode.
+    boot_token = 0;
 
-//  if (test_banner_echo()) {
-        led_on();
-//  }
+    // XXX Enter application code.
+    serial_print("\r\nApp launch time!\r\n");
 
-    dfu_init();
-    usb_init();
-
-    serial_begin(BAUD2DIV(115200));
-    serial_print("Hello from DFU!\r\n");
-
+    __disable_irq();
     while (1) {
-        serial_phex32(dfu_getstate());
-        serial_putchar(' ');
-        serial_phex32(debug);
-        serial_print("\r\n");
-
         watchdog_refresh();
     }
+}
+
+__attribute__ ((section(".startup")))
+int main()
+{
+    //if (test_banner_echo() || test_app_missing() || test_boot_token()) {
+    if (1) {
+
+        // We're doing DFU mode!
+        led_on();
+        dfu_init();
+        usb_init();
+
+        // XXX debug
+        serial_begin(BAUD2DIV(115200));
+        serial_print("\r\nHELLOES!\r\n");
+        serial_phex32(WDOG_RSTCNT);
+
+        while (1) {
+            __disable_irq();
+            watchdog_refresh();
+            __enable_irq();
+        }
+    }
+
+    app_launch();
 }

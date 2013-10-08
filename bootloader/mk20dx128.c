@@ -45,12 +45,13 @@ void ResetHandler(void);
 void _init_Teensyduino_internal_(void);
 void __libc_init_array(void);
 
-
+__attribute__ ((section(".startup")))
 void fault_isr(void)
 {
         while (1); // die
 }
 
+__attribute__ ((section(".startup")))
 void unused_isr(void)
 {
         while (1); // die
@@ -198,6 +199,7 @@ void ResetHandler(void)
     // application firmware wants to adjust its settings or disable it.
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+    asm volatile ("nop");
     WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
         WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN;
     WDOG_PRESC = 0;
@@ -246,19 +248,8 @@ void ResetHandler(void)
     while (!(MCG_S & MCG_S_LOCK0)) ;
     // now we're in PBE mode
 
-#if F_CPU == 96000000
-    // config divisors: 96 MHz core, 48 MHz bus, 24 MHz flash
-    SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(0) | SIM_CLKDIV1_OUTDIV2(1) |  SIM_CLKDIV1_OUTDIV4(3);
-#elif F_CPU == 48000000
     // config divisors: 48 MHz core, 48 MHz bus, 24 MHz flash
     SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(1) | SIM_CLKDIV1_OUTDIV2(1) |  SIM_CLKDIV1_OUTDIV4(3);
-#elif F_CPU == 24000000
-    // config divisors: 24 MHz core, 24 MHz bus, 24 MHz flash
-    SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(3) | SIM_CLKDIV1_OUTDIV2(3) |  SIM_CLKDIV1_OUTDIV4(3);
-#else
-#error "Error, F_CPU must be 96000000, 48000000, or 24000000"
-#endif
-
     // switch to PLL as clock source, FLL input = 16 MHz / 512
     MCG_C1 = MCG_C1_CLKS(0) | MCG_C1_FRDIV(4);
     // wait for PLL clock to be used
@@ -270,6 +261,5 @@ void ResetHandler(void)
     SIM_SOPT2 = SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TRACECLKSEL | SIM_SOPT2_CLKOUTSEL(6);
 
     __enable_irq();
-    main();
-    while (1) ;
+    return main();
 }
