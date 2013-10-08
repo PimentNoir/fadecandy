@@ -96,12 +96,23 @@ static bool test_banner_echo()
 
 static void app_launch()
 {
+    // Relocate IVT to application flash
+    __disable_irq();
+    SCB_VTOR = (uint32_t) &appVectors[0];
+
+    // Refresh watchdog right before launching app
+    watchdog_refresh();
+
     // Clear the boot token, so we don't repeatedly enter DFU mode.
     boot_token = 0;
 
-    while (1) {
-        watchdog_refresh();
-    }
+    asm volatile (
+        "mov lr, %0 \n\t"
+        "mov sp, %1 \n\t"
+        "bx %2 \n\t"
+        : : "r" (0xFFFFFFFF),
+            "r" (appVectors[0]),
+            "r" (appVectors[1]) );
 }
 
 int main()
