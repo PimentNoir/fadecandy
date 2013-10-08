@@ -1,17 +1,19 @@
 Fadecandy
 =========
 
-Fadecandy is firmware for the [Teensy 3.0](http://www.pjrc.com/store/teensy3.html), a tiny and inexpensive ARM microcontroller board.
-
 Fadecandy drives addressable LED strips with the WS2811 and WS2812 controllers. These LED strips are common and inexpensive, available from [many suppliers](http://www.aliexpress.com/item/5M-WS2811-LED-digital-strip-60leds-m-with-60pcs-WS2811-built-in-tthe-5050-smd-rgb/635563383.html?tracelog=back_to_detail_a) for around $0.25 per pixel.
 
-This firmware is based on Stoffregen's excellent [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) library, which pumps out serial data for these LED strips entirely using DMA. This firmware builds on Paul's work by adding:
+Fadecandy makes it easy to drive these LEDs from anything with USB, and it includes unique algorithms which eliminate many of the common visual glitches you see when using these LEDs.
+
+The LED drive engine is based on Stoffregen's excellent [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) library, which pumps out serial data for these LED strips entirely using DMA. This firmware builds on Paul's work by adding:
 
 * A high performance USB protocol
 * Zero copy architecture with triple-buffering
 * Interpolation between keyframes
 * Gamma and color correction with per-channel lookup tables
 * Temporal dithering
+* A custom PCB with line drivers and a 5V boost converter
+* A fully open source bootloader
 
 These features add up to give *very smooth* fades and high dynamic range. Ever notice that annoying stair-stepping effect when fading LEDs from off to dim? Fadecandy avoids that using a form of [delta-sigma modulation](http://en.wikipedia.org/wiki/Delta-sigma_modulation). It rapidly wiggles each pixel's value up or down by one 8-bit step, in order to achieve 16-bit resolution for fades.
 
@@ -19,6 +21,13 @@ Example videos:
 
 * [Smooth interpolation](http://youtu.be/JilFl-xTdJ4)
 * [Multiple Fadecandy boards running in unison](http://youtu.be/OXvY6aQAGcs)
+
+Platform
+--------
+
+Fadecandy uses the Freescale MK20DX128 microcontroller, the same one used by the [Teensy 3.0](http://www.pjrc.com/store/teensy3.html) board. Fadecandy includes its own PCB design featuring a robust power supply and level shifters. It also includes an open source bootloader compatible with the USB Device Firmware Update spec.
+
+You can use Fadecandy either as a full hardware platform or as firmware for the Teensy 3.0 board.
 
 Vitals
 ------
@@ -67,37 +76,11 @@ Why use Open Pixel Control?
 
 For more information, see the [Server README](https://github.com/scanlime/fadecandy/blob/master/server/README.md).
 
-Prerequisites
--------------
+Tools
+-----
 
-* To install a firmware image, you'll need the [Teensy Loader](http://www.pjrc.com/teensy/loader.html) or the [command line version](http://www.pjrc.com/teensy/loader_cli.html).
 * To recompile the firmware (only needed if you want to modify it), please use the [recommended ARM toolchain](https://code.launchpad.net/gcc-arm-embedded).
-
-Pin Assignment
---------------
-
-The pin assignment is the same as the original [OctoWS2811](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html) pinout:
-
-![Wiring Diagram](https://raw.github.com/scanlime/fadecandy/master/tools/wiring-diagram.png)
-
-Teensy 3.0 Pin | Function
--------------- | --------------
-2              | Led strip #1
-14             | Led strip #2
-7              | Led strip #3
-8              | Led strip #4
-6              | Led strip #5
-20             | Led strip #6
-21             | Led strip #7
-5              | Led strip #8
-15 & 16        | Connect together
-13 (LED)       | Built-in LED blinks when data is received over USB
-
-Remember that each strip may be up to 64 LEDs long. It's fine to have shorter strips or to leave some outputs unused. These outputs are 3.3V logic signals at 800 kilobits per second.
-
-It usually works to connect them directly to the 5V inputs of your WS2811 LED strips, but better signal integrity can be had quite easily by adding a series resistor (47 to 220 ohms) near the Teensy 3.0 board. And for the best signal integrity, you can use a level-shifting buffer (like the 74HCT245) to convert the 3.3V logic to 5V. For more information, see the [OctoWS2811 web site](http://www.pjrc.com/teensy/td_libs_OctoWS2811.html).
-
-Running these control signals over long distances is tricky, and not recommended unless you're using some kind of purpose-built line driver like an RS-485 transmitter/receiver pair. For large installations, it's usually easier to run the USB signals long distances and place the Teensy boards close to your LEDs.
+* To install new firmware, you'll need a USB DFU loader such as [dfu-util](http://dfu-util.gnumonks.org/).
 
 USB Protocol
 ------------
