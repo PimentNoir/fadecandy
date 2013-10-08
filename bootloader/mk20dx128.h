@@ -1604,7 +1604,11 @@ extern void portd_isr(void);
 extern void porte_isr(void);
 extern void software_isr(void);
 
-
+static inline void watchdog_refresh(void)
+{
+	WDOG_REFRESH = 0xA602;
+	WDOG_REFRESH = 0xB480;
+}
 
 
 #ifdef __cplusplus

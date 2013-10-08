@@ -91,5 +91,6 @@ int main()
     	serial_putchar(' ');
     	serial_phex32(debug);
     	serial_print("\r\n");
+        watchdog_refresh();
     }
 }
