@@ -449,6 +449,8 @@ extern "C" int main()
     leds.begin();
 
     while (1) {
+        watchdog_refresh();
+
         buffers.handleUSB();
         updateDrawBuffer(calculateInterpCoefficient());
         leds.show();
