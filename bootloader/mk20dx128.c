@@ -31,30 +31,26 @@
 #include "mk20dx128.h"
 
 
-extern unsigned long _stext;
-extern unsigned long _etext;
-extern unsigned long _sdata;
-extern unsigned long _edata;
+extern unsigned long _eflash;
+extern unsigned long _sdtext;
+extern unsigned long _edtext;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
 extern unsigned long _estack;
-//extern void __init_array_start(void);
-//extern void __init_array_end(void);
+
 extern int main (void);
 void ResetHandler(void);
 void _init_Teensyduino_internal_(void);
 void __libc_init_array(void);
 
-__attribute__ ((section(".startup")))
 void fault_isr(void)
 {
-        while (1); // die
+    while (1); // die
 }
 
-__attribute__ ((section(".startup")))
 void unused_isr(void)
 {
-        while (1); // die
+    while (1); // die
 }
 
 void nmi_isr(void)      __attribute__ ((weak, alias("unused_isr")));
@@ -113,9 +109,9 @@ void portd_isr(void)        __attribute__ ((weak, alias("unused_isr")));
 void porte_isr(void)        __attribute__ ((weak, alias("unused_isr")));
 void software_isr(void)     __attribute__ ((weak, alias("unused_isr")));
 
+// Relocated IVT in RAM
+static uint32_t ramVectors[64] __attribute__ ((aligned (1024)));
 
-// TODO: create AVR-stype ISR() macro, with default linkage to undefined handler
-//
 __attribute__ ((section(".vectors"), used))
 void (* const gVectors[])(void) =
 {
@@ -192,10 +188,6 @@ const uint8_t flashconfigbytes[16] = {
 __attribute__ ((section(".startup")))
 void ResetHandler(void)
 {
-    uint32_t *src = &_etext;
-    uint32_t *dest = &_sdata;
-    const uint32_t watchdog_timeout = F_BUS / 100;  // 10ms
-
     /*
      * Enable watchdog timer. Allow settings to be changed later, in case the
      * application firmware wants to adjust its settings or disable it.
@@ -209,15 +201,19 @@ void ResetHandler(void)
      *
      * As a workaround, I'm using the "alternate" system clock.
      */
-    WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
-    WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-    asm volatile ("nop");
-    asm volatile ("nop");
-    WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
-        WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
-    WDOG_PRESC = 0;
-    WDOG_TOVALH = watchdog_timeout >> 16;
-    WDOG_TOVALL = watchdog_timeout;
+    {
+         const uint32_t watchdog_timeout = F_BUS / 100;  // 10ms
+
+        WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+        WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+        asm volatile ("nop");
+        asm volatile ("nop");
+        WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
+            WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
+        WDOG_PRESC = 0;
+        WDOG_TOVALH = watchdog_timeout >> 16;
+        WDOG_TOVALL = watchdog_timeout;
+    }
 
     // enable clocks to always-used peripherals
     SIM_SCGC5 = 0x00043F82;     // clocks active to all GPIO
@@ -245,11 +241,25 @@ void ResetHandler(void)
     // config PLL for 96 MHz output
     MCG_C6 = MCG_C6_PLLS | MCG_C6_VDIV0(0);
 
-    // Copy data segment while we're waiting on the PLL
-    while (dest < &_edata) *dest++ = *src++;
-    dest = &_sbss;
-    while (dest < &_ebss) *dest++ = 0;
-    SCB_VTOR = 0;   // use vector table in flash
+    // Copy things while we're waiting on the PLL
+    {
+        // Relocate data and text to RAM
+        uint32_t *src = &_eflash;
+        uint32_t *dest = &_sdtext;
+        while (dest < &_edtext) *dest++ = *src++;
+
+        // Clear BSS
+        dest = &_sbss;
+        while (dest < &_ebss) *dest++ = 0;
+
+        // Copy IVT to RAM
+        src = (uint32_t*) &gVectors[0];
+        dest = &ramVectors[0];
+        while (dest <= &ramVectors[63]) *dest++ = *src++;
+
+        // Switch to ram IVT
+        SCB_VTOR = (uint32_t) &ramVectors[0];
+    }
 
     // wait for PLL to start using xtal as its input
     while (!(MCG_S & MCG_S_PLLST)) ;
