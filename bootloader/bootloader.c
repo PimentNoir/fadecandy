@@ -102,7 +102,6 @@ static void app_launch()
     // XXX Enter application code.
     serial_print("\r\nApp launch time!\r\n");
 
-    __disable_irq();
     while (1) {
         watchdog_refresh();
     }
@@ -111,13 +110,12 @@ static void app_launch()
 __attribute__ ((section(".startup")))
 int main()
 {
-    //if (test_banner_echo() || test_app_missing() || test_boot_token()) {
-    if (1) {
+    if (test_banner_echo() || test_app_missing() || test_boot_token()) {
 
         // We're doing DFU mode!
         led_on();
-//        dfu_init();
-//        usb_init();
+        dfu_init();
+        usb_init();
 
         // XXX debug
         serial_begin(BAUD2DIV(115200));
@@ -125,12 +123,7 @@ int main()
         serial_phex32(WDOG_RSTCNT);
 
         while (1) {
-            serial_print("foo");
-            serial_flush();
-
-            __disable_irq();
-            //watchdog_refresh();
-            __enable_irq();
+            watchdog_refresh();
         }
     }
 

@@ -56,7 +56,8 @@ static volatile uint8_t rx_buffer_tail = 0;
 
 static inline void yield()
 {
-	asm volatile ("wfi");
+	// Serial is used during early boot at 9600 baud. (Too slow to survive our 10ms WDT)
+    watchdog_refresh();
 }
 
 void serial_begin(uint32_t divisor)
