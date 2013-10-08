@@ -1,4 +1,7 @@
-/* Teensyduino Core Library
+/* Linker script for application firmware loaded by FC-Boot.
+ * Originally based on:
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -30,7 +33,7 @@
 
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+    FLASH (rx) : ORIGIN = 0x00001000, LENGTH = 124K
     RAM  (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 16K
 }
 
@@ -40,10 +43,6 @@ SECTIONS
     .text : {
         . = 0;
         KEEP(*(.vectors))
-        *(.startup*)
-        /* TODO: does linker detect startup overflow onto flashconfig? */
-        . = 0x400;
-        KEEP(*(.flashconfig*))
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);
@@ -103,7 +102,8 @@ SECTIONS
         __bss_end = .;
     } > RAM
 
-    _estack = ORIGIN(RAM) + LENGTH(RAM);
+    _estack = ORIGIN(RAM) + LENGTH(RAM) - 4;
+    boot_token = _estack;
 }
 
 
