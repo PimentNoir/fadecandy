@@ -29,56 +29,56 @@
 
 void led_on()
 {
-	// Set the status LED on PC5, as an indication that we're in bootloading mode.
-	PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
-	GPIOC_PDDR = 1 << 5;
-	GPIOC_PDOR = 1 << 5;
+    // Set the status LED on PC5, as an indication that we're in bootloading mode.
+    PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
+    GPIOC_PDDR = 1 << 5;
+    GPIOC_PDOR = 1 << 5;
 }
 
 
 bool test_banner_echo()
 {
-	/*
-	 * At startup we print this banner out to the serial port.
-	 * If we see it echo back to us, we enter bootloader mode no matter what.
-	 * This is intended to be a foolproof way to enter recovery mode, even if other
-	 * circuitry has been connected to the serial port.
-	 */
+    /*
+     * At startup we print this banner out to the serial port.
+     * If we see it echo back to us, we enter bootloader mode no matter what.
+     * This is intended to be a foolproof way to enter recovery mode, even if other
+     * circuitry has been connected to the serial port.
+     */
 
-	static char banner[] = "FC-Boot";
-	const unsigned bannerLength = sizeof banner - 1;
-	unsigned matched = 0;
+    static char banner[] = "FC-Boot";
+    const unsigned bannerLength = sizeof banner - 1;
+    unsigned matched = 0;
 
-	// Write banner
-	serial_begin(BAUD2DIV(9600));
-	serial_write(banner, sizeof banner - 1);
+    // Write banner
+    serial_begin(BAUD2DIV(9600));
+    serial_write(banner, sizeof banner - 1);
 
-	// Newline is not technically part of the banner, so we can do the RX check
-	// at a time when we're sure the other characters have arrived in the RX fifo.
-	serial_putchar('\n');
-	serial_flush();
+    // Newline is not technically part of the banner, so we can do the RX check
+    // at a time when we're sure the other characters have arrived in the RX fifo.
+    serial_putchar('\n');
+    serial_flush();
 
-	while (matched < bannerLength) {
-		if (serial_available() && serial_getchar() == banner[matched]) {
-			matched++;
-		} else {
-			break;
-		}
-	}
+    while (matched < bannerLength) {
+        if (serial_available() && serial_getchar() == banner[matched]) {
+            matched++;
+        } else {
+            break;
+        }
+    }
 
-	serial_end();
-	return matched == bannerLength;
+    serial_end();
+    return matched == bannerLength;
 }
 
 uint32_t debug;
 
 int main()
 {
-	// Say hello!
+    // Say hello!
 
-//	if (test_banner_echo()) {
-		led_on();
-//	}
+//  if (test_banner_echo()) {
+        led_on();
+//  }
 
     dfu_init();
     usb_init();
@@ -87,10 +87,11 @@ int main()
     serial_print("Hello from DFU!\r\n");
 
     while (1) {
-    	serial_phex32(dfu_getstate());
-    	serial_putchar(' ');
-    	serial_phex32(debug);
-    	serial_print("\r\n");
+        serial_phex32(dfu_getstate());
+        serial_putchar(' ');
+        serial_phex32(debug);
+        serial_print("\r\n");
+
         watchdog_refresh();
     }
 }
