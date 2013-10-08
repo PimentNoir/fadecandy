@@ -202,7 +202,7 @@ void ResetHandler(void)
      * As a workaround, I'm using the "alternate" system clock.
      */
     {
-         const uint32_t watchdog_timeout = F_BUS / 100;  // 10ms
+        const uint32_t watchdog_timeout = F_BUS / 100;  // 10ms
 
         WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
         WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
