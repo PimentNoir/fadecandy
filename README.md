@@ -162,12 +162,6 @@ Byte Offset | Bits   | Description
 1           | 0      | Disable dithering
 2 … 63      | 7 … 0  | (reserved)
 
-Control transfers supported on EP0:
-
-bmRequestType  | bRequest | wValue | wIndex | wLength | Description
--------------- | -------- | ------ | ------ | ------- | ---------------------------------------------
-0x40           | 1        | 0      | 0      | 0       | Reboot to Teensy 3.0 bootloader
-
 Contact
 -------
 
