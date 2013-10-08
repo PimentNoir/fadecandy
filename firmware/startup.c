@@ -1,4 +1,8 @@
-/* Teensyduino Core Library
+/*
+ * Initialization code for an FC-Boot application.
+ * Originally based on:
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -30,7 +34,6 @@
 
 #include "mk20dx128.h"
 
-
 extern unsigned long _stext;
 extern unsigned long _etext;
 extern unsigned long _sdata;
@@ -38,8 +41,7 @@ extern unsigned long _edata;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
 extern unsigned long _estack;
-//extern void __init_array_start(void);
-//extern void __init_array_end(void);
+
 extern int main (void);
 void ResetHandler(void);
 void _init_Teensyduino_internal_(void);
@@ -188,143 +190,32 @@ void (* const gVectors[])(void) =
     software_isr,                   // 61 Software interrupt
 };
 
-//void usb_isr(void)
-//{
-//}
-
-__attribute__ ((section(".flashconfig"), used))
-const uint8_t flashconfigbytes[16] = {
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF
-};
-
-
-// Automatically initialize the RTC.  When the build defines the compile
-// time, and the user has added a crystal, the RTC will automatically
-// begin at the time of the first upload.
-#ifndef TIME_T
-#define TIME_T 1349049600 // default 1 Oct 2012 (never used, Arduino sets this)
-#endif
-extern void rtc_set(unsigned long t);
-
-
-
-static void startup_unused_hook(void) {}
-void startup_early_hook(void)       __attribute__ ((weak, alias("startup_unused_hook")));
-void startup_late_hook(void)        __attribute__ ((weak, alias("startup_unused_hook")));
-
-
-__attribute__ ((section(".startup")))
 void ResetHandler(void)
 {
-        uint32_t *src = &_etext;
-        uint32_t *dest = &_sdata;
+    // Init data RAM
+    uint32_t *src = &_etext;
+    uint32_t *dest = &_sdata;
+    while (dest < &_edata) *dest++ = *src++;
+    dest = &_sbss;
+    while (dest < &_ebss) *dest++ = 0;
 
-    WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
-    WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-    WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
-    startup_early_hook();
+    // initialize the SysTick counter
+    SYST_RVR = (F_CPU / 1000) - 1;
+    SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
 
-    // enable clocks to always-used peripherals
-    SIM_SCGC5 = 0x00043F82;     // clocks active to all GPIO
-    SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-    // if the RTC oscillator isn't enabled, get it started early
-    if (!(RTC_CR & RTC_CR_OSCE)) {
-        RTC_SR = 0;
-        RTC_CR = RTC_CR_SC16P | RTC_CR_SC4P | RTC_CR_OSCE;
-    }
-
-    // release I/O pins hold, if we woke up from VLLS mode
-    if (PMC_REGSC & PMC_REGSC_ACKISO) PMC_REGSC |= PMC_REGSC_ACKISO;
-
-    // TODO: do this while the PLL is waiting to lock....
-        while (dest < &_edata) *dest++ = *src++;
-        dest = &_sbss;
-        while (dest < &_ebss) *dest++ = 0;
-    SCB_VTOR = 0;   // use vector table in flash
-
-        // start in FEI mode
-        // enable capacitors for crystal
-        OSC0_CR = OSC_SC8P | OSC_SC2P;
-        // enable osc, 8-32 MHz range, low power mode
-        MCG_C2 = MCG_C2_RANGE0(2) | MCG_C2_EREFS;
-        // switch to crystal as clock source, FLL input = 16 MHz / 512
-        MCG_C1 =  MCG_C1_CLKS(2) | MCG_C1_FRDIV(4);
-        // wait for crystal oscillator to begin
-        while ((MCG_S & MCG_S_OSCINIT0) == 0) ;
-        // wait for FLL to use oscillator
-        while ((MCG_S & MCG_S_IREFST) != 0) ;
-        // wait for MCGOUT to use oscillator
-        while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST(2)) ;
-        // now we're in FBE mode
-        // config PLL input for 16 MHz Crystal / 4 = 4 MHz
-        MCG_C5 = MCG_C5_PRDIV0(3);
-        // config PLL for 96 MHz output
-        MCG_C6 = MCG_C6_PLLS | MCG_C6_VDIV0(0);
-        // wait for PLL to start using xtal as its input
-        while (!(MCG_S & MCG_S_PLLST)) ;
-        // wait for PLL to lock
-        while (!(MCG_S & MCG_S_LOCK0)) ;
-        // now we're in PBE mode
-#if F_CPU == 96000000
-        // config divisors: 96 MHz core, 48 MHz bus, 24 MHz flash
-        SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(0) | SIM_CLKDIV1_OUTDIV2(1) |  SIM_CLKDIV1_OUTDIV4(3);
-#elif F_CPU == 48000000
-        // config divisors: 48 MHz core, 48 MHz bus, 24 MHz flash
-        SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(1) | SIM_CLKDIV1_OUTDIV2(1) |  SIM_CLKDIV1_OUTDIV4(3);
-#elif F_CPU == 24000000
-        // config divisors: 24 MHz core, 24 MHz bus, 24 MHz flash
-        SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(3) | SIM_CLKDIV1_OUTDIV2(3) |  SIM_CLKDIV1_OUTDIV4(3);
-#else
-#error "Error, F_CPU must be 96000000, 48000000, or 24000000"
-#endif
-        // switch to PLL as clock source, FLL input = 16 MHz / 512
-        MCG_C1 = MCG_C1_CLKS(0) | MCG_C1_FRDIV(4);
-        // wait for PLL clock to be used
-        while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST(3)) ;
-        // now we're in PEE mode
-        // configure USB for 48 MHz clock
-        SIM_CLKDIV2 = SIM_CLKDIV2_USBDIV(1); // USB = 96 MHz PLL / 2
-        // USB uses PLL clock, trace is CPU clock, CLKOUT=OSCERCLK0
-        SIM_SOPT2 = SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TRACECLKSEL | SIM_SOPT2_CLKOUTSEL(6);
-
-        // initialize the SysTick counter
-        SYST_RVR = (F_CPU / 1000) - 1;
-        SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
-
-    //init_pins();
     __enable_irq();
 
     _init_Teensyduino_internal_();
-    if (RTC_SR & RTC_SR_TIF) rtc_set(TIME_T);
-
     __libc_init_array();
 
-/*
-    for (ptr = &__init_array_start; ptr < &__init_array_end; ptr++) {
-        (*ptr)();
-    }
-*/
-    startup_late_hook();
-        main();
-        while (1) ;
+    main();
+    while (1) ;
 }
-
-// TODO: is this needed for c++ and where does it come from?
-/*
-void _init(void)
-{
-}
-*/
 
 char *__brkval = (char *)&_ebss;
 
 void * _sbrk(int incr)
 {
-        //static char *heap_end = (char *)&_ebss;
-    //char *prev = heap_end;
-    //heap_end += incr;
-
     char *prev = __brkval;
     __brkval += incr;
     return prev;
