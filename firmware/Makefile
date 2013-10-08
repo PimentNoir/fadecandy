@@ -12,15 +12,12 @@ SIZE = arm-none-eabi-size
 
 #######################################################
 
-# The name of your project (used to name the compiled .hex file)
+# The name of your project (used to name the compiled .dfu file)
 TARGET = fadecandy
-
-# configurable options
-OPTIONS = -DF_CPU=48000000
 
 # Sources
 C_FILES = \
-	mk20dx128.c \
+	startup.c \
 	pins_teensy.c \
 	usb_desc.c \
 	usb_dev.c \
@@ -44,7 +41,7 @@ CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 CFLAGS =
 
 # linker script
-LDSCRIPT = mk20dx128.ld
+LDSCRIPT = fcb-app.ld
 
 # linker options
 LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -T$(LDSCRIPT)
