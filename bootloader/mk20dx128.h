@@ -1610,6 +1610,12 @@ static inline void watchdog_refresh(void)
 	WDOG_REFRESH = 0xB480;
 }
 
+static inline void watchdog_reboot(void)
+{
+	// Any invalid write to the WDOG registers will trigger an immediate reboot
+	WDOG_REFRESH = 0;
+}
+
 
 #ifdef __cplusplus
 }

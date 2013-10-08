@@ -194,10 +194,11 @@ void ResetHandler(void)
     uint32_t *src = &_etext;
     uint32_t *dest = &_sdata;
 
-    // Enable watchdog timer
+    // Enable watchdog timer. Allow settings to be changed later, in case the
+    // application firmware wants to adjust its settings or disable it.
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-    WDOG_STCTRLH = WDOG_STCTRLH_DISTESTWDOG| WDOG_STCTRLH_WDOGEN |
+    WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
         WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN;
     WDOG_PRESC = 0;
     WDOG_TOVALH = 0;
