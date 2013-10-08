@@ -1,8 +1,8 @@
 *.elf
-*.hex
 *.o
 *.a
 *.d
+*.dfu
 
 # IDA Pro
 *.id0

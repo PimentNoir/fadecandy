@@ -1,10 +1,9 @@
 #######################################################
 # Environment setup
 
-# Teensy loader tools (for 'make install')
-TEENSY_TOOLSPATH = /Applications/Arduino.app/Contents/Resources/Java/hardware/tools
-
 # toolchain
+DFU_SUFFIX = dfu-suffix
+DFU_UTIL = dfu-util
 CC = arm-none-eabi-gcc
 CXX = arm-none-eabi-g++
 OBJCOPY = arm-none-eabi-objcopy
@@ -55,24 +54,24 @@ LIBS = -lm
 
 OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 
-all: $(TARGET).hex
+all: $(TARGET).dfu
 
 $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-%.hex: %.elf
+%.dfu: %.elf
 	$(SIZE) $<
-	$(OBJCOPY) -O ihex -R .eeprom $< $@
+	$(OBJCOPY) -O binary $< $@
+	$(DFU_SUFFIX) -a $@
+
+install: $(TARGET).dfu
+	$(DFU_UTIL) -D $<
 
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f *.d *.o $(TARGET).elf $(TARGET).hex
-
-install-teensy: $(TARGET).hex
-	$(abspath $(TEENSY_TOOLSPATH))/teensy_post_compile -file=$(TARGET) -path=$(shell pwd) -tools=$(abspath $(TOOLSPATH))
-	python ../tools/teensy-bootloader-mode.py
+	rm -f *.d *.o $(TARGET).elf $(TARGET).dfu
 
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
