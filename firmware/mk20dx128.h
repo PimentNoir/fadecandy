@@ -31,24 +31,9 @@
 #ifndef _mk20dx128_h_
 #define _mk20dx128_h_
 
-//#define F_CPU 96000000
-//#define F_CPU 48000000
-//#define F_CPU 24000000
-//#define F_BUS 48000000
-//#define F_BUS 24000000
-//#define F_MEM 24000000
-
-#if (F_CPU == 96000000)
- #define F_BUS 48000000
- #define F_MEM 24000000
-#elif (F_CPU == 48000000)
- #define F_BUS 48000000
- #define F_MEM 24000000
-#elif (F_CPU == 24000000)
- #define F_BUS 24000000
- #define F_MEM 24000000
-#endif
-
+#define F_CPU 48000000
+#define F_BUS 48000000
+#define F_MEM 24000000
 
 #ifndef NULL
 #define NULL ((void *)0)
@@ -1604,7 +1589,17 @@ extern void portd_isr(void);
 extern void porte_isr(void);
 extern void software_isr(void);
 
+static inline void watchdog_refresh(void)
+{
+	WDOG_REFRESH = 0xA602;
+	WDOG_REFRESH = 0xB480;
+}
 
+static inline void watchdog_reboot(void)
+{
+	// Any invalid write to the WDOG registers will trigger an immediate reboot
+	WDOG_REFRESH = 0;
+}
 
 
 #ifdef __cplusplus

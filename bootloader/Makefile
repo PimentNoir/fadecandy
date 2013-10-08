@@ -13,9 +13,6 @@ SIZE = arm-none-eabi-size
 # The name of your project (used to name the compiled .hex file)
 TARGET = fc-boot
 
-# configurable options
-OPTIONS = -DF_CPU=48000000
-
 # Sources
 C_FILES = \
 	mk20dx128.c \

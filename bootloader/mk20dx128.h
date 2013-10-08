@@ -31,24 +31,9 @@
 #ifndef _mk20dx128_h_
 #define _mk20dx128_h_
 
-//#define F_CPU 96000000
-//#define F_CPU 48000000
-//#define F_CPU 24000000
-//#define F_BUS 48000000
-//#define F_BUS 24000000
-//#define F_MEM 24000000
-
-#if (F_CPU == 96000000)
- #define F_BUS 48000000
- #define F_MEM 24000000
-#elif (F_CPU == 48000000)
- #define F_BUS 48000000
- #define F_MEM 24000000
-#elif (F_CPU == 24000000)
- #define F_BUS 24000000
- #define F_MEM 24000000
-#endif
-
+#define F_CPU 48000000
+#define F_BUS 48000000
+#define F_MEM 24000000
 
 #ifndef NULL
 #define NULL ((void *)0)
