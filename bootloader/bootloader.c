@@ -147,8 +147,9 @@ int main()
         }
 
         // USB disconnect and reboot, using watchdog to time 10ms.
-        USB0_CONTROL = 0;
         watchdog_refresh();
+        __disable_irq();
+        USB0_CONTROL = 0;
         while (1);
     }
 
