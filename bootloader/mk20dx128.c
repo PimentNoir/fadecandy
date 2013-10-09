@@ -1,4 +1,7 @@
-/* Teensyduino Core Library
+/* Fadecandy Bootloader
+ * Copyright (c) 2013 Micah Elizabeth Scott
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -185,14 +188,22 @@ const uint8_t flashconfigbytes[16] =
     // Backdoor comparison key (disabled)
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 
-    // Program flash protection (FPROT)
-    // First 4K region is protected from erasure by any means other than mass-erase over JTAG.
+    /*
+     * Program flash protection (FPROT)
+     *
+     * First 4K region is protected from erasure by any means other than mass-erase over JTAG.
+     * This protects our bootloader from being modified except via hardware that could also replace it.
+     *
+     * OpenOCD doesn't give you an easy way to execute mass-erase currently. I'm lazy, I do this by patching
+     * dap_syssec_kinetis_mdmap() in arm_adi_v5.c to always mass-erase, and I run that version of openocd
+     * when necessary :(
+     */
     0xfe, 0xff, 0xff, 0xff,
 
     0xfe,       // Data flash protection (FDPROT)
     0xff,       // EEPROM protection (FEPROT)
     0xff,       // Flash nonvolatile option byte (FOPT)
-    0xff        // Flash security byte (FSEC)
+    0x40        // Flash security byte (FSEC)
 };
 
 __attribute__ ((section(".startup")))
