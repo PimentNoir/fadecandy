@@ -54,13 +54,20 @@ static volatile uint8_t rx_buffer_tail = 0;
 #define C2_TX_COMPLETING	C2_ENABLE | UART_C2_TCIE
 #define C2_TX_INACTIVE		C2_ENABLE
 
+/*
+ * Serial is only used early in startup, before jumping into RAM.
+ * Keep this in the space between the IVT and FlashConfig, to save space.
+ */
+#define SERIAL_SECTION __attribute__ ((section(".startup")))
+
+
 static inline void yield()
 {
 	// Serial is used during early boot at 9600 baud. (Too slow to survive our 10ms WDT)
     watchdog_refresh();
 }
 
-void serial_begin(uint32_t divisor)
+SERIAL_SECTION void serial_begin(uint32_t divisor)
 {
 	SIM_SCGC4 |= SIM_SCGC4_UART0;	// turn on clock, TODO: use bitband
 	rx_buffer_head = 0;
@@ -82,10 +89,10 @@ void serial_begin(uint32_t divisor)
 	NVIC_ENABLE_IRQ(IRQ_UART0_STATUS);
 }
 
-void serial_end(void)
+SERIAL_SECTION void serial_end(void)
 {
 	if (!(SIM_SCGC4 & SIM_SCGC4_UART0)) return;
-	while (transmitting) yield();  // wait for buffered data to send
+	serial_flush();
 	NVIC_DISABLE_IRQ(IRQ_UART0_STATUS);
 	UART0_C2 = 0;
 	CORE_PIN0_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1);
@@ -94,7 +101,7 @@ void serial_end(void)
 	rx_buffer_tail = 0;
 }
 
-void serial_putchar(uint8_t c)
+SERIAL_SECTION void serial_putchar(uint8_t c)
 {
 	uint32_t head;
 
@@ -110,30 +117,17 @@ void serial_putchar(uint8_t c)
 	UART0_C2 = C2_TX_ACTIVE;
 }
 
-void serial_write(const void *buf, unsigned int count)
+SERIAL_SECTION void serial_write(const void *buf, unsigned int count)
 {
-	const uint8_t *p = (const uint8_t *)buf;
-	const uint8_t *end = p + count;
-        uint32_t head;
-
-        if (!(SIM_SCGC4 & SIM_SCGC4_UART0)) return;
-	while (p < end) {
-        	head = tx_buffer_head;
-        	if (++head >= TX_BUFFER_SIZE) head = 0;
-		if (tx_buffer_tail == head) {
-        		UART0_C2 = C2_TX_ACTIVE;
-			do {
-				yield();
-			} while (tx_buffer_tail == head);
-		}
-        	tx_buffer[head] = *p++;
-        	transmitting = 1;
-        	tx_buffer_head = head;
+	// Optimized for size rather than efficiency
+	const uint8_t *buf8 = buf;
+	while (count--) {
+		serial_putchar(*buf8);
+		buf8++;
 	}
-        UART0_C2 = C2_TX_ACTIVE;
 }
 
-void serial_flush(void)
+SERIAL_SECTION void serial_flush(void)
 {
 	while (transmitting) {
 		yield();
@@ -251,8 +245,6 @@ void uart0_status_isr(void)
 		UART0_C2 = C2_TX_INACTIVE;
 	}
 }
-
-
 
 void serial_print(const char *p)
 {
