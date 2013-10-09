@@ -38,6 +38,9 @@ static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 // Residuals for temporal dithering
 static int8_t residual[CHANNELS_TOTAL];
 
+// Reserved RAM area for signalling entry to bootloader
+extern uint32_t boot_token;
+
 
 static inline uint32_t calculateInterpCoefficient()
 {
@@ -443,12 +446,30 @@ static void updateDrawBuffer(unsigned interpCoefficient)
     }
 }
 
+void dfu_reboot()
+{
+    // Reboot to the Fadecandy Bootloader
+    boot_token = 0x74624346;
+
+    // Short delay to allow the host to receive the response to DFU_DETACH.
+    uint32_t deadline = millis() + 10;
+    while (millis() < deadline) {
+        watchdog_refresh();
+    }
+
+    // Detach from USB, and use the watchdog to time out a 10ms USB disconnect.
+    __disable_irq();
+    USB0_CONTROL = 0;
+    while (1);
+}
+
 extern "C" int main()
 {
     pinMode(LED_BUILTIN, OUTPUT);
     leds.begin();
 
-    while (1) {
+    // Application main loop
+    while (usb_dfu_state == DFU_appIDLE) {
         watchdog_refresh();
 
         buffers.handleUSB();
@@ -460,4 +481,7 @@ extern "C" int main()
             memset(residual, 0, sizeof residual);
         }
     }
+
+    // Reboot into DFU bootloader
+    dfu_reboot();
 }

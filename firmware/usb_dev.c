@@ -1,4 +1,8 @@
-/* Teensyduino Core Library
+/* 
+ * Fadecandy firmware
+ * Copyright (c) 2013 Micah Elizabeth Scott
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -123,7 +127,7 @@ static uint8_t ep0_tx_data_toggle = 0;
 uint8_t usb_rx_memory_needed = 0;
 
 volatile uint8_t usb_configuration = 0;
-
+volatile uint8_t usb_dfu_state = DFU_appIDLE;
 
 static void endpoint0_stall(void)
 {
@@ -283,6 +287,39 @@ static void usb_setup(void)
         }
         endpoint0_stall();
         return;
+
+      case 0x03a1: // DFU_GETSTATUS
+        if (setup.wIndex != DFU_INTERFACE) {
+            endpoint0_stall();
+            return;
+        }
+        reply_buffer[0] = 0;    // bStatus = OK
+        reply_buffer[1] = 1;    // bwPollTimeout LSB = 1
+        reply_buffer[2] = 0;    // bwPollTimeout
+        reply_buffer[3] = 0;    // bwPollTimeout
+        reply_buffer[4] = usb_dfu_state;
+        reply_buffer[5] = 0;    // iString = 0
+        data = reply_buffer;
+        datalen = 6;
+        break;
+
+      case 0x05a1: // DFU_GETSTATE
+        if (setup.wIndex != DFU_INTERFACE) {
+            endpoint0_stall();
+            return;
+        }
+        reply_buffer[0] = usb_dfu_state;
+        data = reply_buffer;
+        datalen = 1;
+        break;
+
+      case 0x0021: // DFU_DETACH
+        if (setup.wIndex != DFU_INTERFACE) {
+            endpoint0_stall();
+            return;
+        }
+        usb_dfu_state = DFU_appDETACH;
+        break;
 
       default:
         endpoint0_stall();

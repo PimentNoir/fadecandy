@@ -132,6 +132,27 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         0,                                      // bInterval
 #endif // FC_INTERFACE
 
+#ifdef DFU_INTERFACE
+        // interface descriptor, DFU Mode (DFU spec Table 4.4)
+        9,                                      // bLength
+        4,                                      // bDescriptorType
+        DFU_INTERFACE,                          // bInterfaceNumber
+        0,                                      // bAlternateSetting
+        0,                                      // bNumEndpoints
+        0xFE,                                   // bInterfaceClass
+        0x01,                                   // bInterfaceSubClass
+        0x01,                                   // bInterfaceProtocol (Runtime)
+        4,                                      // iInterface
+        // DFU Functional Descriptor (DFU spec TAble 4.2)
+        9,                                      // bLength
+        0x21,                                   // bDescriptorType
+        0x0D,                                   // bmAttributes
+        LSB(DFU_DETACH_TIMEOUT),                // wDetachTimeOut
+        MSB(DFU_DETACH_TIMEOUT),
+        LSB(DFU_TRANSFER_SIZE),                 // wTransferSize
+        MSB(DFU_TRANSFER_SIZE),
+        0x01,0x01,                              // bcdDFUVersion
+#endif // DFU_INTERFACE
 };
 
 
@@ -173,6 +194,11 @@ struct usb_string_descriptor_struct usb_string_product_name_default = {
         2 + PRODUCT_NAME_LEN * 2,
         3,
         PRODUCT_NAME
+};
+struct usb_string_descriptor_struct usb_string_dfu_name = {
+        2 + DFU_NAME_LEN * 2,
+        3,
+        DFU_NAME
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
@@ -232,37 +258,11 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
         //wValue, wIndex, address,          length
         {0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
         {0x0200, 0x0000, config_descriptor, sizeof(config_descriptor)},
-#ifdef SEREMU_INTERFACE
-        {0x2200, SEREMU_INTERFACE, seremu_report_desc, sizeof(seremu_report_desc)},
-        {0x2100, SEREMU_INTERFACE, config_descriptor+SEREMU_DESC_OFFSET, 9},
-#endif
-#ifdef KEYBOARD_INTERFACE
-        {0x2200, KEYBOARD_INTERFACE, keyboard_report_desc, sizeof(keyboard_report_desc)},
-        {0x2100, KEYBOARD_INTERFACE, config_descriptor+KEYBOARD_DESC_OFFSET, 9},
-#endif
-#ifdef MOUSE_INTERFACE
-        {0x2200, MOUSE_INTERFACE, mouse_report_desc, sizeof(mouse_report_desc)},
-        {0x2100, MOUSE_INTERFACE, config_descriptor+MOUSE_DESC_OFFSET, 9},
-#endif
-#ifdef JOYSTICK_INTERFACE
-        {0x2200, JOYSTICK_INTERFACE, joystick_report_desc, sizeof(joystick_report_desc)},
-        {0x2100, JOYSTICK_INTERFACE, config_descriptor+JOYSTICK_DESC_OFFSET, 9},
-#endif
-#ifdef RAWHID_INTERFACE
-        {0x2200, RAWHID_INTERFACE, rawhid_report_desc, sizeof(rawhid_report_desc)},
-        {0x2100, RAWHID_INTERFACE, config_descriptor+RAWHID_DESC_OFFSET, 9},
-#endif
-#ifdef FLIGHTSIM_INTERFACE
-        {0x2200, FLIGHTSIM_INTERFACE, flightsim_report_desc, sizeof(flightsim_report_desc)},
-        {0x2100, FLIGHTSIM_INTERFACE, config_descriptor+FLIGHTSIM_DESC_OFFSET, 9},
-#endif
         {0x0300, 0x0000, (const uint8_t *)&string0, 0},
         {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
         {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
         {0x0303, 0x0409, (const uint8_t *)&usb_string_serial_number, 0},
-        //{0x0301, 0x0409, (const uint8_t *)&string1, 0},
-        //{0x0302, 0x0409, (const uint8_t *)&string2, 0},
-        //{0x0303, 0x0409, (const uint8_t *)&string3, 0},
+        {0x0304, 0x0409, (const uint8_t *)&usb_string_dfu_name, 0},
         {0, 0, NULL, 0}
 };
 
@@ -270,20 +270,6 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
 // **************************************************************
 //   Endpoint Configuration
 // **************************************************************
-
-#if 0
-// 0x00 = not used
-// 0x19 = Recieve only
-// 0x15 = Transmit only
-// 0x1D = Transmit & Recieve
-// 
-const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS] = 
-{
-        0x00, 0x15, 0x19, 0x15, 0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-};
-#endif
-
 
 const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS] = 
 {

@@ -82,19 +82,24 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define DEVICE_VER                0x0101
+  #define DEVICE_VER                0x0102
   #define DEVICE_CLASS              0xff      // Vendor specific
   #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
   #define MANUFACTURER_NAME_LEN     8
   #define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y'}
   #define PRODUCT_NAME_LEN          9
+  #define DFU_NAME                  {'F','a','d','e','c','a','n','d','y',' ','B','o','o','t','l','o','a','d','e','r'}
+  #define DFU_NAME_LEN              20
   #define EP0_SIZE                  64
   #define NUM_ENDPOINTS             1
-  #define NUM_INTERFACE             1
+  #define NUM_INTERFACE             2
   #define FC_INTERFACE              0
   #define FC_OUT_ENDPOINT           1
   #define FC_OUT_SIZE               64
-  #define CONFIG_DESC_SIZE          (9+9+7)
+  #define DFU_INTERFACE             1
+  #define DFU_DETACH_TIMEOUT        10000     // 10 seconds
+  #define DFU_TRANSFER_SIZE         1024      // Flash sector size
+  #define CONFIG_DESC_SIZE          (9+9+7+9+9)
   #define ENDPOINT1_CONFIG          ENDPOINT_RECEIVE_ONLY
 
 // NUM_ENDPOINTS = number of non-zero endpoints (0 to 15)
