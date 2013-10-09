@@ -142,20 +142,47 @@ extern struct usb_string_descriptor_struct usb_string_product_name
         __attribute__ ((weak, alias("usb_string_product_name_default")));
 
 struct usb_string_descriptor_struct string0 = {
-        4,
-        3,
-        {0x0409}
+    4,
+    3,
+    {0x0409}
+};
+
+// Microsoft OS String Descriptor. See: https://github.com/pbatard/libwdi/wiki/WCID-Devices
+struct usb_string_descriptor_struct usb_string_microsoft = {
+    18, 3,
+    {'M','S','F','T','1','0','0', MSFT_VENDOR_CODE}
+};
+ 
+// Microsoft WCID
+const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
+    MSFT_WCID_LEN, 0, 0, 0,         // Length
+    0x00, 0x01,                     // Version
+    0x04, 0x00,                     // Compatibility ID descriptor index
+    0x02,                           // Number of sections
+    0, 0, 0, 0, 0, 0, 0,            // Reserved (7 bytes)
+
+    FC_INTERFACE,                   // Interface number
+    0x01,                           // Reserved
+    'W','I','N','U','S','B',0,0,    // Compatible ID
+    0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
+    0,0,0,0,0,0,                    // Reserved
+
+    DFU_INTERFACE,                  // Interface number
+    0x01,                           // Reserved
+    'W','I','N','U','S','B',0,0,    // Compatible ID
+    0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
+    0,0,0,0,0,0,                    // Reserved
 };
 
 struct usb_string_descriptor_struct usb_string_manufacturer_name_default = {
-        2 + MANUFACTURER_NAME_LEN * 2,
-        3,
-        MANUFACTURER_NAME
+    2 + MANUFACTURER_NAME_LEN * 2,
+    3,
+    MANUFACTURER_NAME
 };
 struct usb_string_descriptor_struct usb_string_product_name_default = {
-        2 + PRODUCT_NAME_LEN * 2,
-        3,
-        PRODUCT_NAME
+    2 + PRODUCT_NAME_LEN * 2,
+    3,
+    PRODUCT_NAME
 };
 
 
@@ -166,38 +193,11 @@ struct usb_string_descriptor_struct usb_string_product_name_default = {
 // This table provides access to all the descriptor data above.
 
 const usb_descriptor_list_t usb_descriptor_list[] = {
-        //wValue, wIndex, address,          length
-        {0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
-        {0x0200, 0x0000, config_descriptor, sizeof(config_descriptor)},
-#ifdef SEREMU_INTERFACE
-        {0x2200, SEREMU_INTERFACE, seremu_report_desc, sizeof(seremu_report_desc)},
-        {0x2100, SEREMU_INTERFACE, config_descriptor+SEREMU_DESC_OFFSET, 9},
-#endif
-#ifdef KEYBOARD_INTERFACE
-        {0x2200, KEYBOARD_INTERFACE, keyboard_report_desc, sizeof(keyboard_report_desc)},
-        {0x2100, KEYBOARD_INTERFACE, config_descriptor+KEYBOARD_DESC_OFFSET, 9},
-#endif
-#ifdef MOUSE_INTERFACE
-        {0x2200, MOUSE_INTERFACE, mouse_report_desc, sizeof(mouse_report_desc)},
-        {0x2100, MOUSE_INTERFACE, config_descriptor+MOUSE_DESC_OFFSET, 9},
-#endif
-#ifdef JOYSTICK_INTERFACE
-        {0x2200, JOYSTICK_INTERFACE, joystick_report_desc, sizeof(joystick_report_desc)},
-        {0x2100, JOYSTICK_INTERFACE, config_descriptor+JOYSTICK_DESC_OFFSET, 9},
-#endif
-#ifdef RAWHID_INTERFACE
-        {0x2200, RAWHID_INTERFACE, rawhid_report_desc, sizeof(rawhid_report_desc)},
-        {0x2100, RAWHID_INTERFACE, config_descriptor+RAWHID_DESC_OFFSET, 9},
-#endif
-#ifdef FLIGHTSIM_INTERFACE
-        {0x2200, FLIGHTSIM_INTERFACE, flightsim_report_desc, sizeof(flightsim_report_desc)},
-        {0x2100, FLIGHTSIM_INTERFACE, config_descriptor+FLIGHTSIM_DESC_OFFSET, 9},
-#endif
-        {0x0300, 0x0000, (const uint8_t *)&string0, 0},
-        {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
-        {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
-        //{0x0301, 0x0409, (const uint8_t *)&string1, 0},
-        //{0x0302, 0x0409, (const uint8_t *)&string2, 0},
-        //{0x0303, 0x0409, (const uint8_t *)&string3, 0},
-        {0, 0, NULL, 0}
+    {0x0100, device_descriptor, sizeof(device_descriptor)},
+    {0x0200, config_descriptor, sizeof(config_descriptor)},
+    {0x0300, (const uint8_t *)&string0, 0},
+    {0x0301, (const uint8_t *)&usb_string_manufacturer_name, 0},
+    {0x0302, (const uint8_t *)&usb_string_product_name, 0},
+    {0x03EE, (const uint8_t *)&usb_string_microsoft, 0},
+    {0, NULL, 0}
 };

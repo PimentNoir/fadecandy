@@ -38,7 +38,7 @@
 #define NUM_USB_BUFFERS           8
 #define VENDOR_ID                 0x1d50    // OpenMoko
 #define PRODUCT_ID                0x6082    // Assigned to Fadecandy project for DFU Bootloader
-#define DEVICE_VER                0x0100    // Bootloader version
+#define DEVICE_VER                0x0101    // Bootloader version
 #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
 #define MANUFACTURER_NAME_LEN     8
 #define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y',' ','B','o','o','t','l','o','a','d','e','r'}
@@ -47,9 +47,13 @@
 #define NUM_INTERFACE             1
 #define CONFIG_DESC_SIZE          (9+9+9)
 
+// Microsoft Compatible ID Feature Descriptor
+#define MSFT_VENDOR_CODE    0xF7    // Arbitrary
+#define MSFT_WCID_LEN       (16 + 2*24)
+extern const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
+
 typedef struct {
     uint16_t  wValue;
-    uint16_t  wIndex;
     const uint8_t *addr;
     uint16_t  length;
 } usb_descriptor_list_t;

@@ -180,33 +180,54 @@ extern struct usb_string_descriptor_struct usb_string_serial_number
         __attribute__ ((weak, alias("usb_string_serial_number_default")));
 
 struct usb_string_descriptor_struct string0 = {
-        4,
-        3,
-        {0x0409}
+    4,
+    3,
+    {0x0409}
 };
 
 struct usb_string_descriptor_struct usb_string_manufacturer_name_default = {
-        2 + MANUFACTURER_NAME_LEN * 2,
-        3,
-        MANUFACTURER_NAME
+    2 + MANUFACTURER_NAME_LEN * 2,
+    3,
+    MANUFACTURER_NAME
 };
 struct usb_string_descriptor_struct usb_string_product_name_default = {
-        2 + PRODUCT_NAME_LEN * 2,
-        3,
-        PRODUCT_NAME
+    2 + PRODUCT_NAME_LEN * 2,
+    3,
+    PRODUCT_NAME
 };
 struct usb_string_descriptor_struct usb_string_dfu_name = {
-        2 + DFU_NAME_LEN * 2,
-        3,
-        DFU_NAME
+    2 + DFU_NAME_LEN * 2,
+    3,
+    DFU_NAME
+};
+
+// Microsoft OS String Descriptor. See: https://github.com/pbatard/libwdi/wiki/WCID-Devices
+struct usb_string_descriptor_struct usb_string_microsoft = {
+    18, 3,
+    {'M','S','F','T','1','0','0', MSFT_VENDOR_CODE}
+};
+
+// Microsoft WCID
+const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
+    MSFT_WCID_LEN, 0, 0, 0,         // Length
+    0x00, 0x01,                     // Version
+    0x04, 0x00,                     // Compatibility ID descriptor index
+    0x01,                           // Number of sections
+    0, 0, 0, 0, 0, 0, 0,            // Reserved (7 bytes)
+
+    DFU_INTERFACE,                  // Interface number
+    0x01,                           // Reserved
+    'W','I','N','U','S','B',0,0,    // Compatible ID
+    0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
+    0,0,0,0,0,0,                    // Reserved
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
 struct usb_string_descriptor_struct usb_string_serial_number_default = {
-        2 + 16 * 2,
-        3,
-        {0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0}
+    2 + 16 * 2,
+    3,
+    {0,0,0,0,0,0,0,0,
+     0,0,0,0,0,0,0,0}
 };
 
 void usb_init_serialnumber(void)
@@ -255,15 +276,15 @@ void usb_init_serialnumber(void)
 // This table provides access to all the descriptor data above.
 
 const usb_descriptor_list_t usb_descriptor_list[] = {
-        //wValue, wIndex, address,          length
-        {0x0100, 0x0000, device_descriptor, sizeof(device_descriptor)},
-        {0x0200, 0x0000, config_descriptor, sizeof(config_descriptor)},
-        {0x0300, 0x0000, (const uint8_t *)&string0, 0},
-        {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
-        {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
-        {0x0303, 0x0409, (const uint8_t *)&usb_string_serial_number, 0},
-        {0x0304, 0x0409, (const uint8_t *)&usb_string_dfu_name, 0},
-        {0, 0, NULL, 0}
+    {0x0100, device_descriptor, sizeof(device_descriptor)},
+    {0x0200, config_descriptor, sizeof(config_descriptor)},
+    {0x0300, (const uint8_t *)&string0, 0},
+    {0x0301, (const uint8_t *)&usb_string_manufacturer_name, 0},
+    {0x0302, (const uint8_t *)&usb_string_product_name, 0},
+    {0x0303, (const uint8_t *)&usb_string_serial_number, 0},
+    {0x0304, (const uint8_t *)&usb_string_dfu_name, 0},
+    {0x03EE, (const uint8_t *)&usb_string_microsoft, 0},
+    {0, NULL, 0}
 };
 
 

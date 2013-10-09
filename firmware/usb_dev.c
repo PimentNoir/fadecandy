@@ -272,7 +272,7 @@ static void usb_setup(void)
       case 0x0681:
         for (list = usb_descriptor_list; 1; list++) {
             if (list->addr == NULL) break;
-            if (setup.wValue == list->wValue && setup.wIndex == list->wIndex) {
+            if (setup.wValue == list->wValue) {
                 data = list->addr;
                 if ((setup.wValue >> 8) == 3) {
                     // for string descriptors, use the descriptor's
@@ -284,6 +284,16 @@ static void usb_setup(void)
                 }
                 goto send;
             }
+        }
+        endpoint0_stall();
+        return;
+
+      case (MSFT_VENDOR_CODE << 8) | 0xC0:      // Get Microsoft descriptor
+        if (setup.wIndex == 0x0004) {
+            // Return WCID descriptor
+            data = usb_microsoft_wcid;
+            datalen = MSFT_WCID_LEN;
+            break;
         }
         endpoint0_stall();
         return;

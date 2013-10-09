@@ -82,7 +82,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define DEVICE_VER                0x0102
+  #define DEVICE_VER                0x0103
   #define DEVICE_CLASS              0xff      // Vendor specific
   #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
   #define MANUFACTURER_NAME_LEN     8
@@ -102,12 +102,16 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define CONFIG_DESC_SIZE          (9+9+7+9+9)
   #define ENDPOINT1_CONFIG          ENDPOINT_RECEIVE_ONLY
 
+// Microsoft Compatible ID Feature Descriptor
+#define MSFT_VENDOR_CODE    0xF7    // Arbitrary
+#define MSFT_WCID_LEN       40
+extern const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
+
 // NUM_ENDPOINTS = number of non-zero endpoints (0 to 15)
 extern const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS];
 
 typedef struct {
     uint16_t  wValue;
-    uint16_t  wIndex;
     const uint8_t *addr;
     uint16_t  length;
 } usb_descriptor_list_t;
