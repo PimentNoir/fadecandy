@@ -51,20 +51,22 @@ LIBS = -lm
 
 OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 
-all: $(TARGET).hex
+all: $(TARGET).hex $(TARGET).bin size
 
 $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.hex: %.elf
-	$(SIZE) $<
-	$(OBJCOPY) -O ihex -R .eeprom $< $@
+	$(OBJCOPY) -O ihex $< $@
+
+%.bin: %.elf
+	$(OBJCOPY) -O binary $< $@
 
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f *.d *.o $(TARGET).elf $(TARGET).hex
+	rm -f *.d *.o $(TARGET).elf $(TARGET).hex $(TARGET).bin
 
 # Install with OpenOCD. (No code protection!)
 install: $(TARGET).hex
@@ -73,4 +75,7 @@ install: $(TARGET).hex
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
 
-.PHONY: all clean install objdump
+size: $(TARGET).elf
+	$(SIZE) $<
+
+.PHONY: all clean install objdump size

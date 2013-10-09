@@ -3,6 +3,7 @@
 *.o
 *.a
 *.d
+*.bin
 
 # IDA Pro
 *.id0
