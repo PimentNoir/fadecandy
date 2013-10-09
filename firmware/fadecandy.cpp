@@ -446,7 +446,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
     }
 }
 
-void dfu_reboot()
+static void dfu_reboot()
 {
     // Reboot to the Fadecandy Bootloader
     boot_token = 0x74624346;
