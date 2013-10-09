@@ -180,9 +180,19 @@ void (* const gVectors[])(void) =
 };
 
 __attribute__ ((section(".flashconfig"), used))
-const uint8_t flashconfigbytes[16] = {
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF
+const uint8_t flashconfigbytes[16] =
+{
+    // Backdoor comparison key (disabled)
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+    // Program flash protection (FPROT)
+    // First 4K region is protected from erasure by any means other than mass-erase over JTAG.
+    0xfe, 0xff, 0xff, 0xff,
+
+    0xfe,       // Data flash protection (FDPROT)
+    0xff,       // EEPROM protection (FEPROT)
+    0xff,       // Flash nonvolatile option byte (FOPT)
+    0xff        // Flash security byte (FSEC)
 };
 
 __attribute__ ((section(".startup")))
