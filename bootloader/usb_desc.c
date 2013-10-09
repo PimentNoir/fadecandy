@@ -158,14 +158,8 @@ const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
     MSFT_WCID_LEN, 0, 0, 0,         // Length
     0x00, 0x01,                     // Version
     0x04, 0x00,                     // Compatibility ID descriptor index
-    0x02,                           // Number of sections
+    0x01,                           // Number of sections
     0, 0, 0, 0, 0, 0, 0,            // Reserved (7 bytes)
-
-    FC_INTERFACE,                   // Interface number
-    0x01,                           // Reserved
-    'W','I','N','U','S','B',0,0,    // Compatible ID
-    0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
-    0,0,0,0,0,0,                    // Reserved
 
     DFU_INTERFACE,                  // Interface number
     0x01,                           // Reserved

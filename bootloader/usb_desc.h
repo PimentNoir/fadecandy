@@ -49,7 +49,7 @@
 
 // Microsoft Compatible ID Feature Descriptor
 #define MSFT_VENDOR_CODE    0xF7    // Arbitrary
-#define MSFT_WCID_LEN       (16 + 2*24)
+#define MSFT_WCID_LEN       (16 + 1*24)
 extern const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
 
 typedef struct {
