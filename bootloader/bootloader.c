@@ -139,7 +139,7 @@ int main()
         boot_token = 0;
 
         // Wait a little bit longer, while flashing the LED.
-        for (i = 10; i; --i) {
+        for (i = 11; i; --i) {
             led_toggle();
             for (j = 100000; j; --j) {
                 watchdog_refresh();
