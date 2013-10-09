@@ -445,8 +445,6 @@ restart:
 
         // is this necessary?
         USB0_CTL = USB_CTL_USBENSOFEN;
-
-        dfu_usb_reset();
         return;
     }
 

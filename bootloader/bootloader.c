@@ -28,14 +28,19 @@
 
 extern uint32_t boot_token;
 static __attribute__ ((section(".appvectors"))) uint32_t appVectors[64];
+const uint32_t led_bit = 1 << 5;
 
-
-static void led_on()
+static void led_init()
 {
     // Set the status LED on PC5, as an indication that we're in bootloading mode.
     PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
-    GPIOC_PDDR = 1 << 5;
-    GPIOC_PDOR = 1 << 5;
+    GPIOC_PDDR = led_bit;
+    GPIOC_PDOR = led_bit;
+}
+
+static void led_toggle()
+{
+    GPIOC_PTOR = led_bit;
 }
 
 static bool test_boot_token()
@@ -118,15 +123,33 @@ static void app_launch()
 int main()
 {
     if (test_banner_echo() || test_app_missing() || test_boot_token()) {
+        unsigned i, j;
 
         // We're doing DFU mode!
-        led_on();
+        led_init();
         dfu_init();
         usb_init();
 
-        while (1) {
+        // Wait for firmware download
+        while (dfu_getstate() != dfuMANIFEST) {
             watchdog_refresh();
         }
+
+        // Clear boot token, to enter the new application
+        boot_token = 0;
+
+        // Wait a little bit longer, while flashing the LED.
+        for (i = 10; i; --i) {
+            led_toggle();
+            for (j = 100000; j; --j) {
+                watchdog_refresh();
+            }
+        }
+
+        // USB disconnect and reboot, using watchdog to time 10ms.
+        USB0_CONTROL = 0;
+        watchdog_refresh();
+        while (1);
     }
 
     app_launch();

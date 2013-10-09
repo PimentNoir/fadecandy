@@ -260,10 +260,6 @@ bool dfu_getstatus(uint8_t *status)
 			dfu_state = dfuMANIFEST;
 			break;
 
-		case dfuMANIFEST:
-			dfu_state = dfuIDLE;
-			break;
-
 		default:
 			break;
 	}
@@ -301,8 +297,4 @@ bool dfu_abort()
 	dfu_state = dfuIDLE;
 	dfu_status = OK;
 	return true;
-}
-
-void dfu_usb_reset()
-{
 }
