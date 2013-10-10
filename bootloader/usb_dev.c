@@ -212,6 +212,7 @@ static void usb_setup(void)
         return;
 
       case (MSFT_VENDOR_CODE << 8) | 0xC0:      // Get Microsoft descriptor
+      case (MSFT_VENDOR_CODE << 8) | 0xC1:
         if (setup.wIndex == 0x0004) {
             // Return WCID descriptor
             data = usb_microsoft_wcid;
