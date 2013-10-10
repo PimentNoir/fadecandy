@@ -77,7 +77,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define DEVICE_CLASS              0xff      // Vendor specific
   #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
   #define MANUFACTURER_NAME_LEN     8
   #define PRODUCT_NAME              {'F','a','d','e','c','a','n','d','y'}
@@ -99,7 +98,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 // Microsoft Compatible ID Feature Descriptor
 #define MSFT_VENDOR_CODE    '~'     // Arbitrary, but should be printable ASCII
 #define MSFT_WCID_LEN       40
-extern const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
+extern uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
 
 // NUM_ENDPOINTS = number of non-zero endpoints (0 to 15)
 extern const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS];

@@ -208,14 +208,14 @@ struct usb_string_descriptor_struct usb_string_microsoft = {
 };
 
 // Microsoft WCID
-const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
+uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
     MSFT_WCID_LEN, 0, 0, 0,         // Length
     0x00, 0x01,                     // Version
     0x04, 0x00,                     // Compatibility ID descriptor index
     0x01,                           // Number of sections
     0, 0, 0, 0, 0, 0, 0,            // Reserved (7 bytes)
 
-    DFU_INTERFACE,                  // Interface number
+    0,                              // Interface number
     0x01,                           // Reserved
     'W','I','N','U','S','B',0,0,    // Compatible ID
     0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
