@@ -27,6 +27,7 @@
 #include "arm_math.h"
 #include "fc_usb.h"
 #include "fc_defs.h"
+#include "HardwareSerial.h"
 
 // USB data buffers
 static fcBuffers buffers;
@@ -467,6 +468,10 @@ extern "C" int main()
 {
     pinMode(LED_BUILTIN, OUTPUT);
     leds.begin();
+
+    // Announce firmware version
+    serial_begin(BAUD2DIV(115200));
+    serial_print("Fadecandy v" DEVICE_VER_STRING "\r\n");
 
     // Application main loop
     while (usb_dfu_state == DFU_appIDLE) {

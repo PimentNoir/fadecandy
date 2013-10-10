@@ -77,7 +77,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 */
 
 #define USB_FADECANDY
-  #define DEVICE_VER                0x0103
   #define DEVICE_CLASS              0xff      // Vendor specific
   #define MANUFACTURER_NAME         {'s','c','a','n','l','i','m','e'}
   #define MANUFACTURER_NAME_LEN     8
