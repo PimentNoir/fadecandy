@@ -48,7 +48,7 @@
 #define CONFIG_DESC_SIZE          (9+9+9)
 
 // Microsoft Compatible ID Feature Descriptor
-#define MSFT_VENDOR_CODE    0xF7    // Arbitrary
+#define MSFT_VENDOR_CODE    '~'     // Arbitrary, but should be printable ASCII
 #define MSFT_WCID_LEN       40
 extern uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
 

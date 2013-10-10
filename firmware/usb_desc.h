@@ -98,7 +98,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define ENDPOINT1_CONFIG          ENDPOINT_RECEIVE_ONLY
 
 // Microsoft Compatible ID Feature Descriptor
-#define MSFT_VENDOR_CODE    0xF7    // Arbitrary
+#define MSFT_VENDOR_CODE    '~'     // Arbitrary, but should be printable ASCII
 #define MSFT_WCID_LEN       40
 extern const uint8_t usb_microsoft_wcid[MSFT_WCID_LEN];
 
