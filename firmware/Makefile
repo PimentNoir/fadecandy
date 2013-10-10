@@ -62,7 +62,7 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(DFU_SUFFIX) -a $@
 
 install: $(TARGET).dfu
-	$(DFU_UTIL) -D $<
+	$(DFU_UTIL) -d 1d50 -D $<
 
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
