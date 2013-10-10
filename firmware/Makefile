@@ -13,7 +13,7 @@ SIZE = arm-none-eabi-size
 #######################################################
 
 # The name of your project (used to name the compiled .dfu file)
-TARGET = fadecandy
+TARGET = fc-firmware
 
 # Sources
 C_FILES = \
