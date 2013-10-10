@@ -64,21 +64,9 @@ static uint8_t device_descriptor[] = {
         18,                                     // bLength
         1,                                      // bDescriptorType
         0x00, 0x02,                             // bcdUSB
-#ifdef DEVICE_CLASS
-        DEVICE_CLASS,                           // bDeviceClass
-#else
-        0,
-#endif
-#ifdef DEVICE_SUBCLASS
-        DEVICE_SUBCLASS,                        // bDeviceSubClass
-#else
-        0,
-#endif
-#ifdef DEVICE_PROTOCOL
-        DEVICE_PROTOCOL,                        // bDeviceProtocol
-#else
-        0,
-#endif
+        0,                                      // bDeviceClass
+        0,                                      // bDeviceSubClass
+        0,                                      // bDeviceProtocol
         EP0_SIZE,                               // bMaxPacketSize0
         LSB(VENDOR_ID), MSB(VENDOR_ID),         // idVendor
         LSB(PRODUCT_ID), MSB(PRODUCT_ID),       // idProduct
@@ -208,18 +196,42 @@ struct usb_string_descriptor_struct usb_string_microsoft = {
 };
 
 // Microsoft WCID
-uint8_t usb_microsoft_wcid[MSFT_WCID_LEN] = {
-    MSFT_WCID_LEN, 0, 0, 0,         // Length
+uint8_t usb_microsoft_wcid[] = {
+    16 + 2*24, 0, 0, 0,             // Length
     0x00, 0x01,                     // Version
     0x04, 0x00,                     // Compatibility ID descriptor index
-    0x01,                           // Number of sections
+    0x02,                           // Number of sections
     0, 0, 0, 0, 0, 0, 0,            // Reserved (7 bytes)
 
-    0,                              // Interface number
+    FC_INTERFACE,                   // Interface number
     0x01,                           // Reserved
     'W','I','N','U','S','B',0,0,    // Compatible ID
     0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
     0,0,0,0,0,0,                    // Reserved
+
+    DFU_INTERFACE,                  // Interface number
+    0x01,                           // Reserved
+    'W','I','N','U','S','B',0,0,    // Compatible ID
+    0,0,0,0,0,0,0,0,                // Sub-compatible ID (unused)
+    0,0,0,0,0,0,                    // Reserved
+};
+
+// Microsoft Extended Properties descriptor, necessary for WinUSB on a multi-interface device.
+uint8_t usb_microsoft_extprop[] = {
+    146, 0, 0, 0,                   // Length
+    0x00, 0x01,                     // Version
+    0x05, 0x00,                     // Extended Properties descriptor index
+    1, 0,                           // Number of sections
+
+    136, 0, 0, 0,                   // Length of section
+    7, 0, 0, 0,                     // Data type (REG_MULTI_SZ)
+    42, 0,                          // Property name length
+    // L"DeviceInterfaceGUIDs"
+    'D',0,'e',0,'v',0,'i',0,'c',0,'e',0,'I',0,'n',0,'t',0,'e',0,'r',0,'f',0,'a',0,'c',0,'e',0,'G',0,'U',0,'I',0,'D',0,'s',0,0,0,
+    80, 0, 0, 0,                    // Property data length
+    // L"{62fd4123-87e3-47fe-946a-e044f36f2fb3}\0"
+    '{',0,'6',0,'2',0,'f',0,'d',0,'4',0,'1',0,'2',0,'3',0,'-',0,'8',0,'7',0,'e',0,'3',0,'-',0,'4',0,'7',0,'f',0,'e',0,'-',0,'9',0,'4',0,'6',0,'a',0,'-',0,'e',0,'0',0,'4',0,'4',0,'f',0,'3',0,'6',0,'f',0,'2',0,'f',0,'b',0,'3',0,'}',0,
+    0,0,0,0,
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.

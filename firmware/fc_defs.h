@@ -44,5 +44,5 @@
 
 #define VENDOR_ID               0x1d50    // OpenMoko
 #define PRODUCT_ID              0x607a    // Assigned to Fadecandy project
-#define DEVICE_VER              0x0103	  // BCD device version
-#define DEVICE_VER_STRING		"1.03"
+#define DEVICE_VER              0x0104	  // BCD device version
+#define DEVICE_VER_STRING		"1.04"

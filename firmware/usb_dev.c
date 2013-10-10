@@ -293,9 +293,14 @@ static void usb_setup(void)
         if (setup.wIndex == 0x0004) {
             // Return WCID descriptor
             data = usb_microsoft_wcid;
-            datalen = MSFT_WCID_LEN;
+            datalen = usb_microsoft_wcid[0];
             break;
-        }
+        } else if (setup.wIndex == 0x0005) {
+            // Return Extended Properties descriptor
+            data = usb_microsoft_extprop;
+            datalen = usb_microsoft_extprop[0];
+            break;
+        } 
         endpoint0_stall();
         return;
 
