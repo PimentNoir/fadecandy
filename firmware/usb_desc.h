@@ -33,11 +33,6 @@
 
 #include "fc_defs.h"
 
-// This header is NOT meant to be included when compiling
-// user sketches in Arduino.  The low-level functions
-// provided by usb_dev.c are meant to be called only by
-// code which provides higher-level interfaces to the user.
-
 #include <stdint.h>
 #include <stddef.h>
 
