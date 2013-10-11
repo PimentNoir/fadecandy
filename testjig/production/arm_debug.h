@@ -33,7 +33,10 @@ public:
         LOG_NONE = 0,
         LOG_ERROR,
         LOG_NORMAL,
-        LOG_TRACE
+        LOG_TRACE_MEM,
+        LOG_TRACE_DP,
+        LOG_TRACE_SWD,
+        LOG_MAX
     };
 
     /**
@@ -53,9 +56,6 @@ public:
     bool memLoad(uint32_t addr, uint32_t &data);
     bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
 
-    /// The same logging method used internally to ARMDebug
-    void log(int level, const char *fmt, ...);
-
 private:
     uint8_t clockPin, dataPin;
     LogLevel logLevel;
@@ -65,11 +65,16 @@ private:
         uint32_t select;
     } cache;
 
+protected:
+    // Internal logging
+    void log(int level, const char *fmt, ...);
+
     // Low-level wire interface (LSB-first)
     void wireWrite(uint32_t data, unsigned nBits);
     uint32_t wireRead(unsigned nBits);
     void wireWriteTurnaround();
     void wireReadTurnaround();
+    void wireWriteIdle();
 
     // Packet assembly tools
     uint8_t packHeader(unsigned addr, bool APnDP, bool RnW);

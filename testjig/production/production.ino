@@ -37,25 +37,28 @@ void loop()
     }
     digitalWrite(ledPin, HIGH);
 
-    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE))
+    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_MEM))
         return;
 
     uint32_t data;
     if (!target.memLoad(0x00000000, data))
         return;
+    if (!target.memLoad(0x00000000, data))
+        return;
     if (!target.memLoad(0x00000004, data))
+        return;
+    if (!target.memLoad(0x00000004, data))
+        return;
+    if (!target.memLoad(0x00000008, data))
         return;
     if (!target.memLoad(0x00000008, data))
         return;
     if (!target.memLoad(0x20000000, data))
         return;
 
-    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
     data ^= 0xFFFFFFFF;
-    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
     if (!target.memStore(0x20000000, data))
         return;
     if (!target.memLoad(0x20000000, data))
         return;
-    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
 }

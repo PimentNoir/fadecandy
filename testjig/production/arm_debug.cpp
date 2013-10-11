@@ -39,7 +39,9 @@ enum CtrlStatBit {
     CSYSPWRUPACK = 1 << 31,
     CSYSPWRUPREQ = 1 << 30,
     CDBGPWRUPACK = 1 << 29,
-    CDBGPWRUPREQ = 1 << 28
+    CDBGPWRUPREQ = 1 << 28,
+    CDBGRSTACK   = 1 << 27,
+    CDBGRSTREQ   = 1 << 26
 };
 
 // Memory Access Port registers
@@ -92,19 +94,41 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
         return false;
 
     // Wait for power-up acknowledgment
-    uint32_t powerAck = CDBGPWRUPACK | CSYSPWRUPACK;
+    uint32_t expected = CDBGPWRUPACK | CSYSPWRUPACK;
     unsigned retries = 4;
     uint32_t ctrlstat;
     while (retries--) {
         if (!dpRead(CTRLSTAT, false, ctrlstat))
             return false;
-        if ((ctrlstat & powerAck) == powerAck)
+        if ((ctrlstat & expected) == expected)
             break;
     }
     if (!retries) {
         log(LOG_ERROR, "ARMDebug: Debug port failed to power on (CTRLSTAT: %08x)", ctrlstat);
         return false;
     }
+
+    // Reset the debug access port
+    if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ | CDBGRSTREQ))
+        return false;
+
+    // Wait for reset acknowledgment
+    expected = CDBGPWRUPACK | CSYSPWRUPACK | CDBGRSTACK;
+    retries = 4;
+    while (retries--) {
+        if (!dpRead(CTRLSTAT, false, ctrlstat))
+            return false;
+        if ((ctrlstat & expected) == expected)
+            break;
+    }
+    if (!retries) {
+        log(LOG_ERROR, "ARMDebug: Debug port failed to reset (CTRLSTAT: %08x)", ctrlstat);
+        return false;
+    }
+
+    // Clear reset request bit (leave power requests on)
+    if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ))
+        return false;
 
     // Make sure the default debug access port is an AHB (memory bus) port, like we expect
     uint32_t idr;
@@ -141,7 +165,7 @@ bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
         return false;
 
     while (count) {
-        log(LOG_TRACE, "MEM Store [%08x] %08x", addr, *data);
+        log(LOG_TRACE_MEM, "MEM Store [%08x] %08x", addr, *data);
 
         if (!apWrite(0, MEM_DRW, *data))
             return false;
@@ -163,7 +187,7 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
         if (!apRead(0, MEM_DRW, *data))
             return false;
 
-        log(LOG_TRACE, "MEM Load  [%08x] %08x", addr, *data);
+        log(LOG_TRACE_MEM, "MEM Load  [%08x] %08x", addr, *data);
 
         data++;
         addr++;
@@ -180,7 +204,8 @@ bool ARMDebug::apWrite(unsigned accessPort, unsigned addr, uint32_t data)
 
 bool ARMDebug::apRead(unsigned accessPort, unsigned addr, uint32_t &data)
 {
-    return dpSelect(accessPort, addr) && dpRead(addr, true, data);
+    // XXX: Extra dummy read here seems to be necessary. Why? What bug is this covering up?
+    return dpSelect(accessPort, addr) && dpRead(addr, true, data) && dpRead(addr, true, data);
 }
 
 bool ARMDebug::dpSelect(unsigned accessPort, unsigned addr)
@@ -203,7 +228,7 @@ bool ARMDebug::dpWrite(unsigned addr, bool APnDP, uint32_t data)
 {
     unsigned retries = 10;
     unsigned ack;
-    log(LOG_TRACE, "DP  Write [%x:%x] %08x", addr, APnDP, data);
+    log(LOG_TRACE_DP, "DP  Write [%x:%x] %08x", addr, APnDP, data);
 
     do {
         wireWrite(packHeader(addr, APnDP, false), 8);
@@ -215,22 +240,23 @@ bool ARMDebug::dpWrite(unsigned addr, bool APnDP, uint32_t data)
             case 1:     // Success
                 wireWrite(data, 32);
                 wireWrite(evenParity(data), 1);
-                wireWrite(0, 8);
+                wireWriteIdle();
                 return true;
 
             case 2:     // WAIT
-                wireWrite(0, 8);
+                wireWriteIdle();
+                log(LOG_TRACE_DP, "DP  WAIT response, %d retries left", retries);
                 retries--;
                 break;
 
             case 4:     // FAULT
-                wireWrite(0, 8);
+                wireWriteIdle();
                 log(LOG_ERROR, "FAULT response during write (addr=%x APnDP=%d data=%08x)",
                     addr, APnDP, data);
                 return false;
 
             default:
-                wireWrite(0, 8);
+                wireWriteIdle();
                 log(LOG_ERROR, "PROTOCOL ERROR response during write (ack=%x addr=%x APnDP=%d data=%08x)",
                     ack, addr, APnDP, data);
                 return false;
@@ -257,31 +283,32 @@ bool ARMDebug::dpRead(unsigned addr, bool APnDP, uint32_t &data)
                 data = wireRead(32);
                 if (wireRead(1) != evenParity(data)) {
                     wireWriteTurnaround();
-                    wireWrite(0, 8);
+                    wireWriteIdle();
                     log(LOG_ERROR, "PARITY ERROR during read (addr=%x APnDP=%d data=%08x)",
                         addr, APnDP, data);         
                     return false;
                 }
                 wireWriteTurnaround();
-                wireWrite(0, 8);
-                log(LOG_TRACE, "DP  Read  [%x:%x] %08x", addr, APnDP, data);
+                wireWriteIdle();
+                log(LOG_TRACE_DP, "DP  Read  [%x:%x] %08x", addr, APnDP, data);
                 return true;
 
             case 2:     // WAIT
                 wireWriteTurnaround();
-                wireWrite(0, 8);
+                wireWriteIdle();
+                log(LOG_TRACE_DP, "DP  WAIT response, %d retries left", retries);
                 retries--;
                 break;
 
             case 4:     // FAULT
                 wireWriteTurnaround();
-                wireWrite(0, 8);
+                wireWriteIdle();
                 log(LOG_ERROR, "FAULT response during read (addr=%x APnDP=%d)", addr, APnDP);
                 return false;
 
             default:
                 wireWriteTurnaround();
-                wireWrite(0, 8);
+                wireWriteIdle();
                 log(LOG_ERROR, "PROTOCOL ERROR response during read (ack=%x addr=%x APnDP=%d)", ack, addr, APnDP);
                 return false;
         }
@@ -316,7 +343,7 @@ bool ARMDebug::evenParity(uint32_t word)
 
 void ARMDebug::wireWrite(uint32_t data, unsigned nBits)
 {
-    log(LOG_TRACE, "SWD Write %08x (%d)", data, nBits);
+    log(LOG_TRACE_SWD, "SWD Write %08x (%d)", data, nBits);
 
     while (nBits--) {
         digitalWrite(dataPin, data & 1);
@@ -324,6 +351,12 @@ void ARMDebug::wireWrite(uint32_t data, unsigned nBits)
         digitalWrite(clockPin, LOW);
         digitalWrite(clockPin, HIGH);
     }
+}
+
+void ARMDebug::wireWriteIdle()
+{
+    // Minimum 8 clock cycles.
+    wireWrite(0, 32);
 }
 
 uint32_t ARMDebug::wireRead(unsigned nBits)
@@ -341,13 +374,13 @@ uint32_t ARMDebug::wireRead(unsigned nBits)
         digitalWrite(clockPin, HIGH);
     }
 
-    log(LOG_TRACE, "SWD Read  %08x (%d)", result, nBits);
+    log(LOG_TRACE_SWD, "SWD Read  %08x (%d)", result, nBits);
     return result;
 }
 
 void ARMDebug::wireWriteTurnaround()
 {
-    log(LOG_TRACE, "SWD Write trn");
+    log(LOG_TRACE_SWD, "SWD Write trn");
 
     digitalWrite(dataPin, HIGH);
     pinMode(dataPin, INPUT_PULLUP);
@@ -358,7 +391,7 @@ void ARMDebug::wireWriteTurnaround()
 
 void ARMDebug::wireReadTurnaround()
 {
-    log(LOG_TRACE, "SWD Read  trn");
+    log(LOG_TRACE_SWD, "SWD Read  trn");
 
     digitalWrite(dataPin, HIGH);
     pinMode(dataPin, INPUT_PULLUP);
