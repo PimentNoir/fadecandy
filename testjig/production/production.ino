@@ -7,6 +7,7 @@
  */
 
 #include "arm_kinetis_debug.h"
+#include "arm_kinetis_reg.h"
 
 const unsigned buttonPin = 2;
 const unsigned ledPin = 13;
@@ -37,9 +38,22 @@ void loop()
     }
     digitalWrite(ledPin, HIGH);
 
-    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_AP))
+    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_MEM))
         return;
     if (!target.startup())
         return;
-    target.flashMassErase();
+
+    /*
+     * Try blinking an LED on the target
+     */
+
+    // Set PC5 as output
+    if (!target.memStore(REG_PORTC_PCR5, REG_PORT_PCR_MUX(1) | REG_PORT_PCR_DSE | REG_PORT_PCR_SRE))
+        return;
+    if (!target.memStore(REG_GPIOC_PDDR, 1 << 5))
+        return;
+
+    while (target.memStore(REG_GPIOC_PTOR, 1 << 5)) {
+        delay(100);
+    }
 }

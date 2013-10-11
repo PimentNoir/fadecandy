@@ -500,6 +500,10 @@
 #define REG_SCB_HFSR                0xE000ED2C          // HardFault Status
 #define REG_SCB_DFSR                0xE000ED30          // Debug Fault Status
 #define REG_SCB_MMFAR               0xE000ED34          // MemManage Fault Address
+#define REG_SCB_DHCSR               0xE000EDF0          // Debug Halting Control and Status Register
+#define REG_SCB_DCRSR               0xE000EDF4          // Debug Core Register Selector Register
+#define REG_SCB_DCRDR               0xE000EDF8          // Debug Core Register Data Register
+#define REG_SCB_DEMCR               0xE000EDFC          // Debug Exception and Monitor Control Register
 
 #define REG_SYST_CSR                0xE000E010          // SysTick Control and Status
 #define REG_SYST_CSR_COUNTFLAG      0x00010000

@@ -84,6 +84,7 @@ protected:
 
     // Error diagnostics and recovert
     bool handleFault();
+    bool dumpMemPortRegisters();
 
     // Packet assembly tools
     uint8_t packHeader(unsigned addr, bool APnDP, bool RnW);
@@ -97,6 +98,9 @@ protected:
     // Access port layer
     bool apWrite(unsigned addr, uint32_t data);
     bool apRead(unsigned addr, uint32_t &data);
+
+    // Poll for MEM-AP not busy
+    bool memWait();
 
     // Poll for an expected value
     bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
@@ -133,6 +137,23 @@ protected:
         MEM_TAR = 0x04,
         MEM_DRW = 0x0C,
         MEM_IDR = 0xFC,
+    };
+
+    // MEM-AP CSW bits
+    enum MemCSWBit {
+        CSW_8BIT            = 0,
+        CSW_16BIT           = 1,
+        CSW_32BIT           = 2,
+        CSW_ADDRINC_OFF     = 0,
+        CSW_ADDRINC_SINGLE  = 1 << 4,
+        CSW_ADDRINC_PACKED  = 2 << 4,
+        CSW_DEVICE_EN       = 1 << 6,
+        CSW_TRIN_PROG       = 1 << 7,
+        CSW_SPIDEN          = 1 << 23,
+        CSW_HPROT           = 1 << 25,
+        CSW_MASTER_DEBUG    = 1 << 29,
+        CSW_SPROT           = 1 << 30,
+        CSW_DBGSWENABLE     = 1 << 31
     };
 
     static const unsigned DEFAULT_RETRIES = 50;

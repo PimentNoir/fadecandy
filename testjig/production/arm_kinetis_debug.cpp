@@ -32,6 +32,9 @@ bool ARMKinetisDebug::startup()
     uint32_t idr;
     uint32_t status;
 
+    // System resets can be slow, give them more time than the default.
+    const unsigned resetRetries = 2000;
+
     // Make sure we're on a compatible chip. The MDM-AP peripheral is Freescale-specific.
     if (!apRead(REG_MDM_IDR, idr))
         return false;
@@ -40,20 +43,55 @@ bool ARMKinetisDebug::startup()
         return false;
     }
 
-    // Reset the system, and hold the core in reset when it comes back
-    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ | REG_MDM_CONTROL_CORE_HOLD_RESET))
+    // Put the control register in a known state, and make sure we aren't already in the middle of a reset
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
+        return false;
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, -1, resetRetries))
+        return false;
+
+    // System reset
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ))
         return false;
     if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
         return false;
-    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
-        return false;
-
-    // Wait until the flash controller is ready & system is out of reset
-    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY, -1))
+    if (!apWrite(REG_MDM_CONTROL, 0))
         return false;
 
     // Re-initialize the AHB-AP after reset
     if (!initMemPort())
+        return false;
+
+    // Wait until the flash controller is ready & system is out of reset
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY, -1, resetRetries))
+        return false;
+
+    // Enable debugging
+    if (!memStore(REG_SCB_DHCSR, 0xA05F0001))
+        return false;
+
+    // Halt the CPU core. Keep trying, in case we're fighting with watchdog reset :(
+    unsigned retries = 50;
+    uint32_t dhcsr;
+    do {
+        retries--;
+
+        // Request a halt, and read back status
+        if (!memStore(REG_SCB_DHCSR, 0xA05F0003))
+            return false;
+        if (!memLoad(REG_SCB_DHCSR, dhcsr))
+            return false;
+    
+        // Wait for S_HALT acknowledgment bit
+    } while (!(dhcsr & (1 << 17)) && retries);
+    if (!retries) {
+        log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);
+        return false;
+    }
+
+    // Enable peripheral clocks
+    if (!memStore(REG_SIM_SCGC5, 0x00043F82))
+        return false;
+    if (!memStore(REG_SIM_SCGC6, REG_SIM_SCGC6_FTM0 | REG_SIM_SCGC6_FTM1 | REG_SIM_SCGC6_FTFL))
         return false;
 
     // Test AHB-AP: Can we successfully write to RAM?
@@ -62,69 +100,7 @@ bool ARMKinetisDebug::startup()
     if (!memStoreAndVerify(0x20000000, 0x76543210))
         return false;
 
-    /*
-     * The rest of system startup looks a lot like what the bootloader does. This is based
-     * on the startup sequence used by Teensyduino.
-     */
-
-    // Enable peripheral clocks
-    if (!memStore(REG_SIM_SCGC5, 0x00043F82))
-        return false;
-    if (!memStore(REG_SIM_SCGC6, REG_SIM_SCGC6_FTM0 | REG_SIM_SCGC6_FTM1 | REG_SIM_SCGC6_FTFL))
-        return false;
-
-    // Oscillator starts up in FEI mode.
-    // Turn on crystal capacitors
-    if (!memStore(REG_OSC0_CR, REG_OSC_SC8P | REG_OSC_SC2P))
-        return false;
-    // Enable osc, 8-32 MHz range, low power
-    if (!memStore(REG_MCG_C2, REG_MCG_C2_RANGE0(2) | REG_MCG_C2_EREFS))
-        return false;
-    // Switch to crystal as clock source, FLL input = 16 MHz / 512
-    if (!memStore(REG_MCG_C1, REG_MCG_C1_CLKS(2) | REG_MCG_C1_FRDIV(4)))
-        return false;
-
-    // Wait for crystal oscillator to begin
-    uint32_t mcg;
-    if (!memPoll(REG_MCG_S, mcg, REG_MCG_S_OSCINIT0, -1))
-        return false;
-
-    // wait for FLL to use oscillator
-    if (!memPoll(REG_MCG_S, mcg, REG_MCG_S_IREFST, 0))
-        return false;
-
-    // wait for MCGOUT to use oscillator
-    if (!memPoll(REG_MCG_S, mcg, REG_MCG_S_CLKST_MASK, REG_MCG_S_CLKST(2)))
-        return false;
-
-    // Now we're in FBE mode
-    // config PLL input for 16 MHz Crystal / 4 = 4 MHz
-    if (!memStore(REG_MCG_C5, REG_MCG_C5_PRDIV0(3)))
-        return false;
-
-    // config PLL for 96 MHz output
-    if (!memStore(REG_MCG_C6, REG_MCG_C6_PLLS | REG_MCG_C6_VDIV0(0)))
-        return false;
-
-    // wait for PLL to start using xtal as its input
-    if (!memPoll(REG_MCG_S, mcg, REG_MCG_S_PLLST, -1))
-        return false;
-    if (!memPoll(REG_MCG_S, mcg, REG_MCG_S_LOCK0, -1))
-        return false;
-
-    // Now we're in PBE mode
-    // config divisors: 48 MHz core, 48 MHz bus, 24 MHz flash
-    if (!memStore(REG_SIM_CLKDIV1, REG_SIM_CLKDIV1_OUTDIV1(1) | REG_SIM_CLKDIV1_OUTDIV2(1) | REG_SIM_CLKDIV1_OUTDIV4(3)))
-        return false;
-    // switch to PLL as clock source, FLL input = 16 MHz / 512
-    if (!memStore(REG_MCG_C1, REG_MCG_C1_CLKS(0) | REG_MCG_C1_FRDIV(4)))
-        return false;
-
-    // wait for PLL clock to be used
-    if (!memPoll(REG_MCG_S, mcg, MCG_S_CLKST_MASK, MCG_S_CLKST(3)))
-        return false;
-
-    // Now we're in PEE mode. Ready to go!
+    // Good to go!
     return true;
 }
 

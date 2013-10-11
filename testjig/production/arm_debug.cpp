@@ -130,12 +130,19 @@ bool ARMDebug::initMemPort()
     }
 
     // Set up default CSW values for the AHB-AP.
-    uint32_t csw = (1 << 6) |  // Device enable
-                   (1 << 4) |  // Auto-increment by one word
-                   (2 << 0) ;  // 32-bit data size
-    if (!apWrite(MEM_CSW, csw))
+    if (!apWrite(MEM_CSW, CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT | CSW_32BIT | CSW_ADDRINC_SINGLE))
         return false;
 
+    return true;
+}
+
+bool ARMDebug::memWait()
+{
+    uint32_t csw;
+    if (!apReadPoll(MEM_CSW, csw, CSW_TRIN_PROG, 0)) {
+        log(LOG_ERROR, "ARMDebug: Timed out waiting for memory transaction");
+        return false;
+    }
     return true;
 }
 
@@ -159,11 +166,16 @@ bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count)
     if (!memStore(addr, data, count))
         return false;
 
+    if (!memWait())
+        return false;
     if (!apWrite(MEM_TAR, addr))
         return false;
 
     while (count) {
         uint32_t readback;
+
+        if (!memWait())
+            return false;
         if (!apRead(MEM_DRW, readback))
             return false;
 
@@ -183,12 +195,16 @@ bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count)
 
 bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 {
+    if (!memWait())
+        return false;
     if (!apWrite(MEM_TAR, addr))
         return false;
 
     while (count) {
         log(LOG_TRACE_MEM, "MEM Store [%08x] %08x", addr, *data);
 
+        if (!memWait())
+            return false;
         if (!apWrite(MEM_DRW, *data))
             return false;
 
@@ -202,10 +218,14 @@ bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 
 bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 {
+    if (!memWait())
+        return false;
     if (!apWrite(MEM_TAR, addr))
         return false;
 
     while (count) {
+        if (!memWait())
+            return false;
         if (!apRead(MEM_DRW, *data))
             return false;
 
@@ -420,6 +440,7 @@ bool ARMDebug::handleFault()
 
     uint32_t ctrlstat;
     uint32_t abortbits = 0;
+    bool dumpRegs = false;
 
     if (!dpRead(CTRLSTAT, false, ctrlstat))
         return false;
@@ -427,10 +448,6 @@ bool ARMDebug::handleFault()
     if (ctrlstat & (1 << 7)) {
         log(LOG_ERROR, "FAULT: Detected WDATAERR");
         abortbits |= 1 << 3;
-    }
-    if (ctrlstat & (1 << 5)) {
-        log(LOG_ERROR, "FAULT: Detected STICKYERR");
-        abortbits |= 1 << 2;
     }
     if (ctrlstat & (1 << 4)) {
         log(LOG_ERROR, "FAULT: Detected STICKCMP");
@@ -440,9 +457,35 @@ bool ARMDebug::handleFault()
         log(LOG_ERROR, "FAULT: Detected STICKORUN");
         abortbits |= 1 << 4;
     }
+    if (ctrlstat & (1 << 5)) {
+        log(LOG_ERROR, "FAULT: Detected STICKYERR");
+        abortbits |= 1 << 2;
+        dumpRegs = true;
+    }
 
     if (abortbits && !dpWrite(ABORT, false, abortbits))
         return false;
+
+    if (dumpRegs && !dumpMemPortRegisters()) {
+        log(LOG_ERROR, "Failed to dump memory port registers for diagnostics.");
+        return false;
+    }
+
+    return true;
+}
+
+bool ARMDebug::dumpMemPortRegisters()
+{
+    uint32_t reg;
+
+    if (!apRead(MEM_IDR, reg)) return false;
+    log(LOG_ERROR, "  IDR = %08x", reg);
+
+    if (!apRead(MEM_CSW, reg)) return false;
+    log(LOG_ERROR, "  CSW = %08x", reg);
+
+    if (!apRead(MEM_TAR, reg)) return false;
+    log(LOG_ERROR, "  TAR = %08x", reg);
 
     return true;
 }
