@@ -48,13 +48,16 @@ public:
      */
     bool begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel = LOG_NORMAL);
 
-    /// Memory store
+    // Memory operations (AHB bus)
     bool memStore(uint32_t addr, uint32_t data);
     bool memStore(uint32_t addr, uint32_t *data, unsigned count);
-
-    /// Memory load
     bool memLoad(uint32_t addr, uint32_t &data);
     bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
+
+    // CPU core operations
+    bool halt();
+    bool unhalt();
+    bool sysReset();
 
 private:
     uint8_t clockPin, dataPin;
@@ -75,6 +78,9 @@ protected:
     void wireWriteTurnaround();
     void wireReadTurnaround();
     void wireWriteIdle();
+
+    // Error diagnostics and recovert
+    bool handleFault();
 
     // Packet assembly tools
     uint8_t packHeader(unsigned addr, bool APnDP, bool RnW);

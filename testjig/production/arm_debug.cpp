@@ -253,6 +253,8 @@ bool ARMDebug::dpWrite(unsigned addr, bool APnDP, uint32_t data)
                 wireWriteIdle();
                 log(LOG_ERROR, "FAULT response during write (addr=%x APnDP=%d data=%08x)",
                     addr, APnDP, data);
+                if (!handleFault())
+                    log(LOG_ERROR, "Error during fault recovery!");
                 return false;
 
             default:
@@ -304,6 +306,8 @@ bool ARMDebug::dpRead(unsigned addr, bool APnDP, uint32_t &data)
                 wireWriteTurnaround();
                 wireWriteIdle();
                 log(LOG_ERROR, "FAULT response during read (addr=%x APnDP=%d)", addr, APnDP);
+                if (!handleFault())
+                    log(LOG_ERROR, "Error during fault recovery!");
                 return false;
 
             default:
@@ -316,6 +320,39 @@ bool ARMDebug::dpRead(unsigned addr, bool APnDP, uint32_t &data)
 
     log(LOG_ERROR, "WAIT timeout during read (addr=%x APnDP=%d)", addr, APnDP);
     return false;
+}
+
+bool ARMDebug::handleFault()
+{
+    // Read CTRLSTAT to see what the fault was, and set appropriate ABORT bits
+
+    uint32_t ctrlstat;
+    uint32_t abortbits = 0;
+
+    if (!dpRead(CTRLSTAT, false, ctrlstat))
+        return false;
+
+    if (ctrlstat & (1 << 7)) {
+        log(LOG_ERROR, "FAULT: Detected WDATAERR");
+        abortbits |= 1 << 3;
+    }
+    if (ctrlstat & (1 << 5)) {
+        log(LOG_ERROR, "FAULT: Detected STICKYERR");
+        abortbits |= 1 << 2;
+    }
+    if (ctrlstat & (1 << 4)) {
+        log(LOG_ERROR, "FAULT: Detected STICKCMP");
+        abortbits |= 1 << 1;
+    }
+    if (ctrlstat & (1 << 1)) {
+        log(LOG_ERROR, "FAULT: Detected STICKORUN");
+        abortbits |= 1 << 4;
+    }
+
+    if (abortbits && !dpWrite(ABORT, false, abortbits))
+        return false;
+
+    return true;
 }
 
 uint8_t ARMDebug::packHeader(unsigned addr, bool APnDP, bool RnW)
@@ -411,4 +448,23 @@ void ARMDebug::log(int level, const char *fmt, ...)
 
         Serial.println(buffer);
     }
+}
+
+bool ARMDebug::halt()
+{
+    // Write to DHCSR (Debug Halting Control and Status Register)
+    // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337e/CEGCJAHJ.html
+    return memStore(0xE000EDF0, 0xA05F0003);
+}
+
+bool ARMDebug::unhalt()
+{
+    return memStore(0xE000EDF0, 0xA05F0000);
+}
+
+bool ARMDebug::sysReset()
+{
+    // Write to AIRCR (Application Interrupt and Reset Control Register)
+    // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihehdge.html
+    return memStore(0xE000ED0C, 0x05FA0004);
 }

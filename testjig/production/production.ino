@@ -39,6 +39,10 @@ void loop()
 
     if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_MEM))
         return;
+    if (!target.halt())
+        return;
+    if (!target.sysReset())
+        return;
 
     uint32_t data;
     if (!target.memLoad(0x00000000, data))
