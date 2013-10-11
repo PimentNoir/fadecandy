@@ -388,7 +388,7 @@ int libswd_ap_bank_select(libswd_ctx_t *libswdctx, libswd_operation_t operation,
  if ( (addr&0x000000F0) != (libswdctx->log.dp.select&0x00000F0) ){
   int retval;
   int new_select=libswdctx->log.dp.select;
-  new_select=(new_select&0xFFFFF0F)|(addr&0xF0); 
+  new_select=(new_select&0xFFFFFF0F)|(addr&0xF0); 
   retval=libswd_dp_write(libswdctx, operation, LIBSWD_DP_SELECT_ADDR, &new_select);
   if (retval<0) libswd_log(libswdctx, LIBSWD_LOGLEVEL_ERROR, "libswd_ap_bank_select(%p, %0x02X): cannot update DP SELECT register (%s)\n", (void*)libswdctx, addr, libswd_error_string(retval));
   return retval;
