@@ -47,20 +47,22 @@ public:
 	/// Deinitialize the debug interface, if it's been initialized.
 	void end();
 
-	/// Memory store, using a memory access port
-	int memStore(uint32_t addr, uint32_t data, uint8_t accessPort = CortexM_AHB_AP);
+	/// Memory store
+	int memStore(uint32_t addr, uint32_t data);
+	int memStore(uint32_t addr, uint32_t *data, unsigned count);
 
-	/// Memory load, using a memory access port
-	int memLoad(uint32_t addr, uint32_t &data, uint8_t accessPort = CortexM_AHB_AP);
-
-	// Memory access port (MEM-AP) types.
-	static const uint8_t CortexM_AHB_AP = 0x11;		// AHB-AP on ARM Cortex-M parts
+	/// Memory load
+	int memLoad(uint32_t addr, uint32_t &data);
+	int memLoad(uint32_t addr, uint32_t *data, unsigned count);
 
 	// Low-level interface (LSB-first)
 	void mosi_transfer(uint32_t data, unsigned nBits);
 	uint32_t miso_transfer(unsigned nBits);
 	void mosi_trn(unsigned nClocks);
 	void miso_trn(unsigned nClocks);
+
+	// Low-level access to libswd
+	libswd_ctx_t *getContext() { return libswdctx; }
 
 private:
 	uint8_t clockPin, dataPin;

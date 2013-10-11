@@ -42,15 +42,54 @@ int ARMDebug::begin(unsigned clockPin, unsigned dataPin, libswd_loglevel_t logLe
 	libswdctx->config.autofixerrors = false;
 	libswd_log_level_set(libswdctx, logLevel);
 
+	// Identify the attached chip
  	ret = libswd_dap_detect(libswdctx, LIBSWD_OPERATION_EXECUTE, &idcode);
-	if (ret >= 0) {
-		libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
-			"Found ARM processor. IDCODE: 0x%X (%s)\n",
-			*idcode, libswd_bin32_string(idcode));
+ 	if (ret < 0) return ret;
+	libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
+		"Found ARM processor. IDCODE: 0x%X (%s)\n", *idcode, libswd_bin32_string(idcode));
+
+ 	// Initialize CTRL/STAT, request system and debugger power-up
+	int ctrlstat = LIBSWD_DP_CTRLSTAT_CDBGPWRUPREQ | LIBSWD_DP_CTRLSTAT_CSYSPWRUPREQ;
+	ret = libswd_dp_write(libswdctx, LIBSWD_OPERATION_EXECUTE, LIBSWD_DP_CTRLSTAT_ADDR, &ctrlstat);
+	if (ret < 0) return ret;
+
+	// Wait for power-up acknowledgment
+	uint32_t powerAck = LIBSWD_DP_CTRLSTAT_CDBGPWRUPACK | LIBSWD_DP_CTRLSTAT_CSYSPWRUPACK;
+	unsigned retries = 4;
+	while (retries-- && (ctrlstat & powerAck) != powerAck) {
+		int *ptr;
+		ret = libswd_dp_read(libswdctx, LIBSWD_OPERATION_EXECUTE, LIBSWD_DP_CTRLSTAT_ADDR, &ptr);
+	 	if (ret < 0) return ret;
+	 	ctrlstat = *ptr;
+	}
+	if ((ctrlstat & powerAck) != powerAck) {
+		libswd_log(libswdctx, LIBSWD_LOGLEVEL_ERROR,
+			"ARMDebug: Debug port failed to power on (CTRLSTAT: %08x)\n", ctrlstat);
+		return LIBSWD_ERROR_MAXRETRY;
 	}
 
-	libswd_cmdq_free_head(libswdctx->cmdq);
-	return ret;
+	// Select the default debug access port
+	ret = libswd_ap_select(libswdctx, LIBSWD_OPERATION_EXECUTE, 0);
+	if (ret < 0) return ret;
+
+	// We expect this to be an AHB (memory bus) access port. Make sure this is right.
+	int *idr;
+	ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_IDR, &idr);
+	if (ret < 0) return ret;
+	if ((*idr & 0xF) != 1) {
+		libswd_log(libswdctx, LIBSWD_LOGLEVEL_ERROR,
+			"ARMDebug: Default access port is not an AHB-AP as expected! (IDR: %08x)\n", *idr);
+		return LIBSWD_ERROR_GENERAL;	
+	}
+
+	// Set up default CSW values for the AHB-AP. Use 32-bit accesses with auto-increment.
+	int csw = (1 << 6) |  // Device enable
+	          (1 << 4) |  // Increment by a single word
+	          (2 << 0) ;  // 32-bit data size
+	ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_CONTROLSTATUS, &csw);
+	if (ret < 0) return ret;
+
+	return 0;
 }
 
 void ARMDebug::end()
@@ -63,28 +102,46 @@ void ARMDebug::end()
 	}
 }
 
-int ARMDebug::memStore(uint32_t addr, uint32_t data, uint8_t accessPort)
+int ARMDebug::memStore(uint32_t addr, uint32_t data)
 {
+	return memStore(addr, &data, 1);
+}
+
+int ARMDebug::memLoad(uint32_t addr, uint32_t &data)
+{
+	return memLoad(addr, &data, 1);
+}
+
+int ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
+{
+	int ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_TAR, (int*) &addr);
+	if (ret < 0) return ret;
+
+	while (count) {
+		ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_DRW, (int*) data);
+		if (ret < 0) return ret;
+		data++;
+		count--;
+	}
+
 	return 0;
 }
 
-int ARMDebug::memLoad(uint32_t addr, uint32_t &data, uint8_t accessPort)
+int ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 {
-	int ret = 0;
+	int ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_TAR, (int*) &addr);
+	if (ret < 0) return ret;
 
-	ret = libswd_ap_select(libswdctx, LIBSWD_OPERATION_EXECUTE, accessPort);
-	if (ret >= 0) {
-
-		int *result = 0;
-		ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, 0xFC, &result);
-		if (ret >= 0) {
-			libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
-				"FC -> %p %08x\n", result, *result);
-		}
+	while (count) {
+		int *ptr;
+		ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_DRW, &ptr);
+		if (ret < 0) return ret;
+		*data = *ptr;
+		data++;
+		count--;
 	}
 
-	libswd_cmdq_free_head(libswdctx->cmdq);
-	return ret;
+	return 0;
 }
 
 void ARMDebug::mosi_transfer(uint32_t data, unsigned nBits)
@@ -114,6 +171,7 @@ uint32_t ARMDebug::miso_transfer(unsigned nBits)
 
 void ARMDebug::mosi_trn(unsigned nClocks)
 {
+	digitalWrite(dataPin, HIGH);
 	pinMode(dataPin, INPUT_PULLUP);
 	while (nClocks--) {
 		digitalWrite(clockPin, LOW);

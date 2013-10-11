@@ -30,6 +30,7 @@ void loop()
 	Serial.println("");
 
 	while (digitalRead(buttonPin) == LOW);
+	delay(20);   // Debounce delay
 	while (digitalRead(buttonPin) == HIGH) {
 		// While we're waiting, blink the LED to indicate we're alive
 		digitalWrite(ledPin, (millis() % 1000) < 150);
@@ -40,5 +41,14 @@ void loop()
 		return;
 
 	uint32_t data;
-	target.memLoad(0x000000, data);
+	if (target.memLoad(0x20000000, data) < 0)
+		return;
+	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
+	data ^= 0xFFFFFFFF;
+	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
+	if (target.memStore(0x20000000, data) < 0)
+		return;
+	if (target.memLoad(0x20000000, data) < 0)
+		return;
+	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
 }
