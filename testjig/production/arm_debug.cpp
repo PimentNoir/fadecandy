@@ -65,20 +65,13 @@ bool ARMDebug::identify()
 	return true;
 }
 
-void ARMDebug::bit_delay()
-{
-	delayMicroseconds(1);
-}
-
 void ARMDebug::mosi_transfer(uint32_t data, unsigned nBits)
 {
 	while (nBits--) {
 		digitalWrite(this->clockPin, LOW);
 		digitalWrite(this->dataPin, data & 1);
 		data >>= 1;
-		bit_delay();
 		digitalWrite(this->clockPin, HIGH);
-		bit_delay();
 	}
 }
 
@@ -88,13 +81,11 @@ uint32_t ARMDebug::miso_transfer(unsigned nBits)
 	uint32_t mask = 1;
 	while (nBits--) {
 		digitalWrite(this->clockPin, LOW);
-		bit_delay();
 		if (digitalRead(this->dataPin)) {
 			result |= mask;
 		}
 		mask <<= 1;
 		digitalWrite(this->clockPin, HIGH);
-		bit_delay();
 	}
 	return result;
 }
@@ -104,9 +95,7 @@ void ARMDebug::mosi_trn(unsigned nClocks)
 	pinMode(this->dataPin, INPUT_PULLUP);
 	while (nClocks--) {
 		digitalWrite(this->clockPin, LOW);
-		bit_delay();
 		digitalWrite(this->clockPin, HIGH);
-		bit_delay();
 	}
 	pinMode(this->dataPin, OUTPUT);
 }
@@ -117,9 +106,7 @@ void ARMDebug::miso_trn(unsigned nClocks)
 	pinMode(this->dataPin, INPUT_PULLUP);
 	while (nClocks--) {
 		digitalWrite(this->clockPin, LOW);
-		bit_delay();
 		digitalWrite(this->clockPin, HIGH);
-		bit_delay();
 	}
 }
 

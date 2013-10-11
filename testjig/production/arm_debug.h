@@ -48,6 +48,4 @@ public:
 private:
 	uint8_t clockPin, dataPin;
 	void *context;	 // libswd context (opaque type)
-
-	void bit_delay();
 };
