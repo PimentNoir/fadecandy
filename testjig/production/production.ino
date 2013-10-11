@@ -37,7 +37,7 @@ void loop()
     }
     digitalWrite(ledPin, HIGH);
 
-    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_DP))
+    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_AP))
         return;
     if (!target.startup())
         return;

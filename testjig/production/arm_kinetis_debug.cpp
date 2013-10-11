@@ -33,7 +33,7 @@ bool ARMKinetisDebug::startup()
     uint32_t status;
 
     // Make sure we're on a compatible chip. The MDM-AP peripheral is Freescale-specific.
-    if (!apRead(MDM_IDR, idr))
+    if (!apRead(REG_MDM_IDR, idr))
         return false;
     if (idr != 0x001C0000) {
         log(LOG_ERROR, "ARMKinetisDebug: Didn't find a supported MDM-AP peripheral");
@@ -41,15 +41,25 @@ bool ARMKinetisDebug::startup()
     }
 
     // Reset the system, and hold the core in reset when it comes back
-    if (!apWrite(MDM_CONTROL, MDM_CONTROL_SYS_RESET_REQ | MDM_CONTROL_CORE_HOLD_RESET))
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ | REG_MDM_CONTROL_CORE_HOLD_RESET))
         return false;
-    if (!apReadPoll(MDM_STATUS, status, MDM_STATUS_SYS_NRESET, 0))
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
         return false;
-    if (!apWrite(MDM_CONTROL, MDM_CONTROL_CORE_HOLD_RESET))
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
         return false;
 
     // Wait until the flash controller is ready & system is out of reset
-    if (!apReadPoll(MDM_STATUS, status, MDM_STATUS_SYS_NRESET | MDM_STATUS_FLASH_READY, -1))
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY, -1))
+        return false;
+
+    // Re-initialize the AHB-AP after reset
+    if (!initMemPort())
+        return false;
+
+    // Test AHB-AP: Can we successfully write to RAM?
+    if (!memStoreAndVerify(0x20000000, 0x31415927))
+        return false;
+    if (!memStoreAndVerify(0x20000000, 0x76543210))
         return false;
 
     /*
@@ -123,28 +133,32 @@ bool ARMKinetisDebug::flashMassErase()
     // Erase all flash, even if some of it is protected.
 
     uint32_t status;
-    if (!apRead(MDM_STATUS, status))
+    if (!apRead(REG_MDM_STATUS, status))
         return false;
-    if (!(status & MDM_STATUS_FLASH_READY)) {
+    if (!(status & REG_MDM_STATUS_FLASH_READY)) {
         log(LOG_ERROR, "FLASH: Flash controller not ready before mass erase");
         return false;
     }
-    if ((status & MDM_STATUS_FLASH_ERASE_ACK)) {
+    if ((status & REG_MDM_STATUS_FLASH_ERASE_ACK)) {
         log(LOG_ERROR, "FLASH: Mass erase already in progress");
+        return false;
+    }
+    if (!(status & REG_MDM_STATUS_MASS_ERASE_ENABLE)) {
+        log(LOG_ERROR, "FLASH: Mass erase is disabled!");
         return false;
     }
 
     log(LOG_NORMAL, "FLASH: Beginning mass erase operation");
-    if (!apWrite(MDM_CONTROL, MDM_CONTROL_CORE_HOLD_RESET | MDM_CONTROL_MASS_ERASE))
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET | REG_MDM_CONTROL_MASS_ERASE))
         return false;
 
     // Wait for the mass erase to complete
-    if (!apReadPoll(MDM_STATUS, status, MDM_STATUS_FLASH_ERASE_ACK, 0, 10000)) {
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_FLASH_ERASE_ACK, 0, 10000)) {
         log(LOG_ERROR, "FLASH: Timed out waiting for mass erase to complete");
         return false;
     }
 
-    if (!(status & MDM_STATUS_FLASH_READY)) {
+    if (!(status & REG_MDM_STATUS_FLASH_READY)) {
         log(LOG_ERROR, "FLASH: Flash controller not ready after mass erase");
         return false;
     }

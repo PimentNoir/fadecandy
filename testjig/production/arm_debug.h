@@ -34,6 +34,7 @@ public:
         LOG_ERROR,
         LOG_NORMAL,
         LOG_TRACE_MEM,
+        LOG_TRACE_AP,
         LOG_TRACE_DP,
         LOG_TRACE_SWD,
         LOG_MAX
@@ -53,6 +54,10 @@ public:
     bool memStore(uint32_t addr, uint32_t *data, unsigned count);
     bool memLoad(uint32_t addr, uint32_t &data);
     bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
+
+    // Write with verify
+    bool memStoreAndVerify(uint32_t addr, uint32_t data);
+    bool memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count);
 
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
@@ -96,6 +101,12 @@ protected:
     // Poll for an expected value
     bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
     bool apReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
+
+    // Individual initialization steps (already included in begin)
+    bool getIDCODE(uint32_t &idcode);
+    bool debugPortPowerup();
+    bool debugPortReset();
+    bool initMemPort();
 
     // Debug port registers
     enum DebugPortReg {

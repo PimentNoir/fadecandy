@@ -47,8 +47,26 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
     wireWrite(0, 32);
     wireWrite(0, 32);
 
-    // Retrieve IDCODE
     uint32_t idcode;
+    if (!getIDCODE(idcode))
+        return false;
+    log(LOG_NORMAL, "Found ARM processor debug port (IDCODE: %08x)", idcode);
+
+    if (!debugPortPowerup())
+        return false;
+
+    if (!debugPortReset())
+        return false;
+
+    if (!initMemPort())
+        return false;
+
+    return true;
+}
+
+bool ARMDebug::getIDCODE(uint32_t &idcode)
+{
+    // Retrieve IDCODE
     if (!dpRead(IDCODE, false, idcode)) {
         log(LOG_ERROR, "No ARM processor detected. Check power and cables?");
         return false;
@@ -60,8 +78,12 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
         log(LOG_ERROR, "ARM Debug Port has an incorrect part number (IDCODE: %08x)", idcode);
         return false;
     }
-    log(LOG_NORMAL, "Found ARM processor debug port (IDCODE: %08x)", idcode);
 
+    return true;
+}
+
+bool ARMDebug::debugPortPowerup()
+{
     // Initialize CTRL/STAT, request system and debugger power-up
     if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ))
         return false;
@@ -73,11 +95,17 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
         return false;
     }
 
+    return true;
+}
+
+bool ARMDebug::debugPortReset()
+{
     // Reset the debug access port
     if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ | CDBGRSTREQ))
         return false;
 
     // Wait for reset acknowledgment
+    uint32_t ctrlstat;
     if (!dpReadPoll(CTRLSTAT, ctrlstat, CDBGPWRUPACK | CSYSPWRUPACK | CDBGRSTACK, -1)) {
         log(LOG_ERROR, "ARMDebug: Debug port failed to reset (CTRLSTAT: %08x)", ctrlstat);
         return false;
@@ -87,6 +115,11 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
     if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ))
         return false;
 
+    return true;
+}
+
+bool ARMDebug::initMemPort()
+{
     // Make sure the default debug access port is an AHB (memory bus) port, like we expect
     uint32_t idr;
     if (!apRead(MEM_IDR, idr))
@@ -98,7 +131,7 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
 
     // Set up default CSW values for the AHB-AP.
     uint32_t csw = (1 << 6) |  // Device enable
-                   (0 << 4) |  // Auto-increment off
+                   (1 << 4) |  // Auto-increment by one word
                    (2 << 0) ;  // 32-bit data size
     if (!apWrite(MEM_CSW, csw))
         return false;
@@ -114,6 +147,38 @@ bool ARMDebug::memStore(uint32_t addr, uint32_t data)
 bool ARMDebug::memLoad(uint32_t addr, uint32_t &data)
 {
     return memLoad(addr, &data, 1);
+}
+
+bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t data)
+{
+    return memStoreAndVerify(addr, &data, 1);
+}
+
+bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count)
+{
+    if (!memStore(addr, data, count))
+        return false;
+
+    if (!apWrite(MEM_TAR, addr))
+        return false;
+
+    while (count) {
+        uint32_t readback;
+        if (!apRead(MEM_DRW, readback))
+            return false;
+
+        log(readback == *data ? LOG_TRACE_MEM : LOG_ERROR,
+            "MEM Verif [%08x] %08x (expected %08x)", addr, readback, *data);
+
+        if (readback != *data)
+            return false;
+
+        data++;
+        addr++;
+        count--;
+    }
+
+    return true;    
 }
 
 bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
@@ -156,13 +221,38 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 
 bool ARMDebug::apWrite(unsigned addr, uint32_t data)
 {
+    log(LOG_TRACE_AP, "AP  Write [%x] %08x", addr, data);
     return dpSelect(addr) && dpWrite(addr, true, data);
 }
 
 bool ARMDebug::apRead(unsigned addr, uint32_t &data)
 {
-    // XXX: Extra dummy read here seems to be necessary. Why? What bug is this covering up?
-    return dpSelect(addr) && dpRead(addr, true, data) && dpRead(addr, true, data);
+    /*
+     * This is really hard to find in the docs, but AP reads are delayed by one transaction.
+     * So, the very first AP read will return undefined data, the next AP read returns the
+     * data for the previous address, and so on.
+     *
+     * See:
+     *   http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0314h/ch02s04s03.html
+     *
+     * To make this easier to deal with, we issue a real AP read followed by a dummy read.
+     * The first read will give us the previous dummy result, the second read to a dummy
+     * address will give us the data we care about.
+     *
+     * Performance for this will be kinda sucky, but so far I don't care.
+     */
+
+    unsigned dummyAddr = MEM_IDR;  // Something with no side effects
+    uint32_t dummyData;
+
+    bool result = dpSelect(addr) && dpRead(addr, true, dummyData) &&
+                  dpSelect(dummyAddr) && dpRead(dummyAddr, true, data);
+
+    if (result) {
+        log(LOG_TRACE_AP, "AP  Read  [%x] %08x", addr, data);
+    }
+
+    return result;
 }
 
 bool ARMDebug::dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries)

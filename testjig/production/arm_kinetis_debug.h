@@ -33,28 +33,4 @@ public:
 
     // Flash mass-erase operation. Works even on protected devices.
     bool flashMassErase();
-
-protected:
-    // MDM-AP registers
-    enum MDMReg {
-        MDM_STATUS  = 0x01000000,
-        MDM_CONTROL = 0x01000004,
-        MDM_IDR     = 0x010000FC,
-    };
-
-    // MDM-AP bits
-    enum MDMBits {
-        MDM_STATUS_FLASH_ERASE_ACK = 1 << 0,
-        MDM_STATUS_FLASH_READY = 1 << 1,
-        MDM_STATUS_SYS_SECURITY = 1 << 2,
-        MDM_STATUS_SYS_NRESET = 1 << 3,
-        MDM_STATUS_MASS_ERASE_ENABLE = 1 << 4,
-        MDM_STATUS_CORE_HALTED = 1 << 16,
-
-        MDM_CONTROL_MASS_ERASE = 1 << 0,
-        MDM_CONTROL_DEBUG_DISABLE = 1 << 1,
-        MDM_CONTROL_DEBUG_REQ = 1 << 2,
-        MDM_CONTROL_SYS_RESET_REQ = 1 << 3,
-        MDM_CONTROL_CORE_HOLD_RESET = 1 << 4,
-    };
 };

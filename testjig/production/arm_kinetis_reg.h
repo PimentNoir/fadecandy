@@ -515,3 +515,34 @@
 #define REG_ARM_DWT_CTRL            0xE0001000          // DWT control register
 #define REG_ARM_DWT_CTRL_CYCCNTENA  (1 << 0)            // Enable cycle count
 #define REG_ARM_DWT_CYCCNT          0xE0001004          // Cycle count register
+
+// MDM-AP debug port registers
+#define REG_MDM_STATUS              0x01000000
+#define REG_MDM_CONTROL             0x01000004
+#define REG_MDM_IDR                 0x010000FC
+
+// MDM-AP status bits
+#define REG_MDM_STATUS_FLASH_ERASE_ACK      (1 << 0)
+#define REG_MDM_STATUS_FLASH_READY          (1 << 1)
+#define REG_MDM_STATUS_SYS_SECURITY         (1 << 2)
+#define REG_MDM_STATUS_SYS_NRESET           (1 << 3)
+#define REG_MDM_STATUS_MASS_ERASE_ENABLE    (1 << 5)
+#define REG_MDM_STATUS_BACKDOOR_ENABLE      (1 << 6)
+#define REG_MDM_STATUS_LP_ENABLE            (1 << 7)
+#define REG_MDM_STATUS_VLP_ENABLE           (1 << 8)
+#define REG_MDM_STATUS_LLS_EXIT             (1 << 9)
+#define REG_MDM_STATUS_VLLS_EXIT            (1 << 10)
+#define REG_MDM_STATUS_CORE_HALTED          (1 << 16)
+#define REG_MDM_STATUS_CORE_SLEEPDEEP       (1 << 17)
+#define REG_MDM_STATUS_CORE_SLEEPING        (1 << 18)
+
+// MDM-AP control bits
+#define REG_MDM_CONTROL_MASS_ERASE          (1 << 0)
+#define REG_MDM_CONTROL_DEBUG_DISABLE       (1 << 1)
+#define REG_MDM_CONTROL_DEBUG_REQ           (1 << 2)
+#define REG_MDM_CONTROL_SYS_RESET_REQ       (1 << 3)
+#define REG_MDM_CONTROL_CORE_HOLD_RESET     (1 << 4)
+#define REG_MDM_CONTROL_VLLS_DEBUG_REQ      (1 << 5)
+#define REG_MDM_CONTROL_VLLS_DEBUG_ACK      (1 << 6)
+#define REG_MDM_CONTROL_LLS_ACK             (1 << 7)
+#define REG_MDM_CONTROL_TIMESTAMP_DISABLE   (1 << 8)
