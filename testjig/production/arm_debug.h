@@ -60,7 +60,7 @@ public:
     bool memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count);
 
     // Poll for an expected value
-    bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
+    bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 
 private:
     uint8_t clockPin, dataPin;
@@ -99,8 +99,8 @@ protected:
     bool apRead(unsigned addr, uint32_t &data);
 
     // Poll for an expected value
-    bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
-    bool apReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
+    bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
+    bool apReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 
     // Individual initialization steps (already included in begin)
     bool getIDCODE(uint32_t &idcode);
@@ -134,4 +134,6 @@ protected:
         MEM_DRW = 0x0C,
         MEM_IDR = 0xFC,
     };
+
+    static const unsigned DEFAULT_RETRIES = 50;
 };
