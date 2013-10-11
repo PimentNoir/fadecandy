@@ -26,41 +26,41 @@
 #include <stdint.h>
 
 typedef enum {
-	appIDLE = 0,
-	appDETACH,
-	dfuIDLE,
-	dfuDNLOAD_SYNC,
-	dfuDNBUSY,
-	dfuDNLOAD_IDLE,
-	dfuMANIFEST_SYNC,
-	dfuMANIFEST,
-	dfuMANIFEST_WAIT_RESET,
-	dfuUPLOAD_IDLE,
-	dfuERROR
+    appIDLE = 0,
+    appDETACH,
+    dfuIDLE,
+    dfuDNLOAD_SYNC,
+    dfuDNBUSY,
+    dfuDNLOAD_IDLE,
+    dfuMANIFEST_SYNC,
+    dfuMANIFEST,
+    dfuMANIFEST_WAIT_RESET,
+    dfuUPLOAD_IDLE,
+    dfuERROR
 } dfu_state_t;
 
 typedef enum {
-	OK = 0,
-	errTARGET,
-	errFILE,
-	errWRITE,
-	errERASE,
-	errCHECK_ERASED,
-	errPROG,
-	errVERIFY,
-	errADDRESS,
-	errNOTDONE,
-	errFIRMWARE,
-	errVENDOR,
-	errUSBR,
-	errPOR,
-	errUNKNOWN,
-	errSTALLEDPKT,
+    OK = 0,
+    errTARGET,
+    errFILE,
+    errWRITE,
+    errERASE,
+    errCHECK_ERASED,
+    errPROG,
+    errVERIFY,
+    errADDRESS,
+    errNOTDONE,
+    errFIRMWARE,
+    errVENDOR,
+    errUSBR,
+    errPOR,
+    errUNKNOWN,
+    errSTALLEDPKT,
 } dfu_status_t;
 
 #define DFU_INTERFACE             0
-#define DFU_DETACH_TIMEOUT		  10000		// 10 second timer
-#define DFU_TRANSFER_SIZE		  1024		// Flash sector size
+#define DFU_DETACH_TIMEOUT        10000     // 10 second timer
+#define DFU_TRANSFER_SIZE         1024      // Flash sector size
 
 // Main thread
 void dfu_init();
@@ -73,4 +73,4 @@ bool dfu_getstatus(uint8_t *status);
 bool dfu_clrstatus();
 bool dfu_abort();
 bool dfu_download(unsigned blockNum, unsigned blockLength,
-	unsigned packetOffset, unsigned packetLength, const uint8_t *data);
+    unsigned packetOffset, unsigned packetLength, const uint8_t *data);

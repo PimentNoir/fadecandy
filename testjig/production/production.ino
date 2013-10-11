@@ -16,46 +16,46 @@ ARMDebug target;
 
 void setup()
 {
-	pinMode(ledPin, OUTPUT);
-	pinMode(buttonPin, INPUT_PULLUP);
-	Serial.begin(115200);
+    pinMode(ledPin, OUTPUT);
+    pinMode(buttonPin, INPUT_PULLUP);
+    Serial.begin(115200);
 }
 
 void loop()
 {
-	Serial.println("");
-	Serial.println("--------------------------------------------");
-	Serial.println(" Fadecanday Test Jig : Press button to start");
-	Serial.println("--------------------------------------------");
-	Serial.println("");
+    Serial.println("");
+    Serial.println("--------------------------------------------");
+    Serial.println(" Fadecanday Test Jig : Press button to start");
+    Serial.println("--------------------------------------------");
+    Serial.println("");
 
-	while (digitalRead(buttonPin) == LOW);
-	delay(20);   // Debounce delay
-	while (digitalRead(buttonPin) == HIGH) {
-		// While we're waiting, blink the LED to indicate we're alive
-		digitalWrite(ledPin, (millis() % 1000) < 150);
-	}
-	digitalWrite(ledPin, HIGH);
+    while (digitalRead(buttonPin) == LOW);
+    delay(20);   // Debounce delay
+    while (digitalRead(buttonPin) == HIGH) {
+        // While we're waiting, blink the LED to indicate we're alive
+        digitalWrite(ledPin, (millis() % 1000) < 150);
+    }
+    digitalWrite(ledPin, HIGH);
 
-	if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE))
-		return;
+    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE))
+        return;
 
-	uint32_t data;
-	if (!target.memLoad(0x00000000, data))
-		return;
-	if (!target.memLoad(0x00000004, data))
-		return;
-	if (!target.memLoad(0x00000008, data))
-		return;
-	if (!target.memLoad(0x20000000, data))
-		return;
+    uint32_t data;
+    if (!target.memLoad(0x00000000, data))
+        return;
+    if (!target.memLoad(0x00000004, data))
+        return;
+    if (!target.memLoad(0x00000008, data))
+        return;
+    if (!target.memLoad(0x20000000, data))
+        return;
 
-	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
-	data ^= 0xFFFFFFFF;
-	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
-	if (!target.memStore(0x20000000, data))
-		return;
-	if (!target.memLoad(0x20000000, data))
-		return;
-	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
+    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
+    data ^= 0xFFFFFFFF;
+    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
+    if (!target.memStore(0x20000000, data))
+        return;
+    if (!target.memLoad(0x20000000, data))
+        return;
+    target.log(target.LOG_NORMAL, "data = 0x%08x", data);
 }

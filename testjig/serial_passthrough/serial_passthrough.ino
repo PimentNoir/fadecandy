@@ -17,45 +17,45 @@ HardwareSerial Uart = HardwareSerial();
 
 void setup()
 {
-	pinMode(ledPin, OUTPUT);
-	pinMode(buttonPin, INPUT_PULLUP);
-	Serial.begin(BAUD);
+    pinMode(ledPin, OUTPUT);
+    pinMode(buttonPin, INPUT_PULLUP);
+    Serial.begin(BAUD);
 }
 
 void passthroughMode()
 {
-	pinMode(rxPin, INPUT);
-	pinMode(txPin, OUTPUT);
-	digitalWrite(ledPin, HIGH);
+    pinMode(rxPin, INPUT);
+    pinMode(txPin, OUTPUT);
+    digitalWrite(ledPin, HIGH);
 
-	// This is only slow 9600 baud, but input-to-output latency must be less
-	// than one character for the bootloader to detect the loopback.
+    // This is only slow 9600 baud, but input-to-output latency must be less
+    // than one character for the bootloader to detect the loopback.
 
-	while (digitalRead(buttonPin) == LOW) {
-		digitalWrite(txPin, digitalRead(rxPin));
-	}
+    while (digitalRead(buttonPin) == LOW) {
+        digitalWrite(txPin, digitalRead(rxPin));
+    }
 
-	digitalWrite(ledPin, LOW);
+    digitalWrite(ledPin, LOW);
 }
 
 void loopbackMode()
 {
-	Uart.begin(BAUD);
+    Uart.begin(BAUD);
 
-	while (digitalRead(buttonPin) == HIGH) {
-		if (Serial.available()) {
-			Uart.write(Serial.read());
-		}
-		if (Uart.available()) {
-			Serial.write(Uart.read());
-		}
-	}
+    while (digitalRead(buttonPin) == HIGH) {
+        if (Serial.available()) {
+            Uart.write(Serial.read());
+        }
+        if (Uart.available()) {
+            Serial.write(Uart.read());
+        }
+    }
 
-	Uart.end();
+    Uart.end();
 }
 
 void loop()
 {
-	loopbackMode();
-	passthroughMode();
+    loopbackMode();
+    passthroughMode();
 }
