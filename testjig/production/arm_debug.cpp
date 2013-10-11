@@ -53,12 +53,15 @@ bool ARMDebug::identify()
 	libswd_ctx_t *libswdctx = (libswd_ctx_t*) this->context;
 	int *idcode;
 
+	libswd_cmdq_free_head(libswdctx->cmdq);
+
 	if (libswd_dap_detect(libswdctx, LIBSWD_OPERATION_EXECUTE, &idcode) < 0)
 		return false;
 
 	libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
 		"Found ARM processor. IDCODE: 0x%X (%s)\n",
 		*idcode, libswd_bin32_string(idcode));
+
 	return true;
 }
 

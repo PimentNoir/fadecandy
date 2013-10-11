@@ -26,6 +26,7 @@ void loop()
 	Serial.println("--------------------------------------------");
 	Serial.println(" Fadecandy Test Jig : Press button to start");
 	Serial.println("--------------------------------------------");
+	Serial.println("");
 
 	while (digitalRead(buttonPin) == LOW);
 	while (digitalRead(buttonPin) == HIGH) {
