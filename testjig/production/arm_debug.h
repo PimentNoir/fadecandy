@@ -1,5 +1,5 @@
 /*
- * Simple ARM debug interface for Arduino, using libswd
+ * Simple ARM debug interface for Arduino, using the SWD (Serial Wire Debug) port.
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -25,46 +25,62 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern "C" {
-	#include "libswd.h"
-}
-
 
 class ARMDebug
 {
 public:
+	enum LogLevel {
+		LOG_NONE = 0,
+		LOG_ERROR,
+		LOG_NORMAL,
+		LOG_TRACE
+	};
+
 	/**
-	 * (Re)initialize the debug interface, and identify the connected chip.
+	 * Reinitialize the debug interface, and identify the connected chip.
 	 * This resets the target chip, putting it in SWD mode and logging its
 	 * identity.
 	 *
-	 * All functions here return >= 0 on success, or a negative libswd error 
-	 * code on failure. Errors are also logged, so generally you don't need
-	 * to do that yourself.
+	 * Returns true on success, logs and returns false on error.
 	 */
-	int begin(unsigned clockPin, unsigned dataPin, libswd_loglevel_t logLevel = LIBSWD_LOGLEVEL_NORMAL);
-
-	/// Deinitialize the debug interface, if it's been initialized.
-	void end();
+	bool begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel = LOG_NORMAL);
 
 	/// Memory store
-	int memStore(uint32_t addr, uint32_t data);
-	int memStore(uint32_t addr, uint32_t *data, unsigned count);
+	bool memStore(uint32_t addr, uint32_t data);
+	bool memStore(uint32_t addr, uint32_t *data, unsigned count);
 
 	/// Memory load
-	int memLoad(uint32_t addr, uint32_t &data);
-	int memLoad(uint32_t addr, uint32_t *data, unsigned count);
+	bool memLoad(uint32_t addr, uint32_t &data);
+	bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
 
-	// Low-level interface (LSB-first)
-	void mosi_transfer(uint32_t data, unsigned nBits);
-	uint32_t miso_transfer(unsigned nBits);
-	void mosi_trn(unsigned nClocks);
-	void miso_trn(unsigned nClocks);
-
-	// Low-level access to libswd
-	libswd_ctx_t *getContext() { return libswdctx; }
+	/// The same logging method used internally to ARMDebug
+	void log(int level, const char *fmt, ...);
 
 private:
 	uint8_t clockPin, dataPin;
-	libswd_ctx_t *libswdctx;
+	LogLevel logLevel;
+
+	// Cached versions of ARM debug registers
+	struct {
+		uint32_t select;
+	} cache;
+
+	// Low-level wire interface (LSB-first)
+	void wireWrite(uint32_t data, unsigned nBits);
+	uint32_t wireRead(unsigned nBits);
+	void wireWriteTurnaround();
+	void wireReadTurnaround();
+
+	// Packet assembly tools
+	uint8_t packHeader(unsigned addr, bool APnDP, bool RnW);
+	bool evenParity(uint32_t word);
+
+	// Debug port layer
+	bool dpWrite(unsigned addr, bool APnDP, uint32_t data);
+	bool dpRead(unsigned addr, bool APnDP, uint32_t &data);
+	bool dpSelect(unsigned accessPort, unsigned addr);
+
+	// Access port layer
+	bool apWrite(unsigned accessPort, unsigned addr, uint32_t data);
+	bool apRead(unsigned accessPort, unsigned addr, uint32_t &data);
 };

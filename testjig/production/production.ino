@@ -37,18 +37,25 @@ void loop()
 	}
 	digitalWrite(ledPin, HIGH);
 
-	if (target.begin(swclkPin, swdioPin, LIBSWD_LOGLEVEL_MAX) < 0)
+	if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE))
 		return;
 
 	uint32_t data;
-	if (target.memLoad(0x20000000, data) < 0)
+	if (!target.memLoad(0x00000000, data))
 		return;
-	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
+	if (!target.memLoad(0x00000004, data))
+		return;
+	if (!target.memLoad(0x00000008, data))
+		return;
+	if (!target.memLoad(0x20000000, data))
+		return;
+
+	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
 	data ^= 0xFFFFFFFF;
-	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
-	if (target.memStore(0x20000000, data) < 0)
+	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
+	if (!target.memStore(0x20000000, data))
 		return;
-	if (target.memLoad(0x20000000, data) < 0)
+	if (!target.memLoad(0x20000000, data))
 		return;
-	libswd_log(target.getContext(), LIBSWD_LOGLEVEL_NORMAL, "data = 0x%08x\n", data);
+	target.log(target.LOG_NORMAL, "data = 0x%08x", data);
 }

@@ -1,5 +1,5 @@
 /*
- * Simple ARM debug interface for Arduino, using libswd
+ * Simple ARM debug interface for Arduino, using the SWD (Serial Wire Debug) port.
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -22,257 +22,360 @@
  */
 
 #include <Arduino.h>
+#include <stdarg.h>
 #include "arm_debug.h"
 
+// Debug port registers
+enum DebugPortReg {
+	ABORT = 0x0,
+	IDCODE = 0x0,
+	CTRLSTAT = 0x4,
+	SELECT = 0x8,
+	RDBUFF = 0xC
+};
 
-int ARMDebug::begin(unsigned clockPin, unsigned dataPin, libswd_loglevel_t logLevel)
+// CTRL/STAT bits
+enum CtrlStatBit {
+	CSYSPWRUPACK = 1 << 31,
+	CSYSPWRUPREQ = 1 << 30,
+	CDBGPWRUPACK = 1 << 29,
+	CDBGPWRUPREQ = 1 << 28
+};
+
+// Memory Access Port registers
+enum MemPortReg {
+	MEM_CSW = 0x00,
+	MEM_TAR = 0x04,
+	MEM_DRW = 0x0C,
+	MEM_IDR = 0xFC,
+};
+
+
+bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
 {
-	int *idcode;
-	int ret;
-
-	end();
-
 	this->clockPin = clockPin;
 	this->dataPin = dataPin;
+	this->logLevel = logLevel;
 	pinMode(clockPin, OUTPUT);
 	pinMode(dataPin, INPUT_PULLUP);
 
-	libswdctx = libswd_init();
-	libswdctx->driver->device = this;
-	libswdctx->config.autofixerrors = false;
-	libswd_log_level_set(libswdctx, logLevel);
+	// Invalidate cache
+	cache.select = 0xFFFFFFFF;
 
-	// Identify the attached chip
- 	ret = libswd_dap_detect(libswdctx, LIBSWD_OPERATION_EXECUTE, &idcode);
- 	if (ret < 0) return ret;
-	libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
-		"Found ARM processor. IDCODE: 0x%X (%s)\n", *idcode, libswd_bin32_string(idcode));
+	// Put the bus in a known state, and trigger a JTAG-to-SWD transition.
+	wireWriteTurnaround();
+	wireWrite(0xFFFFFFFF, 32);
+	wireWrite(0xFFFFFFFF, 32);
+	wireWrite(0xE79E, 16);
+	wireWrite(0xFFFFFFFF, 32);
+	wireWrite(0xFFFFFFFF, 32);
+	wireWrite(0, 32);
+	wireWrite(0, 32);
+
+	// Retrieve IDCODE
+	uint32_t idcode;
+	if (!dpRead(IDCODE, false, idcode)) {
+		log(LOG_ERROR, "No ARM processor detected. Check power and cables?");
+		return false;
+	}
+	
+	// Verify debug port part number only. This isn't allowed to change, and it's a good early sanity check.
+	if ((idcode & 0x0FF00001) != 0x0ba00001) {
+		// For reference, the K20's IDCODE is 0x4ba00477 over JTAG vs. 0x2ba01477 over SWD.
+		log(LOG_ERROR, "ARM Debug Port has an incorrect part number (IDCODE: %08x)", idcode);
+		return false;
+	}
+	log(LOG_NORMAL, "Found ARM processor debug port (IDCODE: %08x)", idcode);
 
  	// Initialize CTRL/STAT, request system and debugger power-up
-	int ctrlstat = LIBSWD_DP_CTRLSTAT_CDBGPWRUPREQ | LIBSWD_DP_CTRLSTAT_CSYSPWRUPREQ;
-	ret = libswd_dp_write(libswdctx, LIBSWD_OPERATION_EXECUTE, LIBSWD_DP_CTRLSTAT_ADDR, &ctrlstat);
-	if (ret < 0) return ret;
+	if (!dpWrite(CTRLSTAT, false, CSYSPWRUPREQ | CDBGPWRUPREQ))
+		return false;
 
 	// Wait for power-up acknowledgment
-	uint32_t powerAck = LIBSWD_DP_CTRLSTAT_CDBGPWRUPACK | LIBSWD_DP_CTRLSTAT_CSYSPWRUPACK;
+	uint32_t powerAck = CDBGPWRUPACK | CSYSPWRUPACK;
 	unsigned retries = 4;
-	while (retries-- && (ctrlstat & powerAck) != powerAck) {
-		int *ptr;
-		ret = libswd_dp_read(libswdctx, LIBSWD_OPERATION_EXECUTE, LIBSWD_DP_CTRLSTAT_ADDR, &ptr);
-	 	if (ret < 0) return ret;
-	 	ctrlstat = *ptr;
+	uint32_t ctrlstat;
+	while (retries--) {
+		if (!dpRead(CTRLSTAT, false, ctrlstat))
+			return false;
+		if ((ctrlstat & powerAck) == powerAck)
+			break;
 	}
-	if ((ctrlstat & powerAck) != powerAck) {
-		libswd_log(libswdctx, LIBSWD_LOGLEVEL_ERROR,
-			"ARMDebug: Debug port failed to power on (CTRLSTAT: %08x)\n", ctrlstat);
-		return LIBSWD_ERROR_MAXRETRY;
+	if (!retries) {
+		log(LOG_ERROR, "ARMDebug: Debug port failed to power on (CTRLSTAT: %08x)", ctrlstat);
+		return false;
 	}
 
-	// Select the default debug access port
-	ret = libswd_ap_select(libswdctx, LIBSWD_OPERATION_EXECUTE, 0);
-	if (ret < 0) return ret;
-
-	// We expect this to be an AHB (memory bus) access port. Make sure this is right.
-	int *idr;
-	ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_IDR, &idr);
-	if (ret < 0) return ret;
-	if ((*idr & 0xF) != 1) {
-		libswd_log(libswdctx, LIBSWD_LOGLEVEL_ERROR,
-			"ARMDebug: Default access port is not an AHB-AP as expected! (IDR: %08x)\n", *idr);
-		return LIBSWD_ERROR_GENERAL;	
+	// Make sure the default debug access port is an AHB (memory bus) port, like we expect
+	uint32_t idr;
+	if (!apRead(0, MEM_IDR, idr))
+		return false;
+	if ((idr & 0xF) != 1) {
+		log(LOG_ERROR, "ARMDebug: Default access port is not an AHB-AP as expected! (IDR: %08x)", idr);
+		return false;
 	}
 
 	// Set up default CSW values for the AHB-AP. Use 32-bit accesses with auto-increment.
-	int csw = (1 << 6) |  // Device enable
-	          (1 << 4) |  // Increment by a single word
-	          (2 << 0) ;  // 32-bit data size
-	ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_CONTROLSTATUS, &csw);
-	if (ret < 0) return ret;
+	uint32_t csw = (1 << 6) |  // Device enable
+	               (1 << 4) |  // Increment by a single word
+	               (2 << 0) ;  // 32-bit data size
+	if (!apWrite(0, MEM_CSW, csw))
+		return false;
 
-	return 0;
+	return true;
 }
 
-void ARMDebug::end()
-{
-	if (libswdctx) {
-		free(libswdctx->driver);
-		libswdctx->driver = 0;
-		libswd_deinit(libswdctx);
-		libswdctx = 0;
-	}
-}
-
-int ARMDebug::memStore(uint32_t addr, uint32_t data)
+bool ARMDebug::memStore(uint32_t addr, uint32_t data)
 {
 	return memStore(addr, &data, 1);
 }
 
-int ARMDebug::memLoad(uint32_t addr, uint32_t &data)
+bool ARMDebug::memLoad(uint32_t addr, uint32_t &data)
 {
 	return memLoad(addr, &data, 1);
 }
 
-int ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
+bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 {
-	int ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_TAR, (int*) &addr);
-	if (ret < 0) return ret;
+	if (!apWrite(0, MEM_TAR, addr))
+		return false;
 
 	while (count) {
-		ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_DRW, (int*) data);
-		if (ret < 0) return ret;
+		log(LOG_TRACE, "MEM Store [%08x] %08x", addr, *data);
+
+		if (!apWrite(0, MEM_DRW, *data))
+			return false;
+
 		data++;
+		addr++;
 		count--;
 	}
 
-	return 0;
+	return true;
 }
 
-int ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
+bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 {
-	int ret = libswd_ap_write(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_TAR, (int*) &addr);
-	if (ret < 0) return ret;
+	if (!apWrite(0, MEM_TAR, addr))
+		return false;
 
 	while (count) {
-		int *ptr;
-		ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, AHB_AP_DRW, &ptr);
-		if (ret < 0) return ret;
-		*data = *ptr;
+		if (!apRead(0, MEM_DRW, *data))
+			return false;
+
+		log(LOG_TRACE, "MEM Load  [%08x] %08x", addr, *data);
+
 		data++;
+		addr++;
 		count--;
 	}
 
-	return 0;
+	return true;
 }
 
-void ARMDebug::mosi_transfer(uint32_t data, unsigned nBits)
+bool ARMDebug::apWrite(unsigned accessPort, unsigned addr, uint32_t data)
 {
+	return dpSelect(accessPort, addr) && dpWrite(addr, true, data);
+}
+
+bool ARMDebug::apRead(unsigned accessPort, unsigned addr, uint32_t &data)
+{
+	return dpSelect(accessPort, addr) && dpRead(addr, true, data);
+}
+
+bool ARMDebug::dpSelect(unsigned accessPort, unsigned addr)
+{
+	/*
+	 * Select a new access port and/or a bank (high nybble of AP address).
+	 * This is cached, so redundant dpSelect()s have no effect.
+	 */
+
+	uint32_t select = (accessPort << 24) | (addr & 0xF0);
+	if (select != cache.select) {
+		if (!dpWrite(SELECT, false, select))
+			return false;
+		cache.select = select;
+	}
+	return true;
+}
+
+bool ARMDebug::dpWrite(unsigned addr, bool APnDP, uint32_t data)
+{
+	unsigned retries = 10;
+	unsigned ack;
+	log(LOG_TRACE, "DP  Write [%x:%x] %08x", addr, APnDP, data);
+
+	do {
+		wireWrite(packHeader(addr, APnDP, false), 8);
+		wireReadTurnaround();
+		ack = wireRead(3);
+		wireWriteTurnaround();
+
+		switch (ack) {
+			case 1:		// Success
+				wireWrite(data, 32);
+				wireWrite(evenParity(data), 1);
+				wireWrite(0, 8);
+				return true;
+
+			case 2:		// WAIT
+				wireWrite(0, 8);
+				retries--;
+				break;
+
+			case 4:		// FAULT
+				wireWrite(0, 8);
+				log(LOG_ERROR, "FAULT response during write (addr=%x APnDP=%d data=%08x)",
+					addr, APnDP, data);
+				return false;
+
+			default:
+				wireWrite(0, 8);
+				log(LOG_ERROR, "PROTOCOL ERROR response during write (ack=%x addr=%x APnDP=%d data=%08x)",
+					ack, addr, APnDP, data);
+				return false;
+		}
+	} while (retries--);
+
+	log(LOG_ERROR, "WAIT timeout during write (addr=%x APnDP=%d data=%08x)",
+		addr, APnDP, data);
+	return false;
+}
+
+bool ARMDebug::dpRead(unsigned addr, bool APnDP, uint32_t &data)
+{
+	unsigned retries = 10;
+	unsigned ack;
+
+	do {
+		wireWrite(packHeader(addr, APnDP, true), 8);
+		wireReadTurnaround();
+		ack = wireRead(3);
+
+		switch (ack) {
+			case 1:		// Success
+				data = wireRead(32);
+				if (wireRead(1) != evenParity(data)) {
+					wireWriteTurnaround();
+					wireWrite(0, 8);
+					log(LOG_ERROR, "PARITY ERROR during read (addr=%x APnDP=%d data=%08x)",
+						addr, APnDP, data);			
+					return false;
+				}
+				wireWriteTurnaround();
+				wireWrite(0, 8);
+				log(LOG_TRACE, "DP  Read  [%x:%x] %08x", addr, APnDP, data);
+				return true;
+
+			case 2:		// WAIT
+				wireWriteTurnaround();
+				wireWrite(0, 8);
+				retries--;
+				break;
+
+			case 4:		// FAULT
+				wireWriteTurnaround();
+				wireWrite(0, 8);
+				log(LOG_ERROR, "FAULT response during read (addr=%x APnDP=%d)", addr, APnDP);
+				return false;
+
+			default:
+				wireWriteTurnaround();
+				wireWrite(0, 8);
+				log(LOG_ERROR, "PROTOCOL ERROR response during read (ack=%x addr=%x APnDP=%d)", ack, addr, APnDP);
+				return false;
+		}
+	} while (retries--);
+
+	log(LOG_ERROR, "WAIT timeout during read (addr=%x APnDP=%d)", addr, APnDP);
+	return false;
+}
+
+uint8_t ARMDebug::packHeader(unsigned addr, bool APnDP, bool RnW)
+{
+	bool a2 = (addr >> 2) & 1;
+	bool a3 = (addr >> 3) & 1;
+	bool parity = APnDP ^ RnW ^ a2 ^ a3;
+	return (1 << 0)      		 |  // Start
+	       (APnDP << 1) 		 |
+	       (RnW << 2)   		 |
+	       ((addr & 0xC) << 1)   |
+	       (parity << 5)         |
+	       (1 << 7)              ;  // Park
+}
+
+bool ARMDebug::evenParity(uint32_t word)
+{
+	word = (word & 0xFFFF) ^ (word >> 16);
+	word = (word & 0xFF) ^ (word >> 8);
+	word = (word & 0xF) ^ (word >> 4);
+	word = (word & 0x3) ^ (word >> 2);
+	word = (word & 0x1) ^ (word >> 1);
+	return word;
+}
+
+void ARMDebug::wireWrite(uint32_t data, unsigned nBits)
+{
+	log(LOG_TRACE, "SWD Write %08x (%d)", data, nBits);
+
 	while (nBits--) {
-		digitalWrite(clockPin, LOW);
 		digitalWrite(dataPin, data & 1);
 		data >>= 1;
+		digitalWrite(clockPin, LOW);
 		digitalWrite(clockPin, HIGH);
 	}
 }
 
-uint32_t ARMDebug::miso_transfer(unsigned nBits)
+uint32_t ARMDebug::wireRead(unsigned nBits)
 {
 	uint32_t result = 0;
 	uint32_t mask = 1;
-	while (nBits--) {
-		digitalWrite(clockPin, LOW);
+	unsigned count = nBits;
+
+	while (count--) {
 		if (digitalRead(dataPin)) {
 			result |= mask;
 		}
 		mask <<= 1;
+		digitalWrite(clockPin, LOW);
 		digitalWrite(clockPin, HIGH);
 	}
+
+	log(LOG_TRACE, "SWD Read  %08x (%d)", result, nBits);
 	return result;
 }
 
-void ARMDebug::mosi_trn(unsigned nClocks)
+void ARMDebug::wireWriteTurnaround()
 {
+	log(LOG_TRACE, "SWD Write trn");
+
 	digitalWrite(dataPin, HIGH);
 	pinMode(dataPin, INPUT_PULLUP);
-	while (nClocks--) {
-		digitalWrite(clockPin, LOW);
-		digitalWrite(clockPin, HIGH);
-	}
+	digitalWrite(clockPin, LOW);
+	digitalWrite(clockPin, HIGH);
 	pinMode(dataPin, OUTPUT);
 }
 
-void ARMDebug::miso_trn(unsigned nClocks)
+void ARMDebug::wireReadTurnaround()
 {
+	log(LOG_TRACE, "SWD Read  trn");
+
 	digitalWrite(dataPin, HIGH);
 	pinMode(dataPin, INPUT_PULLUP);
-	while (nClocks--) {
-		digitalWrite(clockPin, LOW);
-		digitalWrite(clockPin, HIGH);
+	digitalWrite(clockPin, LOW);
+	digitalWrite(clockPin, HIGH);
+}
+
+void ARMDebug::log(int level, const char *fmt, ...)
+{
+	if (level <= logLevel && Serial) {
+		va_list ap;
+		char buffer[256];
+
+		va_start(ap, fmt);
+		int ret = vsnprintf(buffer, sizeof buffer, fmt, ap);
+		va_end(ap);
+
+		Serial.println(buffer);
 	}
-}
-
-extern "C" int
-libswd_log(libswd_ctx_t *libswdctx, libswd_loglevel_t loglevel, char *msg, ...)
-{
-	if (loglevel < LIBSWD_LOGLEVEL_MIN && loglevel > LIBSWD_LOGLEVEL_MAX)
-		return LIBSWD_ERROR_LOGLEVEL;
-
-	if (loglevel > libswdctx->config.loglevel)
-		return LIBSWD_OK;
-
-	if (!Serial)
-		return LIBSWD_OK;
-
-	va_list ap;
-	char buffer[256];
-
-	va_start(ap, msg);
-	int ret = vsnprintf(buffer, sizeof buffer, msg, ap);
-	va_end(ap);
-
-	Serial.print(buffer);
-	return ret;
-}
-
-extern "C" int
-libswd_drv_mosi_8(libswd_ctx_t *libswdctx, libswd_cmd_t *cmd, char *data, int bits, int nLSBfirst)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	if (nLSBfirst == LIBSWD_DIR_MSBFIRST) {
-		unsigned char lData = *data;
-		libswd_bin8_bitswap(&lData, bits);
-		self->mosi_transfer(lData, bits);
-	} else {
-		self->mosi_transfer(*data, bits);
-	}
-	return bits;
-}
-
-extern "C" int
-libswd_drv_mosi_32(libswd_ctx_t *libswdctx, libswd_cmd_t *cmd, int *data, int bits, int nLSBfirst)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	if (nLSBfirst == LIBSWD_DIR_MSBFIRST) {
-		unsigned int lData = *data;
-		libswd_bin32_bitswap(&lData, bits);
-		self->mosi_transfer(lData, bits);
-	} else {
-		self->mosi_transfer(*data, bits);
-	}
-	return bits;
-}
-
-extern "C" int
-libswd_drv_miso_8(libswd_ctx_t *libswdctx, libswd_cmd_t *cmd, char *data, int bits, int nLSBfirst)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	*data = self->miso_transfer(bits);
-	if (nLSBfirst == LIBSWD_DIR_MSBFIRST)
-		libswd_bin8_bitswap((unsigned char*) data, bits);
-	return bits;
-}
-
-extern "C" int
-libswd_drv_miso_32(libswd_ctx_t *libswdctx, libswd_cmd_t *cmd, int *data, int bits, int nLSBfirst)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	*data = self->miso_transfer(bits);
-	if (nLSBfirst == LIBSWD_DIR_MSBFIRST)
-		libswd_bin32_bitswap((unsigned int*) data, bits);
-	return bits;
-}
-
-extern "C" int
-libswd_drv_mosi_trn(libswd_ctx_t *libswdctx, int clks)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	self->mosi_trn(clks);
-	return clks;
-}
-
-extern "C" int
-libswd_drv_miso_trn(libswd_ctx_t *libswdctx, int clks)
-{
-	ARMDebug *self = (ARMDebug*) libswdctx->driver->device;
-	self->miso_trn(clks);
-	return clks;
 }
