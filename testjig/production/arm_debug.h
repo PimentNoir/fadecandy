@@ -54,10 +54,8 @@ public:
     bool memLoad(uint32_t addr, uint32_t &data);
     bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
 
-    // CPU core operations
-    bool halt();
-    bool unhalt();
-    bool sysReset();
+    // Poll for an expected value
+    bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
 
 private:
     uint8_t clockPin, dataPin;
@@ -89,9 +87,40 @@ protected:
     // Debug port layer
     bool dpWrite(unsigned addr, bool APnDP, uint32_t data);
     bool dpRead(unsigned addr, bool APnDP, uint32_t &data);
-    bool dpSelect(unsigned accessPort, unsigned addr);
+    bool dpSelect(unsigned addr);
 
     // Access port layer
-    bool apWrite(unsigned accessPort, unsigned addr, uint32_t data);
-    bool apRead(unsigned accessPort, unsigned addr, uint32_t &data);
+    bool apWrite(unsigned addr, uint32_t data);
+    bool apRead(unsigned addr, uint32_t &data);
+
+    // Poll for an expected value
+    bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
+    bool apReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = 32);
+
+    // Debug port registers
+    enum DebugPortReg {
+        ABORT = 0x0,
+        IDCODE = 0x0,
+        CTRLSTAT = 0x4,
+        SELECT = 0x8,
+        RDBUFF = 0xC
+    };
+
+    // CTRL/STAT bits
+    enum CtrlStatBit {
+        CSYSPWRUPACK = 1 << 31,
+        CSYSPWRUPREQ = 1 << 30,
+        CDBGPWRUPACK = 1 << 29,
+        CDBGPWRUPREQ = 1 << 28,
+        CDBGRSTACK   = 1 << 27,
+        CDBGRSTREQ   = 1 << 26
+    };
+
+    // Memory Access Port registers
+    enum MemPortReg {
+        MEM_CSW = 0x00,
+        MEM_TAR = 0x04,
+        MEM_DRW = 0x0C,
+        MEM_IDR = 0xFC,
+    };
 };

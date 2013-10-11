@@ -6,13 +6,13 @@
  * Final OK / Error status shows up on WS2811 LEDs attached to the DUT.
  */
 
-#include "arm_debug.h"
+#include "arm_kinetis_debug.h"
 
 const unsigned buttonPin = 2;
 const unsigned ledPin = 13;
 const unsigned swclkPin = 3;
 const unsigned swdioPin = 4;
-ARMDebug target;
+ARMKinetisDebug target;
 
 void setup()
 {
@@ -37,32 +37,9 @@ void loop()
     }
     digitalWrite(ledPin, HIGH);
 
-    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_MEM))
+    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_DP))
         return;
-    if (!target.halt())
+    if (!target.startup())
         return;
-    if (!target.sysReset())
-        return;
-
-    uint32_t data;
-    if (!target.memLoad(0x00000000, data))
-        return;
-    if (!target.memLoad(0x00000000, data))
-        return;
-    if (!target.memLoad(0x00000004, data))
-        return;
-    if (!target.memLoad(0x00000004, data))
-        return;
-    if (!target.memLoad(0x00000008, data))
-        return;
-    if (!target.memLoad(0x00000008, data))
-        return;
-    if (!target.memLoad(0x20000000, data))
-        return;
-
-    data ^= 0xFFFFFFFF;
-    if (!target.memStore(0x20000000, data))
-        return;
-    if (!target.memLoad(0x20000000, data))
-        return;
+    target.flashMassErase();
 }

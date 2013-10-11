@@ -25,33 +25,6 @@
 #include <stdarg.h>
 #include "arm_debug.h"
 
-// Debug port registers
-enum DebugPortReg {
-    ABORT = 0x0,
-    IDCODE = 0x0,
-    CTRLSTAT = 0x4,
-    SELECT = 0x8,
-    RDBUFF = 0xC
-};
-
-// CTRL/STAT bits
-enum CtrlStatBit {
-    CSYSPWRUPACK = 1 << 31,
-    CSYSPWRUPREQ = 1 << 30,
-    CDBGPWRUPACK = 1 << 29,
-    CDBGPWRUPREQ = 1 << 28,
-    CDBGRSTACK   = 1 << 27,
-    CDBGRSTREQ   = 1 << 26
-};
-
-// Memory Access Port registers
-enum MemPortReg {
-    MEM_CSW = 0x00,
-    MEM_TAR = 0x04,
-    MEM_DRW = 0x0C,
-    MEM_IDR = 0xFC,
-};
-
 
 bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
 {
@@ -94,16 +67,8 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
         return false;
 
     // Wait for power-up acknowledgment
-    uint32_t expected = CDBGPWRUPACK | CSYSPWRUPACK;
-    unsigned retries = 4;
     uint32_t ctrlstat;
-    while (retries--) {
-        if (!dpRead(CTRLSTAT, false, ctrlstat))
-            return false;
-        if ((ctrlstat & expected) == expected)
-            break;
-    }
-    if (!retries) {
+    if (!dpReadPoll(CTRLSTAT, ctrlstat, CDBGPWRUPACK | CSYSPWRUPACK, -1)) {
         log(LOG_ERROR, "ARMDebug: Debug port failed to power on (CTRLSTAT: %08x)", ctrlstat);
         return false;
     }
@@ -113,15 +78,7 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
         return false;
 
     // Wait for reset acknowledgment
-    expected = CDBGPWRUPACK | CSYSPWRUPACK | CDBGRSTACK;
-    retries = 4;
-    while (retries--) {
-        if (!dpRead(CTRLSTAT, false, ctrlstat))
-            return false;
-        if ((ctrlstat & expected) == expected)
-            break;
-    }
-    if (!retries) {
+    if (!dpReadPoll(CTRLSTAT, ctrlstat, CDBGPWRUPACK | CSYSPWRUPACK | CDBGRSTACK, -1)) {
         log(LOG_ERROR, "ARMDebug: Debug port failed to reset (CTRLSTAT: %08x)", ctrlstat);
         return false;
     }
@@ -132,18 +89,18 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
 
     // Make sure the default debug access port is an AHB (memory bus) port, like we expect
     uint32_t idr;
-    if (!apRead(0, MEM_IDR, idr))
+    if (!apRead(MEM_IDR, idr))
         return false;
     if ((idr & 0xF) != 1) {
         log(LOG_ERROR, "ARMDebug: Default access port is not an AHB-AP as expected! (IDR: %08x)", idr);
         return false;
     }
 
-    // Set up default CSW values for the AHB-AP. Use 32-bit accesses with auto-increment.
+    // Set up default CSW values for the AHB-AP.
     uint32_t csw = (1 << 6) |  // Device enable
-                   (1 << 4) |  // Increment by a single word
+                   (0 << 4) |  // Auto-increment off
                    (2 << 0) ;  // 32-bit data size
-    if (!apWrite(0, MEM_CSW, csw))
+    if (!apWrite(MEM_CSW, csw))
         return false;
 
     return true;
@@ -161,13 +118,13 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t &data)
 
 bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 {
-    if (!apWrite(0, MEM_TAR, addr))
+    if (!apWrite(MEM_TAR, addr))
         return false;
 
     while (count) {
         log(LOG_TRACE_MEM, "MEM Store [%08x] %08x", addr, *data);
 
-        if (!apWrite(0, MEM_DRW, *data))
+        if (!apWrite(MEM_DRW, *data))
             return false;
 
         data++;
@@ -180,11 +137,11 @@ bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 
 bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 {
-    if (!apWrite(0, MEM_TAR, addr))
+    if (!apWrite(MEM_TAR, addr))
         return false;
 
     while (count) {
-        if (!apRead(0, MEM_DRW, *data))
+        if (!apRead(MEM_DRW, *data))
             return false;
 
         log(LOG_TRACE_MEM, "MEM Load  [%08x] %08x", addr, *data);
@@ -197,25 +154,70 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
     return true;
 }
 
-bool ARMDebug::apWrite(unsigned accessPort, unsigned addr, uint32_t data)
+bool ARMDebug::apWrite(unsigned addr, uint32_t data)
 {
-    return dpSelect(accessPort, addr) && dpWrite(addr, true, data);
+    return dpSelect(addr) && dpWrite(addr, true, data);
 }
 
-bool ARMDebug::apRead(unsigned accessPort, unsigned addr, uint32_t &data)
+bool ARMDebug::apRead(unsigned addr, uint32_t &data)
 {
     // XXX: Extra dummy read here seems to be necessary. Why? What bug is this covering up?
-    return dpSelect(accessPort, addr) && dpRead(addr, true, data) && dpRead(addr, true, data);
+    return dpSelect(addr) && dpRead(addr, true, data) && dpRead(addr, true, data);
 }
 
-bool ARMDebug::dpSelect(unsigned accessPort, unsigned addr)
+bool ARMDebug::dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries)
+{
+    expected &= mask;
+    do {
+        if (!dpRead(addr, false, data))
+            return false;
+        if ((data & mask) == expected)
+            return true;
+    } while (retries--);
+
+    log(LOG_ERROR, "ARMDebug: Timed out while polling DP ([%08x] & %08x == %08x). Current value: %08x",
+        addr, mask, expected, data);
+    return false;
+}
+
+bool ARMDebug::apReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries)
+{
+    expected &= mask;
+    do {
+        if (!apRead(addr, data))
+            return false;
+        if ((data & mask) == expected)
+            return true;
+    } while (retries--);
+
+    log(LOG_ERROR, "ARMDebug: Timed out while polling AP ([%08x] & %08x == %08x). Current value: %08x",
+        addr, mask, expected, data);
+    return false;
+}
+
+bool ARMDebug::memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries)
+{
+    expected &= mask;
+    do {
+        if (!memLoad(addr, data))
+            return false;
+        if ((data & mask) == expected)
+            return true;
+    } while (retries--);
+
+    log(LOG_ERROR, "ARMDebug: Timed out while polling MEM ([%08x] & %08x == %08x). Current value: %08x",
+        addr, mask, expected, data);
+    return false;
+}
+
+bool ARMDebug::dpSelect(unsigned addr)
 {
     /*
-     * Select a new access port and/or a bank (high nybble of AP address).
-     * This is cached, so redundant dpSelect()s have no effect.
+     * Select a new access port and/or a bank. Uses only the high byte and
+     * second nybble of 'addr'. This is cached, so redundant dpSelect()s have no effect.
      */
 
-    uint32_t select = (accessPort << 24) | (addr & 0xF0);
+    uint32_t select = addr & 0xFF0000F0;
     if (select != cache.select) {
         if (!dpWrite(SELECT, false, select))
             return false;
@@ -448,23 +450,4 @@ void ARMDebug::log(int level, const char *fmt, ...)
 
         Serial.println(buffer);
     }
-}
-
-bool ARMDebug::halt()
-{
-    // Write to DHCSR (Debug Halting Control and Status Register)
-    // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337e/CEGCJAHJ.html
-    return memStore(0xE000EDF0, 0xA05F0003);
-}
-
-bool ARMDebug::unhalt()
-{
-    return memStore(0xE000EDF0, 0xA05F0000);
-}
-
-bool ARMDebug::sysReset()
-{
-    // Write to AIRCR (Application Interrupt and Reset Control Register)
-    // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihehdge.html
-    return memStore(0xE000ED0C, 0x05FA0004);
 }
