@@ -32,10 +32,24 @@ Pin | Description
 --- | ----------------------------------
 Gnd | Shared ground
 Vin | +5V power for testjig itself
-0   | Teesny RX, Fadecandy TX
+0   | Teensy RX, Fadecandy TX
 1   | Teensy TX, Fadecandy RX
 2   | To ground via green button
+3   | Fadecandy TCLK (SWCLK)
+4   | Fadecandy TMS (SWDIO)
 
+Testjig Firmwares
+-----------------
+
+* `production`
+	* Programs bootloader and initial firmware image
+	* Runs electrical tests
+	* Communicates with the DUT processor using Serial Wire Debug
+* `serial_passthrough`
+	* Teensyduino sketch
+    * Appears as a USB serial port device
+	* Passes through access to the DUT serial port
+	* When the green button is held, acts as a loopback for the DUT serial port, as one way to enter FC-Boot.
 
 Contact
 -------
