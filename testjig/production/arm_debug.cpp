@@ -23,55 +23,77 @@
 
 #include <Arduino.h>
 #include "arm_debug.h"
-extern "C" {
-	#include "libswd.h"
-}
 
-void ARMDebug::begin(unsigned clockPin, unsigned dataPin)
+
+int ARMDebug::begin(unsigned clockPin, unsigned dataPin, libswd_loglevel_t logLevel)
 {
-	libswd_ctx_t *libswdctx;
-	libswdctx = libswd_init();
-	context = libswdctx;
+	int *idcode;
+	int ret;
+
+	end();
 
 	this->clockPin = clockPin;
 	this->dataPin = dataPin;
-	libswdctx->driver->device = this;
+	pinMode(clockPin, OUTPUT);
+	pinMode(dataPin, INPUT_PULLUP);
 
-	pinMode(this->clockPin, OUTPUT);
-	pinMode(this->dataPin, INPUT_PULLUP);
+	libswdctx = libswd_init();
+	libswdctx->driver->device = this;
+	libswdctx->config.autofixerrors = false;
+	libswd_log_level_set(libswdctx, logLevel);
+
+ 	ret = libswd_dap_detect(libswdctx, LIBSWD_OPERATION_EXECUTE, &idcode);
+	if (ret >= 0) {
+		libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
+			"Found ARM processor. IDCODE: 0x%X (%s)\n",
+			*idcode, libswd_bin32_string(idcode));
+	}
+
+	libswd_cmdq_free_head(libswdctx->cmdq);
+	return ret;
 }
 
 void ARMDebug::end()
 {
-	libswd_ctx_t *libswdctx = (libswd_ctx_t*) this->context;
-	libswd_deinit(libswdctx);
-	this->context = 0;
+	if (libswdctx) {
+		free(libswdctx->driver);
+		libswdctx->driver = 0;
+		libswd_deinit(libswdctx);
+		libswdctx = 0;
+	}
 }
 
-bool ARMDebug::identify()
+int ARMDebug::memStore(uint32_t addr, uint32_t data, uint8_t accessPort)
 {
-	libswd_ctx_t *libswdctx = (libswd_ctx_t*) this->context;
-	int *idcode;
+	return 0;
+}
+
+int ARMDebug::memLoad(uint32_t addr, uint32_t &data, uint8_t accessPort)
+{
+	int ret = 0;
+
+	ret = libswd_ap_select(libswdctx, LIBSWD_OPERATION_EXECUTE, accessPort);
+	if (ret >= 0) {
+
+		int *result = 0;
+		ret = libswd_ap_read(libswdctx, LIBSWD_OPERATION_EXECUTE, 0xFC, &result);
+		if (ret >= 0) {
+			libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
+				"FC -> %p %08x\n", result, *result);
+		}
+	}
 
 	libswd_cmdq_free_head(libswdctx->cmdq);
-
-	if (libswd_dap_detect(libswdctx, LIBSWD_OPERATION_EXECUTE, &idcode) < 0)
-		return false;
-
-	libswd_log(libswdctx, LIBSWD_LOGLEVEL_NORMAL,
-		"Found ARM processor. IDCODE: 0x%X (%s)\n",
-		*idcode, libswd_bin32_string(idcode));
-
-	return true;
+	return ret;
 }
 
 void ARMDebug::mosi_transfer(uint32_t data, unsigned nBits)
 {
 	while (nBits--) {
-		digitalWrite(this->clockPin, LOW);
-		digitalWrite(this->dataPin, data & 1);
+		digitalWrite(clockPin, LOW);
+		digitalWrite(dataPin, data & 1);
 		data >>= 1;
-		digitalWrite(this->clockPin, HIGH);
+		digitalWrite(clockPin, HIGH);
 	}
 }
 
@@ -80,33 +102,33 @@ uint32_t ARMDebug::miso_transfer(unsigned nBits)
 	uint32_t result = 0;
 	uint32_t mask = 1;
 	while (nBits--) {
-		digitalWrite(this->clockPin, LOW);
-		if (digitalRead(this->dataPin)) {
+		digitalWrite(clockPin, LOW);
+		if (digitalRead(dataPin)) {
 			result |= mask;
 		}
 		mask <<= 1;
-		digitalWrite(this->clockPin, HIGH);
+		digitalWrite(clockPin, HIGH);
 	}
 	return result;
 }
 
 void ARMDebug::mosi_trn(unsigned nClocks)
 {
-	pinMode(this->dataPin, INPUT_PULLUP);
+	pinMode(dataPin, INPUT_PULLUP);
 	while (nClocks--) {
-		digitalWrite(this->clockPin, LOW);
-		digitalWrite(this->clockPin, HIGH);
+		digitalWrite(clockPin, LOW);
+		digitalWrite(clockPin, HIGH);
 	}
-	pinMode(this->dataPin, OUTPUT);
+	pinMode(dataPin, OUTPUT);
 }
 
 void ARMDebug::miso_trn(unsigned nClocks)
 {
-	digitalWrite(this->dataPin, HIGH);
-	pinMode(this->dataPin, INPUT_PULLUP);
+	digitalWrite(dataPin, HIGH);
+	pinMode(dataPin, INPUT_PULLUP);
 	while (nClocks--) {
-		digitalWrite(this->clockPin, LOW);
-		digitalWrite(this->clockPin, HIGH);
+		digitalWrite(clockPin, LOW);
+		digitalWrite(clockPin, HIGH);
 	}
 }
 

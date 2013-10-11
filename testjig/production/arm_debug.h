@@ -25,19 +25,36 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+extern "C" {
+	#include "libswd.h"
+}
+
+
 class ARMDebug
 {
 public:
-	// Init or de-init the debug interface itself
-	void begin(unsigned clockPin, unsigned dataPin);
+	/**
+	 * (Re)initialize the debug interface, and identify the connected chip.
+	 * This resets the target chip, putting it in SWD mode and logging its
+	 * identity.
+	 *
+	 * All functions here return >= 0 on success, or a negative libswd error 
+	 * code on failure. Errors are also logged, so generally you don't need
+	 * to do that yourself.
+	 */
+	int begin(unsigned clockPin, unsigned dataPin, libswd_loglevel_t logLevel = LIBSWD_LOGLEVEL_NORMAL);
+
+	/// Deinitialize the debug interface, if it's been initialized.
 	void end();
 
-	/*
-	 * Identify the connected chip. Tries to reset it, put it in SWD mode,
-	 * and log its identity. If successful, this returns 'true'. If something is wrong
-	 * (the chip isn't responding) returns 'false', and logs an error.
-	 */
-	bool identify();
+	/// Memory store, using a memory access port
+	int memStore(uint32_t addr, uint32_t data, uint8_t accessPort = CortexM_AHB_AP);
+
+	/// Memory load, using a memory access port
+	int memLoad(uint32_t addr, uint32_t &data, uint8_t accessPort = CortexM_AHB_AP);
+
+	// Memory access port (MEM-AP) types.
+	static const uint8_t CortexM_AHB_AP = 0x11;		// AHB-AP on ARM Cortex-M parts
 
 	// Low-level interface (LSB-first)
 	void mosi_transfer(uint32_t data, unsigned nBits);
@@ -47,5 +64,5 @@ public:
 
 private:
 	uint8_t clockPin, dataPin;
-	void *context;	 // libswd context (opaque type)
+	libswd_ctx_t *libswdctx;
 };

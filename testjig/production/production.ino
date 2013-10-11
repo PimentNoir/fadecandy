@@ -10,21 +10,22 @@
 
 const unsigned buttonPin = 2;
 const unsigned ledPin = 13;
-ARMDebug arm;
+const unsigned swclkPin = 3;
+const unsigned swdioPin = 4;
+ARMDebug target;
 
 void setup()
 {
 	pinMode(ledPin, OUTPUT);
 	pinMode(buttonPin, INPUT_PULLUP);
 	Serial.begin(115200);
-	arm.begin(3, 4);
 }
 
 void loop()
 {
 	Serial.println("");
 	Serial.println("--------------------------------------------");
-	Serial.println(" Fadecandy Test Jig : Press button to start");
+	Serial.println(" Fadecanday Test Jig : Press button to start");
 	Serial.println("--------------------------------------------");
 	Serial.println("");
 
@@ -35,5 +36,9 @@ void loop()
 	}
 	digitalWrite(ledPin, HIGH);
 
-	arm.identify();
+	if (target.begin(swclkPin, swdioPin, LIBSWD_LOGLEVEL_MAX) < 0)
+		return;
+
+	uint32_t data;
+	target.memLoad(0x000000, data);
 }
