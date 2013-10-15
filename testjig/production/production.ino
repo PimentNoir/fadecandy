@@ -48,9 +48,6 @@ void loop()
     if (!target.flashEraseAndProgram(firmwareData, firmwareSectorCount))
         return;
 
-    // Hex dump programmed firmware a little
-    target.hexDump(0, 128);
-
     /*
      * Try blinking an LED on the target!
      */

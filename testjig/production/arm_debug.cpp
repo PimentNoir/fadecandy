@@ -31,6 +31,7 @@ bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
     this->clockPin = clockPin;
     this->dataPin = dataPin;
     this->logLevel = logLevel;
+    fastPins = dataPin == ARMDEBUG_FAST_DATA_PIN && clockPin == ARMDEBUG_FAST_CLOCK_PIN;
     pinMode(clockPin, OUTPUT);
     pinMode(dataPin, INPUT_PULLUP);
 
@@ -573,11 +574,25 @@ void ARMDebug::wireWrite(uint32_t data, unsigned nBits)
 {
     log(LOG_TRACE_SWD, "SWD Write %08x (%d)", data, nBits);
 
-    while (nBits--) {
-        digitalWrite(dataPin, data & 1);
-        data >>= 1;
-        digitalWrite(clockPin, LOW);
-        digitalWrite(clockPin, HIGH);
+    if (fastPins) {
+        // Fast path
+
+        while (nBits--) {
+            digitalWriteFast(ARMDEBUG_FAST_DATA_PIN, data & 1);
+            digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, LOW);
+            data >>= 1;
+            digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, HIGH);
+        }
+
+    } else {
+        // Slow (generic) path
+
+        while (nBits--) {
+            digitalWrite(dataPin, data & 1);
+            digitalWrite(clockPin, LOW);
+            data >>= 1;
+            digitalWrite(clockPin, HIGH);
+        }
     }
 }
 
@@ -593,13 +608,29 @@ uint32_t ARMDebug::wireRead(unsigned nBits)
     uint32_t mask = 1;
     unsigned count = nBits;
 
-    while (count--) {
-        if (digitalRead(dataPin)) {
-            result |= mask;
+    if (fastPins) {
+        // Fast path
+
+        while (count--) {
+            if (digitalReadFast(ARMDEBUG_FAST_DATA_PIN)) {
+                result |= mask;
+            }
+            digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, LOW);
+            mask <<= 1;
+            digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, HIGH);
         }
-        mask <<= 1;
-        digitalWrite(clockPin, LOW);
-        digitalWrite(clockPin, HIGH);
+
+    } else {
+        // Slow (generic) path
+
+        while (count--) {
+            if (digitalRead(dataPin)) {
+                result |= mask;
+            }
+            digitalWrite(clockPin, LOW);
+            mask <<= 1;
+            digitalWrite(clockPin, HIGH);
+        }
     }
 
     log(LOG_TRACE_SWD, "SWD Read  %08x (%d)", result, nBits);
@@ -610,21 +641,46 @@ void ARMDebug::wireWriteTurnaround()
 {
     log(LOG_TRACE_SWD, "SWD Write trn");
 
-    digitalWrite(dataPin, HIGH);
-    pinMode(dataPin, INPUT_PULLUP);
-    digitalWrite(clockPin, LOW);
-    digitalWrite(clockPin, HIGH);
-    pinMode(dataPin, OUTPUT);
+    if (fastPins) {
+        // Fast path
+
+        digitalWriteFast(ARMDEBUG_FAST_DATA_PIN, HIGH);
+        pinMode(ARMDEBUG_FAST_DATA_PIN, INPUT_PULLUP);
+        digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, LOW);
+        digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, HIGH);
+        pinMode(ARMDEBUG_FAST_DATA_PIN, OUTPUT);
+
+    } else {
+        // Slow (generic) path
+
+        digitalWrite(dataPin, HIGH);
+        pinMode(dataPin, INPUT_PULLUP);
+        digitalWrite(clockPin, LOW);
+        digitalWrite(clockPin, HIGH);
+        pinMode(dataPin, OUTPUT);
+    }
 }
 
 void ARMDebug::wireReadTurnaround()
 {
     log(LOG_TRACE_SWD, "SWD Read  trn");
 
-    digitalWrite(dataPin, HIGH);
-    pinMode(dataPin, INPUT_PULLUP);
-    digitalWrite(clockPin, LOW);
-    digitalWrite(clockPin, HIGH);
+    if (fastPins) {
+        // Fast path
+
+        digitalWriteFast(ARMDEBUG_FAST_DATA_PIN, HIGH);
+        pinMode(ARMDEBUG_FAST_DATA_PIN, INPUT_PULLUP);
+        digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, LOW);
+        digitalWriteFast(ARMDEBUG_FAST_CLOCK_PIN, HIGH);
+
+    } else {
+        // Slow (generic) path
+
+        digitalWrite(dataPin, HIGH);
+        pinMode(dataPin, INPUT_PULLUP);
+        digitalWrite(clockPin, LOW);
+        digitalWrite(clockPin, HIGH);
+    }
 }
 
 void ARMDebug::log(int level, const char *fmt, ...)

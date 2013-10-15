@@ -117,13 +117,12 @@ bool ARMKinetisDebug::debugHalt()
         setLogLevel(savedLogLevel);
     }
 
-    if (haltRetries) {
-        log(LOG_NORMAL, "CPU halt successful. Now in debug mode.");
-        return true;
+    if (!haltRetries) {
+        log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);
+        return false;
     }
 
-    log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);
-    return false;
+    return true;
 }
 
 bool ARMKinetisDebug::peripheralInit()
@@ -332,21 +331,64 @@ bool ARMKinetisDebug::flashEraseAndProgram(const uint32_t *image, unsigned numSe
     if (!flashMassErase())
         return false;
 
+    // Reset again after mass erase, for new protection bits to take effect
+    if (!reset())
+        return false;
+    if (!debugHalt())
+        return false;
+
     uint32_t address = 0;
-    while (numSectors) {
+    uint32_t count = numSectors;
+    const uint32_t *ptr = image;
 
-        log(LOG_NORMAL, "FLASH: Programming at %08x, %d sectors left", address, numSectors);
+    while (count) {
+        log(LOG_NORMAL, "FLASH: Programming sector at %08x", address);
 
-        if (!flashSectorBufferWrite(0, image, FLASH_SECTOR_SIZE/4))
+        if (!flashSectorBufferWrite(0, ptr, FLASH_SECTOR_SIZE/4))
             return false;
         if (!flashSectorProgram(address))
             return false;
 
-        numSectors--;
+        count--;
         address += FLASH_SECTOR_SIZE;
-        image += FLASH_SECTOR_SIZE/4;
+        ptr += FLASH_SECTOR_SIZE/4;
     }
 
-    log(LOG_NORMAL, "FLASH: Programming complete!");
+    // Another reset! Load new protection flags.
+    if (!reset())
+        return false;
+    if (!debugHalt())
+        return false;
+
+    // Verify flash memory
+
+    uint32_t buffer[FLASH_SECTOR_SIZE/4];
+    address = 0;
+    count = numSectors;
+    ptr = image;
+
+    while (count) {
+        log(LOG_NORMAL, "FLASH: Verifying sector at %08x", address);
+
+        if (!memLoad(address, buffer, FLASH_SECTOR_SIZE/4))
+            return false;
+
+        bool okay = true;
+        for (unsigned i = 0; i < FLASH_SECTOR_SIZE/4; i++) {
+            if (buffer[i] != ptr[i]) {
+                log(LOG_ERROR, "FLASH: Verify error at %08x. Expected %08x, actual %08x",
+                    address + i*4, ptr[i], buffer[i]);
+                okay = false;
+            }
+        }
+
+        if (!okay)
+            return false;
+        count--;
+        address += FLASH_SECTOR_SIZE;
+        ptr += FLASH_SECTOR_SIZE/4;
+    }
+
+    log(LOG_NORMAL, "FLASH: Programming successful!");
     return true;
 }

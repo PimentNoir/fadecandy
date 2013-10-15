@@ -25,6 +25,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * Compile-time optimization for a particular clock and data pin.
+ *
+ * Any clock/data pin will work, and we can support multiple debug interfaces,
+ * but this particular set will be faster due to compile-time inlining of
+ * bit-banging code.
+ */
+#define ARMDEBUG_FAST_CLOCK_PIN     3
+#define ARMDEBUG_FAST_DATA_PIN      4
+
 
 class ARMDebug
 {
@@ -74,7 +84,7 @@ public:
     void setLogLevel(LogLevel newLevel, LogLevel &prevLevel);
 
 private:
-    uint8_t clockPin, dataPin;
+    uint8_t clockPin, dataPin, fastPins;
     LogLevel logLevel;
 
     // Cached versions of ARM debug registers
