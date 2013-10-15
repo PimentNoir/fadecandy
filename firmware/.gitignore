@@ -3,6 +3,7 @@
 *.a
 *.d
 *.dfu
+*.hex
 
 # IDA Pro
 *.id0
