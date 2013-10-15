@@ -142,7 +142,7 @@ bool ARMDebug::memWait()
 
     uint32_t csw;
     if (!apReadPoll(MEM_CSW, csw, CSW_TRIN_PROG | CSW_DEVICE_EN, CSW_DEVICE_EN)) {
-        log(LOG_ERROR, "ARMDebug: Timed out waiting for memory port (CSW: %08x)", csw);
+        log(LOG_ERROR, "ARMDebug: Error while waiting for memory port");
         return false;
     }
 
