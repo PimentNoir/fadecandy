@@ -128,16 +128,27 @@ bool ARMKinetisDebug::flashMassErase()
     if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET | REG_MDM_CONTROL_MASS_ERASE))
         return false;
 
-    // Wait for the mass erase to complete
-    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_FLASH_ERASE_ACK, 0, 10000)) {
+    // Wait for the mass erase to begin (ACK bit set)
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_FLASH_ERASE_ACK, -1)) {
+        log(LOG_ERROR, "FLASH: Timed out waiting for mass erase to begin");
+        return false;
+    }
+
+    // Wait for it to complete (CONTROL bit cleared)
+    uint32_t control;
+    if (!apReadPoll(REG_MDM_CONTROL, control, REG_MDM_CONTROL_MASS_ERASE, 0, 10000)) {
         log(LOG_ERROR, "FLASH: Timed out waiting for mass erase to complete");
         return false;
     }
 
+    // Check status again
+    if (!apRead(REG_MDM_STATUS, status))
+        return false;
     if (!(status & REG_MDM_STATUS_FLASH_READY)) {
         log(LOG_ERROR, "FLASH: Flash controller not ready after mass erase");
         return false;
     }
 
+    log(LOG_NORMAL, "FLASH: Mass erase complete");
     return true;
 }

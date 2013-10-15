@@ -43,6 +43,9 @@ void loop()
     if (!target.startup())
         return;
 
+    if (!target.flashMassErase())
+        return;
+
     /*
      * Try blinking an LED on the target
      */
@@ -53,7 +56,8 @@ void loop()
     if (!target.memStore(REG_GPIOC_PDDR, 1 << 5))
         return;
 
-    while (target.memStore(REG_GPIOC_PTOR, 1 << 5)) {
+    for (unsigned i = 10; i; i--) {
+        target.memStore(REG_GPIOC_PTOR, 1 << 5);
         delay(100);
     }
 }
