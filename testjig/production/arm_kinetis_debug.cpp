@@ -29,13 +29,13 @@
 
 bool ARMKinetisDebug::startup()
 {
-    uint32_t idr;
-    uint32_t status;
+    return detect() && resetHalt() && peripheralInit();
+}
 
-    // System resets can be slow, give them more time than the default.
-    const unsigned resetRetries = 2000;
-
+bool ARMKinetisDebug::detect()
+{
     // Make sure we're on a compatible chip. The MDM-AP peripheral is Freescale-specific.
+    uint32_t idr;
     if (!apRead(REG_MDM_IDR, idr))
         return false;
     if (idr != 0x001C0000) {
@@ -43,51 +43,72 @@ bool ARMKinetisDebug::startup()
         return false;
     }
 
-    // Put the control register in a known state, and make sure we aren't already in the middle of a reset
-    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
-        return false;
-    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, -1, resetRetries))
-        return false;
+    return true;
+}
 
-    // System reset
-    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ))
-        return false;
-    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
-        return false;
-    if (!apWrite(REG_MDM_CONTROL, 0))
-        return false;
+bool ARMKinetisDebug::resetHalt()
+{
+    uint32_t status, dhcsr;
 
-    // Re-initialize the AHB-AP after reset
-    if (!initMemPort())
-        return false;
+    // System resets can be slow, give them more time than the default.
+    const unsigned resetRetries = 2000;
 
-    // Wait until the flash controller is ready & system is out of reset
-    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY, -1, resetRetries))
-        return false;
+    // Keep trying to reset/halt, in case we're fighting with watchdog timer :(
+    unsigned outerRetries = 50;
 
-    // Enable debugging
-    if (!memStore(REG_SCB_DHCSR, 0xA05F0001))
-        return false;
+    while (outerRetries--) {
 
-    // Halt the CPU core. Keep trying, in case we're fighting with watchdog reset :(
-    unsigned retries = 50;
-    uint32_t dhcsr;
-    do {
-        retries--;
+        // Put the control register in a known state, and make sure we aren't already in the middle of a reset
+        if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
+            continue;
+        if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, -1, resetRetries))
+            continue;
 
-        // Request a halt, and read back status
-        if (!memStore(REG_SCB_DHCSR, 0xA05F0003))
-            return false;
-        if (!memLoad(REG_SCB_DHCSR, dhcsr))
-            return false;
-    
-        // Wait for S_HALT acknowledgment bit
-    } while (!(dhcsr & (1 << 17)) && retries);
-    if (!retries) {
-        log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);
-        return false;
+        // System reset
+        if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ))
+            continue;
+        if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
+            continue;
+        if (!apWrite(REG_MDM_CONTROL, 0))
+            continue;
+
+        // Wait until the flash controller is ready & system is out of reset.
+        // Also wait for security bit to be cleared. Early in reset, the chip is determining
+        // its security status. When the security bit is set, AHB-AP is disabled.
+        if (!apReadPoll(REG_MDM_STATUS, status,
+                REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY | REG_MDM_STATUS_SYS_SECURITY,
+                REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY,
+                resetRetries))
+            continue;
+
+        // Re-initialize the AHB-AP after reset
+        if (!initMemPort())
+            continue;
+
+        // Enable debugging
+        if (!memStore(REG_SCB_DHCSR, 0xA05F0001))
+            continue;
+
+        unsigned haltRetries = 50;
+        while (haltRetries--) {
+            // Request a halt, and read back status
+            if (!memStore(REG_SCB_DHCSR, 0xA05F0003))
+                break;
+            if (!memLoad(REG_SCB_DHCSR, dhcsr))
+                break;
+            if (dhcsr & (1 << 17)) {
+                // Halted!
+                return true;
+            }
+        }
     }
 
+    log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);
+    return false;
+}
+
+bool ARMKinetisDebug::peripheralInit()
+{
     // Enable peripheral clocks
     if (!memStore(REG_SIM_SCGC5, 0x00043F82))
         return false;
@@ -100,7 +121,6 @@ bool ARMKinetisDebug::startup()
     if (!memStoreAndVerify(0x20000000, 0x76543210))
         return false;
 
-    // Good to go!
     return true;
 }
 

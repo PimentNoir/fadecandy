@@ -28,8 +28,13 @@
 class ARMKinetisDebug : public ARMDebug
 {
 public:
-    // Hold the processor core in reset, and initialize peripherals
+    // First-time initialization, resetting into system halt state.
     bool startup();
+
+    // Individual parts of startup():
+    bool detect();              // Detect supported Kinetis hardware
+    bool resetHalt();           // Reset into system halt state
+    bool peripheralInit();      // Initialize peripherals into default state
 
     // Flash mass-erase operation. Works even on protected devices.
     bool flashMassErase();
