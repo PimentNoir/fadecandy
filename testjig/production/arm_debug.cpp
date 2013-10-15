@@ -587,3 +587,15 @@ void ARMDebug::log(int level, const char *fmt, ...)
         Serial.println(buffer);
     }
 }
+
+void ARMDebug::setLogLevel(LogLevel newLevel)
+{
+    logLevel = newLevel;
+}
+
+void ARMDebug::setLogLevel(LogLevel newLevel, LogLevel &prevLevel)
+{
+    prevLevel = logLevel;
+    logLevel = newLevel;
+}
+

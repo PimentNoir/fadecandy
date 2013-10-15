@@ -48,59 +48,77 @@ bool ARMKinetisDebug::detect()
 
 bool ARMKinetisDebug::resetHalt()
 {
-    uint32_t status, dhcsr;
-
     // System resets can be slow, give them more time than the default.
     const unsigned resetRetries = 2000;
 
-    // Keep trying to reset/halt, in case we're fighting with watchdog timer :(
-    unsigned outerRetries = 50;
+    // Put the control register in a known state, and make sure we aren't already in the middle of a reset
+    uint32_t status;
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
+        return false;
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, -1, resetRetries))
+        return false;
 
-    while (outerRetries--) {
+    // System reset
+    if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ))
+        return false;
+    if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
+        return false;
+    if (!apWrite(REG_MDM_CONTROL, 0))
+        return false;
 
-        // Put the control register in a known state, and make sure we aren't already in the middle of a reset
-        if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_CORE_HOLD_RESET))
+    // Wait until the flash controller is ready & system is out of reset.
+    // Also wait for security bit to be cleared. Early in reset, the chip is determining
+    // its security status. When the security bit is set, AHB-AP is disabled.
+    if (!apReadPoll(REG_MDM_STATUS, status,
+            REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY | REG_MDM_STATUS_SYS_SECURITY,
+            REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY,
+            resetRetries))
+        return false;
+
+    // Set up CSW, no auto-increment.
+    if (!apWrite(MEM_CSW, CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT | CSW_32BIT | CSW_ADDRINC_OFF))
+        return false;
+
+    // Point at the debug halt control/status register
+    if (!apWrite(MEM_TAR, REG_SCB_DHCSR))
+        return false;
+
+    /*
+     * Enable debug, request a halt, and read back status.
+     *
+     * This part is somewhat timing critical, since we're racing against the watchdog
+     * timer. Avoid memWait() by calling the lower-level interface directly.
+     *
+     * Since this is expected to fail a bunch before succeeding, mute errors temporarily.
+     */
+
+    unsigned haltRetries = 200;
+    LogLevel savedLogLevel;
+    uint32_t dhcsr;
+
+    setLogLevel(LOG_NONE, savedLogLevel);
+
+    while (haltRetries) {
+        haltRetries--;
+
+        if (!apWrite(MEM_DRW, 0xA05F0003))
             continue;
-        if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, -1, resetRetries))
+        if (!apRead(MEM_DRW, dhcsr))
             continue;
 
-        // System reset
-        if (!apWrite(REG_MDM_CONTROL, REG_MDM_CONTROL_SYS_RESET_REQ))
-            continue;
-        if (!apReadPoll(REG_MDM_STATUS, status, REG_MDM_STATUS_SYS_NRESET, 0))
-            continue;
-        if (!apWrite(REG_MDM_CONTROL, 0))
-            continue;
-
-        // Wait until the flash controller is ready & system is out of reset.
-        // Also wait for security bit to be cleared. Early in reset, the chip is determining
-        // its security status. When the security bit is set, AHB-AP is disabled.
-        if (!apReadPoll(REG_MDM_STATUS, status,
-                REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY | REG_MDM_STATUS_SYS_SECURITY,
-                REG_MDM_STATUS_SYS_NRESET | REG_MDM_STATUS_FLASH_READY,
-                resetRetries))
-            continue;
-
-        // Re-initialize the AHB-AP after reset
-        if (!initMemPort())
-            continue;
-
-        // Enable debugging
-        if (!memStore(REG_SCB_DHCSR, 0xA05F0001))
-            continue;
-
-        unsigned haltRetries = 50;
-        while (haltRetries--) {
-            // Request a halt, and read back status
-            if (!memStore(REG_SCB_DHCSR, 0xA05F0003))
-                break;
-            if (!memLoad(REG_SCB_DHCSR, dhcsr))
-                break;
-            if (dhcsr & (1 << 17)) {
-                // Halted!
-                return true;
-            }
+        if (dhcsr & (1 << 17)) {
+            // Halted!
+            break;
         }
+    }
+
+    // Restore previous settings
+    initMemPort();
+    setLogLevel(savedLogLevel);
+
+    if (haltRetries) {
+        log(LOG_NORMAL, "CPU reset & halt successful. Now in debug mode.");
+        return true;
     }
 
     log(LOG_ERROR, "ARMKinetisDebug: Failed to put CPU in debug halt state. (DHCSR: %08x)", dhcsr);

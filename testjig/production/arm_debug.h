@@ -62,6 +62,10 @@ public:
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 
+    // Change log levels, optionally returning the old level so it can be restored.
+    void setLogLevel(LogLevel newLevel);
+    void setLogLevel(LogLevel newLevel, LogLevel &prevLevel);
+
 private:
     uint8_t clockPin, dataPin;
     LogLevel logLevel;
