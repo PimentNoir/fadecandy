@@ -80,9 +80,6 @@ bool ARMKinetisDebug::reset()
 
 bool ARMKinetisDebug::debugHalt()
 {
-    // Set up CSW, no auto-increment.
-    if (!apWrite(MEM_CSW, CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT | CSW_32BIT | CSW_ADDRINC_OFF))
-        return false;
 
     /*
      * Enable debug, request a halt, and read back status.
@@ -97,8 +94,9 @@ bool ARMKinetisDebug::debugHalt()
     LogLevel savedLogLevel;
     uint32_t dhcsr;
 
-    // Point at the debug halt control/status register
-    if (apWrite(MEM_TAR, REG_SCB_DHCSR)) {
+    // Point at the debug halt control/status register. We disable MEM-AP autoincrement,
+    // and leave TAR pointed at DHCSR for the entire loop.
+    if (memWriteCSW(CSW_32BIT) && apWrite(MEM_TAR, REG_SCB_DHCSR)) {
 
         setLogLevel(LOG_NONE, savedLogLevel);
 
@@ -118,9 +116,6 @@ bool ARMKinetisDebug::debugHalt()
 
         setLogLevel(savedLogLevel);
     }
-
-    // Restore previous settings
-    initMemPort();
 
     if (haltRetries) {
         log(LOG_NORMAL, "CPU halt successful. Now in debug mode.");
@@ -144,6 +139,26 @@ bool ARMKinetisDebug::peripheralInit()
         return false;
     if (!memStoreAndVerify(0x20000000, 0x76543210))
         return false;
+
+    // Test byte-wide writes
+    uint32_t word;
+    uint8_t byte;
+    if (!memStoreByte(0x20000001, 0x55))
+        return false;
+    if (!memStoreByte(0x20000002, 0x9F))
+        return false;
+    if (!memLoad(0x20000000, word))
+        return false;
+    if (word != 0x769F5510) {
+        log(LOG_ERROR, "ARMKinetisDebug: Byte-wide AHB write seems broken! (Test word = %08x)", word);
+        return false;
+    }
+    if (!memLoadByte(0x20000003, byte))
+        return false;
+    if (byte != 0x76) {
+        log(LOG_ERROR, "ARMKinetisDebug: Byte-wide AHB read seems broken! (Test byte = %08x)", byte);
+        return false;
+    }
 
     return true;
 }
@@ -249,16 +264,16 @@ bool ARMKinetisDebug::ftfl_launchCommand()
 {
     // Begin a flash memory controller command, and clear any previous error status.
     return
-        memStore(REG_FTFL_FSTAT, REG_FTFL_FSTAT_ACCERR | REG_FTFL_FSTAT_FPVIOL | REG_FTFL_FSTAT_RDCOLERR) &&
-        memStore(REG_FTFL_FSTAT, REG_FTFL_FSTAT_CCIF);
+        memStoreByte(REG_FTFL_FSTAT, REG_FTFL_FSTAT_ACCERR | REG_FTFL_FSTAT_FPVIOL | REG_FTFL_FSTAT_RDCOLERR) &&
+        memStoreByte(REG_FTFL_FSTAT, REG_FTFL_FSTAT_CCIF);
 }
 
 bool ARMKinetisDebug::ftfl_setFlexRAMFunction(uint8_t controlCode)
 {
     return
         ftfl_busyWait() &&
-        memStore(REG_FTFL_FCCOB0, 0x81) &&
-        memStore(REG_FTFL_FCCOB1, controlCode) &&
+        memStoreByte(REG_FTFL_FCCOB0, 0x81) &&
+        memStoreByte(REG_FTFL_FCCOB1, controlCode) &&
         ftfl_launchCommand() &&
         ftfl_busyWait() &&
         ftfl_handleCommandStatus();
@@ -268,12 +283,12 @@ bool ARMKinetisDebug::ftfl_programSection(uint32_t address, uint32_t numLWords)
 {
     return
         ftfl_busyWait() &&
-        memStore(REG_FTFL_FCCOB0, 0x0B) &&
-        memStore(REG_FTFL_FCCOB1, address >> 16) &&
-        memStore(REG_FTFL_FCCOB2, address >> 8) &&
-        memStore(REG_FTFL_FCCOB3, address) &&
-        memStore(REG_FTFL_FCCOB4, numLWords >> 8) &&
-        memStore(REG_FTFL_FCCOB5, numLWords) &&
+        memStoreByte(REG_FTFL_FCCOB0, 0x0B) &&
+        memStoreByte(REG_FTFL_FCCOB1, address >> 16) &&
+        memStoreByte(REG_FTFL_FCCOB2, address >> 8) &&
+        memStoreByte(REG_FTFL_FCCOB3, address) &&
+        memStoreByte(REG_FTFL_FCCOB4, numLWords >> 8) &&
+        memStoreByte(REG_FTFL_FCCOB5, numLWords) &&
         ftfl_launchCommand() &&
         ftfl_busyWait() &&
         ftfl_handleCommandStatus("FLASH: Error verifying sector! (FSTAT: %08x)");

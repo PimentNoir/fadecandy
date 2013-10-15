@@ -129,10 +129,23 @@ bool ARMDebug::initMemPort()
         return false;
     }
 
-    // Set up default CSW values for the AHB-AP.
-    if (!apWrite(MEM_CSW, CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT | CSW_32BIT | CSW_ADDRINC_SINGLE))
+    // Invalidate CSW cache
+    cache.csw = -1;
+
+    return true;
+}
+
+bool ARMDebug::memWriteCSW(uint32_t data)
+{
+    // Write to the MEM-AP CSW. Duplicate writes are ignored, and the cache is updated.
+
+    if (data == cache.csw)
+        return true;
+
+    if (!apWrite(MEM_CSW, data | CSW_DEFAULTS))
         return false;
 
+    cache.csw = data;
     return true;
 }
 
@@ -200,6 +213,8 @@ bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
 {
     if (!memWait())
         return false;
+    if (!memWriteCSW(CSW_32BIT | CSW_ADDRINC_SINGLE))
+        return false;
     if (!apWrite(MEM_TAR, addr))
         return false;
 
@@ -223,6 +238,8 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
 {
     if (!memWait())
         return false;
+    if (!memWriteCSW(CSW_32BIT | CSW_ADDRINC_SINGLE))
+        return false;
     if (!apWrite(MEM_TAR, addr))
         return false;
 
@@ -239,6 +256,42 @@ bool ARMDebug::memLoad(uint32_t addr, uint32_t *data, unsigned count)
         count--;
     }
 
+    return true;
+}
+
+bool ARMDebug::memStoreByte(uint32_t addr, uint8_t data)
+{
+    if (!memWait())
+        return false;
+    if (!memWriteCSW(CSW_8BIT))
+        return false;
+    if (!apWrite(MEM_TAR, addr))
+        return false;
+
+    log(LOG_TRACE_MEM, "MEM Store [%08x] %02x", addr, data);
+
+    // Replicate across lanes
+    uint32_t word = data | (data << 8) | (data << 16) | (data << 24);
+
+    return apWrite(MEM_DRW, word);
+}
+
+bool ARMDebug::memLoadByte(uint32_t addr, uint8_t &data)
+{
+    uint32_t word;
+    if (!memWait())
+        return false;
+    if (!memWriteCSW(CSW_8BIT))
+        return false;
+    if (!apWrite(MEM_TAR, addr))
+        return false;
+    if (!apRead(MEM_DRW, word))
+        return false;
+
+    // Select the proper lane
+    data = word >> ((addr & 3) << 3);
+
+    log(LOG_TRACE_MEM, "MEM Load  [%08x] %02x", addr, data);
     return true;
 }
 
@@ -613,7 +666,7 @@ void ARMDebug::hexDump(uint32_t addr, unsigned count, int level)
                 }
 
                 count--;
-                addr++;
+                addr += 4;
             }
 
             Serial.println();

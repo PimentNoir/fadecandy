@@ -59,6 +59,10 @@ public:
     bool memStoreAndVerify(uint32_t addr, uint32_t data);
     bool memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count);
 
+    // Byte load/store operations (AHB bus)
+    bool memStoreByte(uint32_t addr, uint8_t data);
+    bool memLoadByte(uint32_t addr, uint8_t &data);
+
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 
@@ -76,6 +80,7 @@ private:
     // Cached versions of ARM debug registers
     struct {
         uint32_t select;
+        uint32_t csw;
     } cache;
 
 protected:
@@ -106,8 +111,9 @@ protected:
     bool apWrite(unsigned addr, uint32_t data);
     bool apRead(unsigned addr, uint32_t &data);
 
-    // Poll for MEM-AP not busy
+    // Internal MEM-AP functions
     bool memWait();
+    bool memWriteCSW(uint32_t data);
 
     // Poll for an expected value
     bool dpReadPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
@@ -163,5 +169,6 @@ protected:
         CSW_DBGSWENABLE     = 1 << 31
     };
 
+    static const unsigned CSW_DEFAULTS = CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT;
     static const unsigned DEFAULT_RETRIES = 50;
 };
