@@ -8,6 +8,7 @@
 
 #include "arm_kinetis_debug.h"
 #include "arm_kinetis_reg.h"
+#include "firmware_data.h"
 
 const unsigned buttonPin = 2;
 const unsigned ledPin = 13;
@@ -38,16 +39,20 @@ void loop()
     }
     digitalWrite(ledPin, HIGH);
 
-    if (!target.begin(swclkPin, swdioPin, target.LOG_TRACE_MEM))
+    if (!target.begin(swclkPin, swdioPin))
         return;
     if (!target.startup())
         return;
 
-    if (!target.flashMassErase())
+    // Program firmware
+    if (!target.flashEraseAndProgram(firmwareData, firmwareSectorCount))
         return;
 
+    // Hex dump programmed firmware a little
+    target.hexDump(0, 128);
+
     /*
-     * Try blinking an LED on the target
+     * Try blinking an LED on the target!
      */
 
     // Set PC5 as output
@@ -56,16 +61,7 @@ void loop()
     if (!target.memStore(REG_GPIOC_PDDR, 1 << 5))
         return;
 
-    for (unsigned i = 10; i; i--) {
-        target.memStore(REG_GPIOC_PTOR, 1 << 5);
+    while (target.memStore(REG_GPIOC_PTOR, 1 << 5)) {
         delay(100);
     }
-
-    uint32_t foo[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-
-    target.flashSectorBufferInit();
-    target.flashSectorBufferWrite(0, foo, 16);
-    target.flashSectorProgram(0);
-
-    target.hexDump(0, 32);
 }

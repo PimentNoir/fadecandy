@@ -44,10 +44,13 @@ public:
     bool flashSectorBufferInit();
 
     // Write a chunk of data to the flash sector buffer
-    bool flashSectorBufferWrite(uint32_t bufferOffset, uint32_t *data, unsigned count);
+    bool flashSectorBufferWrite(uint32_t bufferOffset, const uint32_t *data, unsigned count);
 
     // Write one flash sector from the buffer
     bool flashSectorProgram(uint32_t address);
+
+    // Entire programming process, including mass erase, from a contiguous firmware image.
+    bool flashEraseAndProgram(const uint32_t *image, unsigned numSectors);
 
     static const uint32_t FLASH_SECTOR_SIZE = 1024;
 

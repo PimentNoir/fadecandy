@@ -223,7 +223,7 @@ bool ARMKinetisDebug::flashSectorBufferInit()
         memStoreAndVerify(REG_FLEXRAM_BASE + FLASH_SECTOR_SIZE - 4, 0xFFFFFFFF);
 }
 
-bool ARMKinetisDebug::flashSectorBufferWrite(uint32_t bufferOffset, uint32_t *data, unsigned count)
+bool ARMKinetisDebug::flashSectorBufferWrite(uint32_t bufferOffset, const uint32_t *data, unsigned count)
 {
     if (bufferOffset & 3) {
         log(LOG_ERROR, "ARMKinetisDebug::flashSectorBufferWrite alignment error");
@@ -322,5 +322,31 @@ bool ARMKinetisDebug::ftfl_handleCommandStatus(const char *cmdSpecificError)
         return false;
     }
 
+    return true;
+}
+
+bool ARMKinetisDebug::flashEraseAndProgram(const uint32_t *image, unsigned numSectors)
+{
+    if (!flashSectorBufferInit())
+        return false;
+    if (!flashMassErase())
+        return false;
+
+    uint32_t address = 0;
+    while (numSectors) {
+
+        log(LOG_NORMAL, "FLASH: Programming at %08x, %d sectors left", address, numSectors);
+
+        if (!flashSectorBufferWrite(0, image, FLASH_SECTOR_SIZE/4))
+            return false;
+        if (!flashSectorProgram(address))
+            return false;
+
+        numSectors--;
+        address += FLASH_SECTOR_SIZE;
+        image += FLASH_SECTOR_SIZE/4;
+    }
+
+    log(LOG_NORMAL, "FLASH: Programming complete!");
     return true;
 }

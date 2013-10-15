@@ -177,7 +177,7 @@ bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t data)
     return memStoreAndVerify(addr, &data, 1);
 }
 
-bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count)
+bool ARMDebug::memStoreAndVerify(uint32_t addr, const uint32_t *data, unsigned count)
 {
     if (!memStore(addr, data, count))
         return false;
@@ -209,7 +209,7 @@ bool ARMDebug::memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count)
     return true;    
 }
 
-bool ARMDebug::memStore(uint32_t addr, uint32_t *data, unsigned count)
+bool ARMDebug::memStore(uint32_t addr, const uint32_t *data, unsigned count)
 {
     if (!memWait())
         return false;

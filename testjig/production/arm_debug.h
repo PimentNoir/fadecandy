@@ -51,13 +51,13 @@ public:
 
     // Memory operations (AHB bus)
     bool memStore(uint32_t addr, uint32_t data);
-    bool memStore(uint32_t addr, uint32_t *data, unsigned count);
+    bool memStore(uint32_t addr, const uint32_t *data, unsigned count);
     bool memLoad(uint32_t addr, uint32_t &data);
     bool memLoad(uint32_t addr, uint32_t *data, unsigned count);
 
     // Write with verify
     bool memStoreAndVerify(uint32_t addr, uint32_t data);
-    bool memStoreAndVerify(uint32_t addr, uint32_t *data, unsigned count);
+    bool memStoreAndVerify(uint32_t addr, const uint32_t *data, unsigned count);
 
     // Byte load/store operations (AHB bus)
     bool memStoreByte(uint32_t addr, uint8_t data);
