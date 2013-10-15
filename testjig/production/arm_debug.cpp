@@ -588,6 +588,41 @@ void ARMDebug::log(int level, const char *fmt, ...)
     }
 }
 
+void ARMDebug::hexDump(uint32_t addr, unsigned count, int level)
+{
+    // Hex dump target memory to the log
+
+    if (level <= logLevel && Serial) {
+        va_list ap;
+        char buffer[32];
+        LogLevel oldLogLevel;
+
+        setLogLevel(LOG_NONE, oldLogLevel);
+
+        while (count) {
+            snprintf(buffer, sizeof buffer, "%08x:", addr);
+            Serial.print(buffer);
+
+            for (unsigned x = 0; count && x < 4; x++) {
+                uint32_t word;
+                if (memLoad(addr, word)) {
+                    snprintf(buffer, sizeof buffer, " %08x", word);
+                    Serial.print(buffer);
+                } else {
+                    Serial.print(" (error )");
+                }
+
+                count--;
+                addr++;
+            }
+
+            Serial.println();
+        }
+
+        setLogLevel(oldLogLevel);
+    }
+}
+
 void ARMDebug::setLogLevel(LogLevel newLevel)
 {
     logLevel = newLevel;
@@ -598,4 +633,3 @@ void ARMDebug::setLogLevel(LogLevel newLevel, LogLevel &prevLevel)
     prevLevel = logLevel;
     logLevel = newLevel;
 }
-

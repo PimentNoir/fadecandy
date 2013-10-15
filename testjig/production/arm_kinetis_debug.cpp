@@ -29,7 +29,7 @@
 
 bool ARMKinetisDebug::startup()
 {
-    return detect() && resetHalt() && peripheralInit();
+    return detect() && reset() && debugHalt() && peripheralInit();
 }
 
 bool ARMKinetisDebug::detect()
@@ -46,7 +46,7 @@ bool ARMKinetisDebug::detect()
     return true;
 }
 
-bool ARMKinetisDebug::resetHalt()
+bool ARMKinetisDebug::reset()
 {
     // System resets can be slow, give them more time than the default.
     const unsigned resetRetries = 2000;
@@ -75,12 +75,13 @@ bool ARMKinetisDebug::resetHalt()
             resetRetries))
         return false;
 
+    return true;
+}
+
+bool ARMKinetisDebug::debugHalt()
+{
     // Set up CSW, no auto-increment.
     if (!apWrite(MEM_CSW, CSW_DBGSWENABLE | CSW_MASTER_DEBUG | CSW_HPROT | CSW_32BIT | CSW_ADDRINC_OFF))
-        return false;
-
-    // Point at the debug halt control/status register
-    if (!apWrite(MEM_TAR, REG_SCB_DHCSR))
         return false;
 
     /*
@@ -96,28 +97,33 @@ bool ARMKinetisDebug::resetHalt()
     LogLevel savedLogLevel;
     uint32_t dhcsr;
 
-    setLogLevel(LOG_NONE, savedLogLevel);
+    // Point at the debug halt control/status register
+    if (apWrite(MEM_TAR, REG_SCB_DHCSR)) {
 
-    while (haltRetries) {
-        haltRetries--;
+        setLogLevel(LOG_NONE, savedLogLevel);
 
-        if (!apWrite(MEM_DRW, 0xA05F0003))
-            continue;
-        if (!apRead(MEM_DRW, dhcsr))
-            continue;
+        while (haltRetries) {
+            haltRetries--;
 
-        if (dhcsr & (1 << 17)) {
-            // Halted!
-            break;
+            if (!apWrite(MEM_DRW, 0xA05F0003))
+                continue;
+            if (!apRead(MEM_DRW, dhcsr))
+                continue;
+
+            if (dhcsr & (1 << 17)) {
+                // Halted!
+                break;
+            }
         }
+
+        setLogLevel(savedLogLevel);
     }
 
     // Restore previous settings
     initMemPort();
-    setLogLevel(savedLogLevel);
 
     if (haltRetries) {
-        log(LOG_NORMAL, "CPU reset & halt successful. Now in debug mode.");
+        log(LOG_NORMAL, "CPU halt successful. Now in debug mode.");
         return true;
     }
 
@@ -188,5 +194,118 @@ bool ARMKinetisDebug::flashMassErase()
     }
 
     log(LOG_NORMAL, "FLASH: Mass erase complete");
+    return true;
+}
+
+bool ARMKinetisDebug::flashSectorBufferInit()
+{
+    // Use FlexRAM as normal RAM, and erase it. Test to make sure it's working.
+    return
+        ftfl_setFlexRAMFunction(0xFF) &&
+        memStoreAndVerify(REG_FLEXRAM_BASE, 0x12345678) &&
+        memStoreAndVerify(REG_FLEXRAM_BASE, 0xFFFFFFFF) &&
+        memStoreAndVerify(REG_FLEXRAM_BASE + FLASH_SECTOR_SIZE - 4, 0xA5559872) &&
+        memStoreAndVerify(REG_FLEXRAM_BASE + FLASH_SECTOR_SIZE - 4, 0xFFFFFFFF);
+}
+
+bool ARMKinetisDebug::flashSectorBufferWrite(uint32_t bufferOffset, uint32_t *data, unsigned count)
+{
+    if (bufferOffset & 3) {
+        log(LOG_ERROR, "ARMKinetisDebug::flashSectorBufferWrite alignment error");
+        return false;
+    }
+    if (bufferOffset + (count * sizeof *data) > FLASH_SECTOR_SIZE) {
+        log(LOG_ERROR, "ARMKinetisDebug::flashSectorBufferWrite overrun");
+        return false;
+    }
+
+    return memStore(REG_FLEXRAM_BASE + bufferOffset, data, count);
+}
+
+bool ARMKinetisDebug::flashSectorProgram(uint32_t address)
+{
+    if (address & (FLASH_SECTOR_SIZE-1)) {
+        log(LOG_ERROR, "ARMKinetisDebug::flashSectorProgram alignment error");
+        return false;
+    }
+
+    return ftfl_programSection(address, FLASH_SECTOR_SIZE/4);
+}
+
+bool ARMKinetisDebug::ftfl_busyWait()
+{
+    const unsigned retries = 1000;
+    uint32_t fstat;
+
+    if (!memPoll(REG_FTFL_FSTAT, fstat, REG_FTFL_FSTAT_CCIF, -1)) {
+        log(LOG_ERROR, "FLASH: Error waiting for flash controller");
+        return false;
+    }
+
+    return true;
+}
+
+bool ARMKinetisDebug::ftfl_launchCommand()
+{
+    // Begin a flash memory controller command, and clear any previous error status.
+    return
+        memStore(REG_FTFL_FSTAT, REG_FTFL_FSTAT_ACCERR | REG_FTFL_FSTAT_FPVIOL | REG_FTFL_FSTAT_RDCOLERR) &&
+        memStore(REG_FTFL_FSTAT, REG_FTFL_FSTAT_CCIF);
+}
+
+bool ARMKinetisDebug::ftfl_setFlexRAMFunction(uint8_t controlCode)
+{
+    return
+        ftfl_busyWait() &&
+        memStore(REG_FTFL_FCCOB0, 0x81) &&
+        memStore(REG_FTFL_FCCOB1, controlCode) &&
+        ftfl_launchCommand() &&
+        ftfl_busyWait() &&
+        ftfl_handleCommandStatus();
+}
+
+bool ARMKinetisDebug::ftfl_programSection(uint32_t address, uint32_t numLWords)
+{
+    return
+        ftfl_busyWait() &&
+        memStore(REG_FTFL_FCCOB0, 0x0B) &&
+        memStore(REG_FTFL_FCCOB1, address >> 16) &&
+        memStore(REG_FTFL_FCCOB2, address >> 8) &&
+        memStore(REG_FTFL_FCCOB3, address) &&
+        memStore(REG_FTFL_FCCOB4, numLWords >> 8) &&
+        memStore(REG_FTFL_FCCOB5, numLWords) &&
+        ftfl_launchCommand() &&
+        ftfl_busyWait() &&
+        ftfl_handleCommandStatus("FLASH: Error verifying sector! (FSTAT: %08x)");
+}
+
+bool ARMKinetisDebug::ftfl_handleCommandStatus(const char *cmdSpecificError)
+{
+    /*
+     * Handle common errors from an FSTAT register value.
+     * The indicated "errorMessage" is used for reporting a command-specific
+     * error from MGSTAT0. Returns true on success, false on error.
+     */
+
+    uint32_t fstat;
+    if (!memLoad(REG_FTFL_FSTAT, fstat))
+        return false;
+
+    if (fstat & FTFL_FSTAT_RDCOLERR) {
+        log(LOG_ERROR, "FLASH: Bus collision error (FSTAT: %08x)", fstat);
+        return false;
+    }
+
+    if (fstat & (FTFL_FSTAT_FPVIOL | FTFL_FSTAT_ACCERR)) {
+        log(LOG_ERROR, "FLASH: Address access error (FSTAT: %08x)", fstat);
+        return false;
+    }
+
+    if (cmdSpecificError && (fstat & FTFL_FSTAT_MGSTAT0)) {
+        // Command-specifid error
+        log(LOG_ERROR, cmdSpecificError, fstat);
+        return false;
+    }
+
     return true;
 }

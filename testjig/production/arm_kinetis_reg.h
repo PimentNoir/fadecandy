@@ -520,6 +520,9 @@
 #define REG_ARM_DWT_CTRL_CYCCNTENA  (1 << 0)            // Enable cycle count
 #define REG_ARM_DWT_CYCCNT          0xE0001004          // Cycle count register
 
+// FlexRAM base address
+#define REG_FLEXRAM_BASE            0x14000000
+
 // MDM-AP debug port registers
 #define REG_MDM_STATUS              0x01000000
 #define REG_MDM_CONTROL             0x01000004

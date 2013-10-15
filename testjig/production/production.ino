@@ -60,4 +60,12 @@ void loop()
         target.memStore(REG_GPIOC_PTOR, 1 << 5);
         delay(100);
     }
+
+    uint32_t foo[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+
+    target.flashSectorBufferInit();
+    target.flashSectorBufferWrite(0, foo, 16);
+    target.flashSectorProgram(0);
+
+    target.hexDump(0, 32);
 }
