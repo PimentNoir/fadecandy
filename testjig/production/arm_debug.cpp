@@ -138,11 +138,14 @@ bool ARMDebug::initMemPort()
 
 bool ARMDebug::memWait()
 {
+    // Wait for a transaction to complete & the port to be enabled.
+
     uint32_t csw;
-    if (!apReadPoll(MEM_CSW, csw, CSW_TRIN_PROG, 0)) {
-        log(LOG_ERROR, "ARMDebug: Timed out waiting for memory transaction");
+    if (!apReadPoll(MEM_CSW, csw, CSW_TRIN_PROG | CSW_DEVICE_EN, CSW_DEVICE_EN)) {
+        log(LOG_ERROR, "ARMDebug: Timed out waiting for memory port (CSW: %08x)", csw);
         return false;
     }
+
     return true;
 }
 
