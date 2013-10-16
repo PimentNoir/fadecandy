@@ -203,6 +203,13 @@ bool ARMKinetisDebug::peripheralInit()
         memStoreByte(REG_USB0_USBTRC0, REG_USB_USBTRC_USBRESET) &&
         memPollByte(REG_USB0_USBTRC0, value, REG_USB_USBTRC_USBRESET, 0) &&
 
+        // Enable USB
+        memStoreByte(REG_USB0_CTL, REG_USB_CTL_USBENSOFEN) &&
+        memStoreByte(REG_USB0_USBCTRL, 0) &&
+
+        // USB pull-up off for now
+        usbSetPullup(false) &&
+
         // Test AHB-AP: Can we successfully write to RAM?
         testMemoryAccess();
 }
@@ -578,5 +585,5 @@ bool ARMKinetisDebug::digitalWritePort(unsigned port, unsigned value)
 
 bool ARMKinetisDebug::usbSetPullup(bool enable)
 {
-    return memStore(REG_USB0_CONTROL, enable ? USB_CONTROL_DPPULLUPNONOTG : 0);
+    return memStoreByte(REG_USB0_CONTROL, enable ? USB_CONTROL_DPPULLUPNONOTG : 0);
 }
