@@ -392,3 +392,73 @@ bool ARMKinetisDebug::flashEraseAndProgram(const uint32_t *image, unsigned numSe
     log(LOG_NORMAL, "FLASH: Programming successful!");
     return true;
 }
+
+static inline uint32_t gpioBitBandAddr(uint32_t addr, unsigned bit)
+{
+    return (addr - 0x40000000) * 32 + bit * 4 + 0x42000000;
+}
+
+static inline uint32_t gpioPortAddr(uint32_t base, unsigned p)
+{
+    return base + (p >> 12) * (REG_GPIOB_PDOR - REG_GPIOA_PDOR);
+}
+
+static inline uint32_t gpioPortBit(unsigned p)
+{
+    return (p >> 2) & 31;
+}
+
+bool ARMKinetisDebug::memStoreBit(uint32_t addr, unsigned bit, uint32_t data)
+{
+    return memStore(gpioBitBandAddr(addr, bit), data);
+}
+
+bool ARMKinetisDebug::memLoadBit(uint32_t addr, unsigned bit, uint32_t &data)
+{
+    return memLoad(gpioBitBandAddr(addr, bit), data);
+}
+
+bool ARMKinetisDebug::pinMode(unsigned p, int mode)
+{
+    // GPIO, and default drive strength + slew rate
+    uint32_t pcrValue = REG_PORT_PCR_MUX(1) | REG_PORT_PCR_DSE | REG_PORT_PCR_SRE;
+
+    // PCR address
+    uint32_t pcrAddr = REG_PORTA_PCR0 + p;
+
+    switch (mode) {
+        case INPUT_PULLUP:
+            // Turn on pullup
+            pcrValue |= REG_PORT_PCR_PE | REG_PORT_PCR_PS;
+            break;
+
+        case INPUT:
+        case OUTPUT:
+            // Default PCR value
+            break;
+
+        default:
+            log(LOG_ERROR, "GPIO: Unsupported pinMode %d", mode);
+            return true;
+    }
+
+    // Set pin mode
+    if (!memStore(pcrAddr, pcrValue))
+        return false;
+
+    // Set direction
+    return memStoreBit(gpioPortAddr(REG_GPIOA_PDDR, p), gpioPortBit(p), mode == OUTPUT);
+}
+
+bool ARMKinetisDebug::digitalWrite(unsigned p, int value)
+{
+    return memStoreBit(gpioPortAddr(REG_GPIOA_PDOR, p), gpioPortBit(p), value != 0);
+}
+
+int ARMKinetisDebug::digitalRead(unsigned p)
+{
+    uint32_t data;
+    if (!memLoadBit(gpioPortAddr(REG_GPIOA_PDIR, p), gpioPortBit(p), data))
+        return -1;
+    return data;
+}

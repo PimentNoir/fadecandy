@@ -14,7 +14,9 @@ const unsigned buttonPin = 2;
 const unsigned ledPin = 13;
 const unsigned swclkPin = 3;
 const unsigned swdioPin = 4;
+
 ARMKinetisDebug target;
+const unsigned targetLedPin = target.PTC5;
 
 void setup()
 {
@@ -45,20 +47,17 @@ void loop()
         return;
 
     // Program firmware
+#if 0
     if (!target.flashEraseAndProgram(firmwareData, firmwareSectorCount))
         return;
+#endif
 
     /*
      * Try blinking an LED on the target!
      */
 
-    // Set PC5 as output
-    if (!target.memStore(REG_PORTC_PCR5, REG_PORT_PCR_MUX(1) | REG_PORT_PCR_DSE | REG_PORT_PCR_SRE))
-        return;
-    if (!target.memStore(REG_GPIOC_PDDR, 1 << 5))
-        return;
-
-    while (target.memStore(REG_GPIOC_PTOR, 1 << 5)) {
+    target.pinMode(targetLedPin, OUTPUT);
+    while (target.digitalWrite(targetLedPin, !target.digitalRead(targetLedPin))) {
         delay(100);
     }
 }

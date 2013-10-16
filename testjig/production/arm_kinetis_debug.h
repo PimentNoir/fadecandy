@@ -37,6 +37,15 @@ public:
     bool debugHalt();           // Turn on debugging and enter halt state
     bool peripheralInit();      // Initialize peripherals into default state
 
+    // High-level GPIO interface.
+    bool pinMode(unsigned p, int mode);
+    bool digitalWrite(unsigned p, int value);
+    int digitalRead(unsigned p);
+
+    // Bit-band operations on IO space
+    bool memStoreBit(uint32_t addr, unsigned bit, uint32_t data);
+    bool memLoadBit(uint32_t addr, unsigned bit, uint32_t &data);
+
     // Flash mass-erase operation. Works even on protected devices.
     bool flashMassErase();
 
@@ -53,6 +62,52 @@ public:
     bool flashEraseAndProgram(const uint32_t *image, unsigned numSectors);
 
     static const uint32_t FLASH_SECTOR_SIZE = 1024;
+
+    // Pin constants. (Corresponds to PCR address map)
+    enum Pin {
+        PTA0    = 0x0000 + 4 * 0,
+        PTA1    = 0x0000 + 4 * 1,
+        PTA2    = 0x0000 + 4 * 2,
+        PTA3    = 0x0000 + 4 * 3,
+        PTA4    = 0x0000 + 4 * 4,
+        PTA5    = 0x0000 + 4 * 5,
+        PTA12   = 0x0000 + 4 * 12,
+        PTA13   = 0x0000 + 4 * 13,
+        PTA18   = 0x0000 + 4 * 18,
+        PTA19   = 0x0000 + 4 * 19,
+        PTB0    = 0x1000 + 4 * 0,
+        PTB1    = 0x1000 + 4 * 1,
+        PTB2    = 0x1000 + 4 * 2,
+        PTB3    = 0x1000 + 4 * 3,
+        PTB16   = 0x1000 + 4 * 16,
+        PTB17   = 0x1000 + 4 * 17,
+        PTB18   = 0x1000 + 4 * 18,
+        PTB19   = 0x1000 + 4 * 19,
+        PTC0    = 0x2000 + 4 * 0,
+        PTC1    = 0x2000 + 4 * 1,
+        PTC2    = 0x2000 + 4 * 2,
+        PTC3    = 0x2000 + 4 * 3,
+        PTC4    = 0x2000 + 4 * 4,
+        PTC5    = 0x2000 + 4 * 5,
+        PTC6    = 0x2000 + 4 * 6,
+        PTC7    = 0x2000 + 4 * 7,
+        PTC8    = 0x2000 + 4 * 8,
+        PTC9    = 0x2000 + 4 * 9,
+        PTC10   = 0x2000 + 4 * 10,
+        PTC11   = 0x2000 + 4 * 11,
+        PTD0    = 0x3000 + 4 * 0,
+        PTD1    = 0x3000 + 4 * 1,
+        PTD2    = 0x3000 + 4 * 2,
+        PTD3    = 0x3000 + 4 * 3,
+        PTD4    = 0x3000 + 4 * 4,
+        PTD5    = 0x3000 + 4 * 5,
+        PTD6    = 0x3000 + 4 * 6,
+        PTD7    = 0x3000 + 4 * 7,
+        PTE0    = 0x4000 + 4 * 0,
+        PTE1    = 0x4000 + 4 * 1,
+    };
+
+    // Pin configurations
 
 protected:
     // Low-level flash interface
