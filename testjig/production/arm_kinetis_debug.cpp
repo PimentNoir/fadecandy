@@ -131,13 +131,85 @@ bool ARMKinetisDebug::debugHalt()
 
 bool ARMKinetisDebug::peripheralInit()
 {
-    // Enable peripheral clocks
-    if (!memStore(REG_SIM_SCGC5, 0x00043F82))
-        return false;
-    if (!memStore(REG_SIM_SCGC6, REG_SIM_SCGC6_FTM0 | REG_SIM_SCGC6_FTM1 | REG_SIM_SCGC6_FTFL))
-        return false;
+    /*
+     * ARM peripheral initialization, based on the peripheral startup code
+     * used in Teensyduino. We set up the same peripherals that FC-Boot sets up.
+     */
 
-    // Test AHB-AP: Can we successfully write to RAM?
+    uint8_t value;
+    return
+        // Enable peripheral clocks
+        memStore(REG_SIM_SCGC5, 0x00043F82) && // clocks active to all GPIO
+        memStore(REG_SIM_SCGC6,
+            REG_SIM_SCGC6_RTC | REG_SIM_SCGC6_FTM0 | REG_SIM_SCGC6_FTM1 |
+            REG_SIM_SCGC6_ADC0 | REG_SIM_SCGC6_FTFL) &&
+
+        // Start in FEI mode
+        // Enable capacitors for crystal
+        memStoreByte(REG_OSC0_CR, REG_OSC_SC8P | REG_OSC_SC2P) &&
+
+        // Enable osc, 8-32 MHz range, low power mode
+        memStoreByte(REG_MCG_C2, REG_MCG_C2_RANGE0(2) | REG_MCG_C2_EREFS) &&
+
+        // Switch to crystal as clock source, FLL input = 16 MHz / 512
+        memStoreByte(REG_MCG_C1, REG_MCG_C1_CLKS(2) | REG_MCG_C1_FRDIV(4)) &&
+
+        // Wait for crystal oscillator to begin
+        memPollByte(REG_MCG_S, value, REG_MCG_S_OSCINIT0, -1) &&
+
+        // Wait for FLL to use oscillator
+        memPollByte(REG_MCG_S, value, REG_MCG_S_IREFST, 0) &&
+
+        // Wait for MCGOUT to use oscillator
+        memPollByte(REG_MCG_S, value, REG_MCG_S_CLKST_MASK, REG_MCG_S_CLKST(2)) &&
+
+        // Now we're in FBE mode
+        // Config PLL input for 16 MHz Crystal / 4 = 4 MHz
+        memStoreByte(REG_MCG_C5, REG_MCG_C5_PRDIV0(3)) &&
+
+        // Config PLL for 96 MHz output
+        memStoreByte(REG_MCG_C6, REG_MCG_C6_PLLS | REG_MCG_C6_VDIV0(0)) &&
+
+        // Wait for PLL to start using xtal as its input
+        memPollByte(REG_MCG_S, value, REG_MCG_S_PLLST, -1) &&
+
+        // Wait for PLL to lock
+        memPollByte(REG_MCG_S, value, REG_MCG_S_LOCK0, -1) &&
+
+        // Now we're in PBE mode
+        // Config divisors: 48 MHz core, 48 MHz bus, 24 MHz flash
+        memStore(REG_SIM_CLKDIV1, REG_SIM_CLKDIV1_OUTDIV1(1) |
+            REG_SIM_CLKDIV1_OUTDIV2(1) | REG_SIM_CLKDIV1_OUTDIV4(3)) &&
+
+        // Switch to PLL as clock source, FLL input = 16 MHz / 512
+        memStoreByte(REG_MCG_C1, REG_MCG_C1_CLKS(0) | REG_MCG_C1_FRDIV(4)) &&
+
+        // Wait for PLL clock to be used
+        memPollByte(REG_MCG_S, value, REG_MCG_S_CLKST_MASK, REG_MCG_S_CLKST(3)) &&
+
+        // Now we're in PEE mode
+        // Configure USB for 48 MHz clock
+        // USB = 96 MHz PLL / 2
+        memStore(REG_SIM_CLKDIV2, REG_SIM_CLKDIV2_USBDIV(1)) &&
+
+        // USB uses PLL clock, trace is CPU clock, CLKOUT=OSCERCLK0
+        memStore(REG_SIM_SOPT2, REG_SIM_SOPT2_USBSRC | REG_SIM_SOPT2_PLLFLLSEL |
+            REG_SIM_SOPT2_TRACECLKSEL | REG_SIM_SOPT2_CLKOUTSEL(6)) &&
+
+        // Enable USB clock gate
+        memStore(REG_SIM_SCGC4, REG_SIM_SCGC4_USBOTG) &&
+
+        // Reset USB core
+        memStoreByte(REG_USB0_USBTRC0, REG_USB_USBTRC_USBRESET) &&
+        memPollByte(REG_USB0_USBTRC0, value, REG_USB_USBTRC_USBRESET, 0) &&
+
+        // Test AHB-AP: Can we successfully write to RAM?
+        testMemoryAccess();
+}
+
+bool ARMKinetisDebug::testMemoryAccess()
+{
+    // Try word-wide stores to SRAM
     if (!memStoreAndVerify(0x20000000, 0x31415927))
         return false;
     if (!memStoreAndVerify(0x20000000, 0x76543210))
@@ -502,4 +574,9 @@ bool ARMKinetisDebug::digitalWritePort(unsigned port, unsigned value)
 {
     // Write to all bits on a given port
     return memStore(gpioPortAddr(REG_GPIOA_PDOR, port), value);
+}
+
+bool ARMKinetisDebug::usbSetPullup(bool enable)
+{
+    return memStore(REG_USB0_CONTROL, enable ? USB_CONTROL_DPPULLUPNONOTG : 0);
 }

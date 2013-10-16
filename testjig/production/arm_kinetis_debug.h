@@ -28,6 +28,8 @@
 class ARMKinetisDebug : public ARMDebug
 {
 public:
+    ARMKinetisDebug(unsigned clockPin, unsigned dataPin, LogLevel logLevel = LOG_NORMAL);
+
     // First-time initialization, resetting into system halt state.
     bool startup();
 
@@ -46,6 +48,9 @@ public:
     // Bit-band operations on IO space
     bool memStoreBit(uint32_t addr, unsigned bit, uint32_t data);
     bool memLoadBit(uint32_t addr, unsigned bit, uint32_t &data);
+
+    // USB controller pull-up resistor
+    bool usbSetPullup(bool enable);
 
     // Flash mass-erase operation. Works even on protected devices.
     bool flashMassErase();
@@ -139,6 +144,8 @@ public:
     }
 
 protected:
+    bool testMemoryAccess();
+
     // Low-level flash interface
     bool ftfl_busyWait();
     bool ftfl_launchCommand();
