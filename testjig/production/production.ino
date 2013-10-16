@@ -12,7 +12,7 @@
 #include "electrical_test.h"
 #include "testjig.h"
 
-ARMKinetisDebug target;
+ARMKinetisDebug target(swclkPin, swdioPin, target.LOG_TRACE_MEM);
 FcRemote remote(target);
 ElectricalTest etest(target);
 
@@ -46,7 +46,7 @@ void loop()
     etest.powerOn();
 
     // Start debugging the target
-    if (!target.begin(swclkPin, swdioPin))
+    if (!target.begin())
         return;
     if (!target.startup())
         return;

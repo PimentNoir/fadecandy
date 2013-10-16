@@ -26,12 +26,13 @@
 #include "arm_debug.h"
 
 
-bool ARMDebug::begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
+ARMDebug::ARMDebug(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
+    : clockPin(clockPin), dataPin(dataPin), logLevel(logLevel),
+      fastPins(dataPin == ARMDEBUG_FAST_DATA_PIN && clockPin == ARMDEBUG_FAST_CLOCK_PIN)
+{}
+
+bool ARMDebug::begin()
 {
-    this->clockPin = clockPin;
-    this->dataPin = dataPin;
-    this->logLevel = logLevel;
-    fastPins = dataPin == ARMDEBUG_FAST_DATA_PIN && clockPin == ARMDEBUG_FAST_CLOCK_PIN;
     pinMode(clockPin, OUTPUT);
     pinMode(dataPin, INPUT_PULLUP);
 

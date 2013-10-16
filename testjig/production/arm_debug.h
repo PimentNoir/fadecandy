@@ -50,6 +50,8 @@ public:
         LOG_MAX
     };
 
+    ARMDebug(unsigned clockPin, unsigned dataPin, LogLevel logLevel = LOG_NORMAL);
+
     /**
      * Reinitialize the debug interface, and identify the connected chip.
      * This resets the target chip, putting it in SWD mode and logging its
@@ -57,7 +59,7 @@ public:
      *
      * Returns true on success, logs and returns false on error.
      */
-    bool begin(unsigned clockPin, unsigned dataPin, LogLevel logLevel = LOG_NORMAL);
+    bool begin();
 
     // Memory operations (AHB bus)
     bool memStore(uint32_t addr, uint32_t data);

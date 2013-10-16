@@ -27,6 +27,10 @@
 #include "arm_kinetis_reg.h"
 
 
+ARMKinetisDebug::ARMKinetisDebug(unsigned clockPin, unsigned dataPin, LogLevel logLevel)
+    : ARMDebug(clockPin, dataPin, logLevel)
+{}
+
 bool ARMKinetisDebug::startup()
 {
     return detect() && reset() && debugHalt() && peripheralInit();
