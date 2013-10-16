@@ -32,6 +32,9 @@ void loop()
     Serial.println("--------------------------------------------");
     Serial.println("");
 
+    // Keep target power supply off when we're not using it
+    etest.powerOff();
+
     while (digitalRead(buttonPin) == LOW);
     delay(20);   // Debounce delay
     while (digitalRead(buttonPin) == HIGH) {
@@ -39,6 +42,8 @@ void loop()
         digitalWrite(ledPin, (millis() % 1000) < 150);
     }
     digitalWrite(ledPin, HIGH);
+
+    etest.powerOn();
 
     // Start debugging the target
     if (!target.begin(swclkPin, swdioPin))

@@ -114,6 +114,30 @@ bool ElectricalTest::initTarget()
     return true;
 }
 
+void ElectricalTest::setPowerSupplyVoltage(float volts)
+{
+    // Set the variable power supply voltage. Usable range is from 0V to system VUSB.
+
+    const float fullScaleVoltage = 6.42;
+    int pwm = constrain(volts * (255 / fullScaleVoltage), 0, 255);
+    pinMode(10, OUTPUT);
+    analogWriteFrequency(10, 1000000);
+    analogWrite(10, pwm);
+
+    delay(5);
+}
+
+void ElectricalTest::powerOff()
+{
+    setPowerSupplyVoltage(0);
+}
+
+void ElectricalTest::powerOn()
+{
+    target.log(logLevel, "ETEST: Enabling power supply");
+    setPowerSupplyVoltage(5.0);
+}
+
 bool ElectricalTest::runAll()
 {
     target.log(logLevel, "ETEST: Beginning electrical test");

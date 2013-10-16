@@ -37,6 +37,15 @@ Vin      | +5V power for testjig itself
 2        | To ground via green button
 3        | Fadecandy TCLK (SWCLK)
 4        | Fadecandy TMS (SWDIO)
+5        | Fadecandy USB D- (white wire)
+6        | Fadecandy USB D+ (green wire)
+7        | Fadecandy USB shield ground
+8        | Fadecandy USB signal ground
+9        | (No connection)
+10       | PWM out for power supply control
+11       | (No connection)
+12       | DOUT of second WS2811 LED, via 3.3K current limiting resistor
+13       | (Teensy built-in LED)
 14 (A0)  | Fadecandy output 0 (via resistor divider)
 15 (A1)  | Fadecandy output 1 (via resistor divider)
 16 (A2)  | Fadecandy output 2 (via resistor divider)
@@ -49,9 +58,26 @@ Vin      | +5V power for testjig itself
 23 (A9)  | Fadecandy VUSB     (via resistor divider)
 
 All analog inputs connect via the same resistor divider:
+
 * 1K between analog input and ground
 * 6.8K between analog input and Fadecandy signal
 * Use 5% tolerance resistors or better
+
+Target power supply (micro-USB cable) is driven at a variable voltage. This is achieved by buffering a PWM output with an RC filter and op-amp.
+
+* Op-amp should be able to drive ~20mA. I used half an OPA2350, since it was handy.
+* Op-amp supply voltage driven by Teensy VUSB (~5V), bypassed with 0.1uF cap
+* Configured as a non-inverting amplifier with gain=2
+  * Feedback resistor, - to out, 68K
+  * Feedback resistor, - to ground, 68K
+* Low-pass filter on + input
+  * 68K between + and PWM input
+  * 0.1uF capacitor between + and ground
+* Unused op-amps configured as followers
+  * 33K from - to out
+  * 33K from + to ground
+
+The Teensy isn't capable of communicating over USB with the Fadecandy board when wired this way, but the USB pins are electrically tested in a minimal way. Note that the USB signal ground and shield ground are set up this way only for electrical testing. During testing and programming, the actual power and signal ground is achieved through the test clip's connection to the output port. Except for VUSB, all signals on the USB connector are used only to electrically test the USB connector itself.
 
 Testjig Firmwares
 -----------------

@@ -30,7 +30,10 @@ public:
     ElectricalTest(ARMKinetisDebug &target, int logLevel = ARMDebug::LOG_NORMAL)
         : target(target), logLevel(logLevel) {}
 
-    bool runAll();
+    void powerOff();    // Turn off target power supply
+    void powerOn();     // Set target power supply to default voltage
+
+    bool runAll();      // All normal electrical tests
 
 private:
     ARMKinetisDebug &target;
@@ -41,6 +44,7 @@ private:
         return target.pin(target.PTD, index);
     }
 
+    void setPowerSupplyVoltage(float volts);
     float analogVolts(int pin);
     bool analogThreshold(int pin, float nominal, float tolerance = 0.20);
     bool testOutputPattern(uint8_t bits);
