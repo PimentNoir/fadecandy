@@ -24,26 +24,36 @@ void setup()
     Serial.begin(115200);
 }
 
-void loop()
+void waitForButton()
 {
+    // Wait for button press, with debounce
+
     Serial.println("");
     Serial.println("--------------------------------------------");
     Serial.println(" Fadecandy Test Jig : Press button to start");
     Serial.println("--------------------------------------------");
     Serial.println("");
 
-    // Keep target power supply off when we're not using it
-    etest.powerOff();
-
     while (digitalRead(buttonPin) == LOW);
-    delay(20);   // Debounce delay
+    delay(20);
     while (digitalRead(buttonPin) == HIGH) {
         // While we're waiting, blink the LED to indicate we're alive
         digitalWrite(ledPin, (millis() % 1000) < 150);
     }
     digitalWrite(ledPin, HIGH);
+}
 
-    etest.powerOn();
+void loop()
+{
+    // Keep target power supply off when we're not using it
+    etest.powerOff();
+
+    // Button press starts the test
+    waitForButton();
+
+    // Turn on the target power supply
+    if (!etest.powerOn())
+        return;
 
     // Start debugging the target
     if (!target.begin())

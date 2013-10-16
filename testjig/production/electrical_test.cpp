@@ -23,6 +23,8 @@
 
 #include <Arduino.h>
 #include "electrical_test.h"
+#include "testjig.h"
+#include "arm_kinetis_reg.h"
 
 
 float ElectricalTest::analogVolts(int pin)
@@ -46,7 +48,7 @@ bool ElectricalTest::analogThreshold(int pin, float nominal, float tolerance)
     float upper = nominal + tolerance;
 
     if (volts < lower || volts > upper) {
-        target.log(target.LOG_ERROR,
+        target.log(LOG_ERROR,
                 "ETEST: Analog value %d outside reference range! "
                 "value = %.2fv, ref = %.2fv +/- %.2fv",
                 pin, volts, nominal, tolerance);
@@ -61,11 +63,12 @@ bool ElectricalTest::testOutputPattern(uint8_t bits)
     // Set the target's 8-bit output port to the given value, and check all analog values
 
     // Write the port all at once
-    target.digitalWritePort(outPin(0), bits);
+    if (!target.digitalWritePort(outPin(0), bits))
+        return false;
 
     // Check power supply each time
-    if (!analogThreshold(8, 3.3)) return false;
-    if (!analogThreshold(9, 5.0)) return false;
+    if (!analogThreshold(analogTarget33vPin, 3.3)) return false;
+    if (!analogThreshold(analogTargetVUsbPin, 5.0)) return false;
 
     // Check all data signal levels
     for (unsigned n = 0; n < 8; n++) {
@@ -79,7 +82,7 @@ bool ElectricalTest::testOutputPattern(uint8_t bits)
 
 bool ElectricalTest::testAllOutputPatterns()
 {
-    // Multiple output patterns
+    target.log(logLevel, "ETEST: Testing data output patterns");
 
     // All on, all off
     if (!testOutputPattern(0x00)) return false;
@@ -111,6 +114,10 @@ bool ElectricalTest::initTarget()
             return false;
     }
 
+    // Disable target USB USB pull-ups
+    if (!target.usbSetPullup(false))
+        return false;
+
     return true;
 }
 
@@ -118,13 +125,16 @@ void ElectricalTest::setPowerSupplyVoltage(float volts)
 {
     // Set the variable power supply voltage. Usable range is from 0V to system VUSB.
 
-    const float fullScaleVoltage = 6.42;
-    int pwm = constrain(volts * (255 / fullScaleVoltage), 0, 255);
-    pinMode(10, OUTPUT);
-    analogWriteFrequency(10, 1000000);
-    analogWrite(10, pwm);
+    int pwm = constrain(volts * (255 / powerSupplyFullScaleVoltage), 0, 255);
+    pinMode(powerPWMPin, OUTPUT);
+    analogWriteFrequency(powerPWMPin, 1000000);
+    analogWrite(powerPWMPin, pwm);
 
-    delay(5);
+    /*
+     * Time for the PSU to settle. Our testjig's power supply settles very
+     * fast (<1ms), but the capacitors on the target need more time to charge.
+     */
+    delay(30);
 }
 
 void ElectricalTest::powerOff()
@@ -132,10 +142,90 @@ void ElectricalTest::powerOff()
     setPowerSupplyVoltage(0);
 }
 
-void ElectricalTest::powerOn()
+bool ElectricalTest::powerOn()
 {
     target.log(logLevel, "ETEST: Enabling power supply");
-    setPowerSupplyVoltage(5.0);
+    const float volts = 5.0;
+    setPowerSupplyVoltage(volts);
+    return analogThreshold(analogTargetVUsbPin, volts);
+}
+
+bool ElectricalTest::testHighZ(int pin)
+{
+    // Test a pin to make sure it's high-impedance, by using its parasitic capacitance
+    for (unsigned i = 0; i < 10; i++) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, i & 1);
+        pinMode(pin, INPUT);
+        if (digitalRead(pin) != (i & 1))
+            return false;
+    }
+    return true;
+}
+
+bool ElectricalTest::testPull(int pin, bool state)
+{
+    // Test a pin for a pull-up/down resistor
+    for (unsigned i = 0; i < 10; i++) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, i & 1);
+        pinMode(pin, INPUT);
+        if (digitalRead(pin) != state)
+            return false;
+    }
+    return true;
+}    
+
+bool ElectricalTest::testUSBConnections()
+{
+    target.log(logLevel, "ETEST: Testing USB connections");
+
+    // Run this test a few times
+    for (unsigned iter = 0; iter < 4; iter++) {
+
+        // Start with pull-up disabled
+        if (!target.usbSetPullup(false))
+            return false;
+
+        // Test both USB ground connections
+        pinMode(usbShieldGroundPin, INPUT_PULLUP);
+        pinMode(usbSignalGroundPin, INPUT_PULLUP);
+        if (digitalRead(usbShieldGroundPin) != LOW) {
+            target.log(LOG_ERROR, "ETEST: Faulty USB shield ground");
+            return false;
+        }
+        if (digitalRead(usbSignalGroundPin) != LOW) {
+            target.log(LOG_ERROR, "ETEST: Faulty USB signal ground");
+            return false;
+        }
+
+        // Test for a high-impedance USB D+ and D- by charging and discharging parasitic capacitance
+        if (!testHighZ(usbDMinusPin)) {
+            target.log(LOG_ERROR, "ETEST: Fault on USB D-, expected High-Z");
+            return false;
+        }
+        if (!testHighZ(usbDPlusPin)) {
+            target.log(LOG_ERROR, "ETEST: Fault on USB D+, expected High-Z");
+            return false;
+        }
+
+        // Turn on USB pull-up on D+
+        if (!target.usbSetPullup(true))
+            return false;
+
+        // Now D+ should be pulled up, and D- needs to still be high-Z
+        if (!testPull(usbDPlusPin, HIGH)) {
+            target.log(LOG_ERROR, "ETEST: Fault on USB D+, no pull-up found");
+            return false;
+        }
+        if (!testHighZ(usbDMinusPin)) {
+            target.log(LOG_ERROR, "ETEST: Fault on USB D-, expected High-Z. Possible short to D+");
+            return false;
+        }
+
+    }
+
+    return true;
 }
 
 bool ElectricalTest::runAll()
@@ -143,6 +233,10 @@ bool ElectricalTest::runAll()
     target.log(logLevel, "ETEST: Beginning electrical test");
 
     if (!initTarget())
+        return false;
+
+    // USB tests
+    if (!testUSBConnections())
         return false;
 
     // Output patterns

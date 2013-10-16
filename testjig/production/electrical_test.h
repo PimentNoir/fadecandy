@@ -31,13 +31,15 @@ public:
         : target(target), logLevel(logLevel) {}
 
     void powerOff();    // Turn off target power supply
-    void powerOn();     // Set target power supply to default voltage
+    bool powerOn();     // Set target power supply to default voltage
 
     bool runAll();      // All normal electrical tests
 
 private:
     ARMKinetisDebug &target;
     int logLevel;
+
+    const int LOG_ERROR = ARMDebug::LOG_ERROR;
 
     // Pin number for an LED output
     int outPin(int index) {
@@ -46,8 +48,11 @@ private:
 
     void setPowerSupplyVoltage(float volts);
     float analogVolts(int pin);
-    bool analogThreshold(int pin, float nominal, float tolerance = 0.20);
+    bool analogThreshold(int pin, float nominal, float tolerance = 0.30);
     bool testOutputPattern(uint8_t bits);
     bool testAllOutputPatterns();
+    bool testUSBConnections();
+    bool testHighZ(int pin);
+    bool testPull(int pin, bool state);
     bool initTarget();
 };
