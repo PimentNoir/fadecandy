@@ -90,7 +90,7 @@ bool ARMKinetisDebug::debugHalt()
      * Since this is expected to fail a bunch before succeeding, mute errors temporarily.
      */
 
-    unsigned haltRetries = 200;
+    unsigned haltRetries = 10000;
     LogLevel savedLogLevel;
     uint32_t dhcsr;
 
