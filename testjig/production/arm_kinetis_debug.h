@@ -58,8 +58,24 @@ public:
     // Write one flash sector from the buffer
     bool flashSectorProgram(uint32_t address);
 
-    // Entire programming process, including mass erase, from a contiguous firmware image.
-    bool flashEraseAndProgram(const uint32_t *image, unsigned numSectors);
+    /*
+     * High-level flash programming manager. Handles the entire programming process,
+     * including protection resets and verification.
+     */
+    class FlashProgrammer {
+        public:
+            FlashProgrammer(ARMKinetisDebug &target, const uint32_t *image, unsigned numSectors);
+            bool begin();
+            bool isComplete();
+            bool next();
+
+        private:
+            ARMKinetisDebug &target;
+            const uint32_t *image;
+            unsigned numSectors;
+            unsigned nextSector;
+            bool isVerifying;
+    };
 
     static const uint32_t FLASH_SECTOR_SIZE = 1024;
 

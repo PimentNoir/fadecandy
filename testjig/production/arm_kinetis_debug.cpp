@@ -343,59 +343,53 @@ bool ARMKinetisDebug::ftfl_handleCommandStatus(const char *cmdSpecificError)
     return true;
 }
 
-bool ARMKinetisDebug::flashEraseAndProgram(const uint32_t *image, unsigned numSectors)
+ARMKinetisDebug::FlashProgrammer::FlashProgrammer(
+    ARMKinetisDebug &target, const uint32_t *image, unsigned numSectors)
+    : target(target), image(image), numSectors(numSectors)
+{}
+
+bool ARMKinetisDebug::FlashProgrammer::begin()
 {
-    if (!flashSectorBufferInit())
-        return false;
-    if (!flashMassErase())
+    nextSector = 0;
+    isVerifying = false;
+
+    // Start with a mass-erase
+    if (!target.flashMassErase())
         return false;
 
     // Reset again after mass erase, for new protection bits to take effect
-    if (!reset())
-        return false;
-    if (!debugHalt())
+    if (!(target.reset() && target.debugHalt() && target.peripheralInit()))
         return false;
 
-    uint32_t address = 0;
-    uint32_t count = numSectors;
-    const uint32_t *ptr = image;
-
-    while (count) {
-        log(LOG_NORMAL, "FLASH: Programming sector at %08x", address);
-
-        if (!flashSectorBufferWrite(0, ptr, FLASH_SECTOR_SIZE/4))
-            return false;
-        if (!flashSectorProgram(address))
-            return false;
-
-        count--;
-        address += FLASH_SECTOR_SIZE;
-        ptr += FLASH_SECTOR_SIZE/4;
-    }
-
-    // Another reset! Load new protection flags.
-    if (!reset())
-        return false;
-    if (!debugHalt())
+    // Use FlexRAM as normal RAM, for buffering flash sectors
+    if (!target.flashSectorBufferInit())
         return false;
 
-    // Verify flash memory
+    return true;
+}
 
-    uint32_t buffer[FLASH_SECTOR_SIZE/4];
-    address = 0;
-    count = numSectors;
-    ptr = image;
+bool ARMKinetisDebug::FlashProgrammer::isComplete()
+{
+    return isVerifying && nextSector == numSectors;
+}
 
-    while (count) {
-        log(LOG_NORMAL, "FLASH: Verifying sector at %08x", address);
+bool ARMKinetisDebug::FlashProgrammer::next()
+{
+    uint32_t address = nextSector * FLASH_SECTOR_SIZE;
+    const uint32_t *ptr = image + (nextSector * FLASH_SECTOR_SIZE/4);
 
-        if (!memLoad(address, buffer, FLASH_SECTOR_SIZE/4))
+    if (isVerifying) {
+        target.log(LOG_NORMAL, "FLASH: Verifying sector at %08x", address);
+
+        uint32_t buffer[FLASH_SECTOR_SIZE/4];
+        if (!target.memLoad(address, buffer, FLASH_SECTOR_SIZE/4))
             return false;
 
         bool okay = true;
+
         for (unsigned i = 0; i < FLASH_SECTOR_SIZE/4; i++) {
             if (buffer[i] != ptr[i]) {
-                log(LOG_ERROR, "FLASH: Verify error at %08x. Expected %08x, actual %08x",
+                target.log(LOG_ERROR, "FLASH: Verify error at %08x. Expected %08x, actual %08x",
                     address + i*4, ptr[i], buffer[i]);
                 okay = false;
             }
@@ -403,12 +397,30 @@ bool ARMKinetisDebug::flashEraseAndProgram(const uint32_t *image, unsigned numSe
 
         if (!okay)
             return false;
-        count--;
-        address += FLASH_SECTOR_SIZE;
-        ptr += FLASH_SECTOR_SIZE/4;
+
+        if (++nextSector == numSectors) {
+            // Done with verify!
+            target.log(LOG_NORMAL, "FLASH: Programming successful!");
+        }
+
+    } else {
+        target.log(LOG_NORMAL, "FLASH: Programming sector at %08x", address);
+
+        if (!target.flashSectorBufferWrite(0, ptr, FLASH_SECTOR_SIZE/4))
+            return false;
+        if (!target.flashSectorProgram(address))
+            return false;
+
+        if (++nextSector == numSectors) {
+            // Done programming. Another reset! Load new protection flags.
+            if (!(target.reset() && target.debugHalt() && target.peripheralInit()))
+                return false;
+
+            nextSector = 0;
+            isVerifying = true;
+        }
     }
 
-    log(LOG_NORMAL, "FLASH: Programming successful!");
     return true;
 }
 
