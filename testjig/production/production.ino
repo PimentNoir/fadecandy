@@ -12,7 +12,7 @@
 #include "electrical_test.h"
 #include "testjig.h"
 
-ARMKinetisDebug target(swclkPin, swdioPin, target.LOG_TRACE_MEM);
+ARMKinetisDebug target(swclkPin, swdioPin);
 FcRemote remote(target);
 ElectricalTest etest(target);
 
@@ -41,6 +41,20 @@ void waitForButton()
         digitalWrite(ledPin, (millis() % 1000) < 150);
     }
     digitalWrite(ledPin, HIGH);
+}
+
+void success()
+{
+    Serial.println("");
+    Serial.println("#### Tests Passed! ####");
+    Serial.println("");
+
+    // Green and blue throbbing means success!
+    while (1) {
+        float x = sin(millis() * 0.008);
+        if (!remote.setPixel(0, 0, 0xc + 0x10 * x, 0)) return;
+        if (!remote.setPixel(1, 0, 0, 0xc - 0x10 * x)) return;
+    }
 }
 
 void loop()
@@ -81,10 +95,5 @@ void loop()
     if (!remote.initLUT())
         return;
 
-    // Green and blue throbbing means success!
-    while (1) {
-        float x = sin(millis() * 0.008);
-        if (!remote.setPixel(0, 0, 0xc + 0x10 * x, 0)) return;
-        if (!remote.setPixel(1, 0, 0, 0xc - 0x10 * x)) return;
-    }
+    success();
 }
