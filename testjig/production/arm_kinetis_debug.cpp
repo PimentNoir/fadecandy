@@ -139,7 +139,7 @@ bool ARMKinetisDebug::peripheralInit()
     if (!memStoreAndVerify(0x20000000, 0x76543210))
         return false;
 
-    // Test byte-wide writes
+    // Test byte-wide memory access
     uint32_t word;
     uint8_t byte;
     if (!memStoreByte(0x20000001, 0x55))
@@ -155,7 +155,26 @@ bool ARMKinetisDebug::peripheralInit()
     if (!memLoadByte(0x20000003, byte))
         return false;
     if (byte != 0x76) {
-        log(LOG_ERROR, "ARMKinetisDebug: Byte-wide AHB read seems broken! (Test byte = %08x)", byte);
+        log(LOG_ERROR, "ARMKinetisDebug: Byte-wide AHB read seems broken! (Test byte = %02x)", byte);
+        return false;
+    }
+
+    // Test halfword-wide memory access
+    uint16_t half;
+    if (!memStoreHalf(0x20000000, 0x5abc))
+        return false;
+    if (!memStoreHalf(0x20000002, 0xdef0))
+        return false;
+    if (!memLoad(0x20000000, word))
+        return false;
+    if (word != 0xdef05abc) {
+        log(LOG_ERROR, "ARMKinetisDebug: Halfword-wide AHB write seems broken! (Test word = %08x)", word);
+        return false;
+    }
+    if (!memLoadHalf(0x20000002, half))
+        return false;
+    if (half != 0xdef0) {
+        log(LOG_ERROR, "ARMKinetisDebug: Halfword-wide AHB read seems broken! (Test half = %04x)", half);
         return false;
     }
 

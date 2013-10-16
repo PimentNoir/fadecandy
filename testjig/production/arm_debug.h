@@ -73,6 +73,10 @@ public:
     bool memStoreByte(uint32_t addr, uint8_t data);
     bool memLoadByte(uint32_t addr, uint8_t &data);
 
+    // Halfword (16-bit) load/store operations (AHB bus)
+    bool memStoreHalf(uint32_t addr, uint16_t data);
+    bool memLoadHalf(uint32_t addr, uint16_t &data);
+
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 

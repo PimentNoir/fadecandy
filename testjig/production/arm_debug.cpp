@@ -296,6 +296,42 @@ bool ARMDebug::memLoadByte(uint32_t addr, uint8_t &data)
     return true;
 }
 
+bool ARMDebug::memStoreHalf(uint32_t addr, uint16_t data)
+{
+    if (!memWait())
+        return false;
+    if (!memWriteCSW(CSW_16BIT))
+        return false;
+    if (!apWrite(MEM_TAR, addr))
+        return false;
+
+    log(LOG_TRACE_MEM, "MEM Store [%08x] %04x", addr, data);
+
+    // Replicate across lanes
+    uint32_t word = data | (data << 16);
+
+    return apWrite(MEM_DRW, word);
+}
+
+bool ARMDebug::memLoadHalf(uint32_t addr, uint16_t &data)
+{
+    uint32_t word;
+    if (!memWait())
+        return false;
+    if (!memWriteCSW(CSW_16BIT))
+        return false;
+    if (!apWrite(MEM_TAR, addr))
+        return false;
+    if (!apRead(MEM_DRW, word))
+        return false;
+
+    // Select the proper lane
+    data = word >> ((addr & 2) << 3);
+
+    log(LOG_TRACE_MEM, "MEM Load  [%08x] %04x", addr, data);
+    return true;
+}
+
 bool ARMDebug::apWrite(unsigned addr, uint32_t data)
 {
     log(LOG_TRACE_AP, "AP  Write [%x] %08x", addr, data);
