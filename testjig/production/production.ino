@@ -29,7 +29,7 @@ void loop()
 {
     Serial.println("");
     Serial.println("--------------------------------------------");
-    Serial.println(" Fadecanday Test Jig : Press button to start");
+    Serial.println(" Fadecandy Test Jig : Press button to start");
     Serial.println("--------------------------------------------");
     Serial.println("");
 
