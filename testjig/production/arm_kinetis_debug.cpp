@@ -493,3 +493,9 @@ int ARMKinetisDebug::digitalRead(unsigned p)
         return -1;
     return data;
 }
+
+bool ARMKinetisDebug::digitalWritePort(unsigned port, unsigned value)
+{
+    // Write to all bits on a given port
+    return memStore(gpioPortAddr(REG_GPIOA_PDOR, port), value);
+}

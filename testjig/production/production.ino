@@ -9,15 +9,18 @@
 #include "arm_kinetis_debug.h"
 #include "arm_kinetis_reg.h"
 #include "fc_remote.h"
+#include "electrical_test.h"
 #include "testjig.h"
 
 ARMKinetisDebug target;
 FcRemote remote(target);
+ElectricalTest etest(target);
 
 void setup()
 {
     pinMode(ledPin, OUTPUT);
     pinMode(buttonPin, INPUT_PULLUP);
+    analogReference(INTERNAL);
     Serial.begin(115200);
 }
 
@@ -41,6 +44,10 @@ void loop()
     if (!target.begin(swclkPin, swdioPin))
         return;
     if (!target.startup())
+        return;
+
+    // Run an electrical test, to verify that the target board is okay
+    if (!etest.runAll())
         return;
 
     // Program firmware, blinking both LEDs in unison for status.

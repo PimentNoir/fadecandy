@@ -41,6 +41,7 @@ public:
     bool pinMode(unsigned p, int mode);
     bool digitalWrite(unsigned p, int value);
     int digitalRead(unsigned p);
+    bool digitalWritePort(unsigned port, unsigned value);
 
     // Bit-band operations on IO space
     bool memStoreBit(uint32_t addr, unsigned bit, uint32_t data);
@@ -78,6 +79,15 @@ public:
     };
 
     static const uint32_t FLASH_SECTOR_SIZE = 1024;
+
+    // Port constants. (Corresponds to PCR address base)
+    enum Port {
+        PTA = 0x0000,
+        PTB = 0x1000,
+        PTC = 0x2000,
+        PTD = 0x3000,
+        PTE = 0x4000,
+    };
 
     // Pin constants. (Corresponds to PCR address map)
     enum Pin {
@@ -123,7 +133,10 @@ public:
         PTE1    = 0x4000 + 4 * 1,
     };
 
-    // Pin configurations
+    // Assemble a pin number programmatically
+    Pin pin(Port port, unsigned index) {
+        return (Pin)(port + index * 4);
+    }
 
 protected:
     // Low-level flash interface

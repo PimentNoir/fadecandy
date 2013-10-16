@@ -80,6 +80,9 @@ public:
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
 
+    // Write to the log, printf-style
+    void log(int level, const char *fmt, ...);
+
     // Hex dump target memory words to the log
     void hexDump(uint32_t addr, unsigned count, int level = LOG_NORMAL);
 
@@ -98,9 +101,6 @@ private:
     } cache;
 
 protected:
-    // Internal logging
-    void log(int level, const char *fmt, ...);
-
     // Low-level wire interface (LSB-first)
     void wireWrite(uint32_t data, unsigned nBits);
     uint32_t wireRead(unsigned nBits);

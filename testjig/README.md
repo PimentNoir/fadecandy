@@ -28,15 +28,30 @@ Hardware tidbits
 Teensy 3.0 pin assignment
 -------------------------
 
-Pin | Description
---- | ----------------------------------
-Gnd | Shared ground
-Vin | +5V power for testjig itself
-0   | Teensy RX, Fadecandy TX
-1   | Teensy TX, Fadecandy RX
-2   | To ground via green button
-3   | Fadecandy TCLK (SWCLK)
-4   | Fadecandy TMS (SWDIO)
+Pin      | Description
+-------- | ----------------------------------
+Gnd      | Shared ground
+Vin      | +5V power for testjig itself
+0        | Teensy RX, Fadecandy TX
+1        | Teensy TX, Fadecandy RX
+2        | To ground via green button
+3        | Fadecandy TCLK (SWCLK)
+4        | Fadecandy TMS (SWDIO)
+14 (A0)  | Fadecandy output 0 (via resistor divider)
+15 (A1)  | Fadecandy output 1 (via resistor divider)
+16 (A2)  | Fadecandy output 2 (via resistor divider)
+17 (A3)  | Fadecandy output 3 (via resistor divider)
+18 (A4)  | Fadecandy output 4 (via resistor divider)
+19 (A5)  | Fadecandy output 5 (via resistor divider)
+20 (A6)  | Fadecandy output 6 (via resistor divider)
+21 (A7)  | Fadecandy output 7 (via resistor divider)
+22 (A8)  | Fadecandy 3.3v     (via resistor divider)
+23 (A9)  | Fadecandy VUSB     (via resistor divider)
+
+All analog inputs connect via the same resistor divider:
+* 1K between analog input and ground
+* 6.8K between analog input and Fadecandy signal
+* Use 5% tolerance resistors or better
 
 Testjig Firmwares
 -----------------
