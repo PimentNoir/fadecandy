@@ -413,6 +413,21 @@ bool ARMDebug::memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t ex
     return false;
 }
 
+bool ARMDebug::memPollByte(unsigned addr, uint8_t &data, uint8_t mask, uint8_t expected, unsigned retries)
+{
+    expected &= mask;
+    do {
+        if (!memLoadByte(addr, data))
+            return false;
+        if ((data & mask) == expected)
+            return true;
+    } while (retries--);
+
+    log(LOG_ERROR, "ARMDebug: Timed out while polling MEM ([%08x] & %02x == %02x). Current value: %02x",
+        addr, mask, expected, data);
+    return false;
+}
+
 bool ARMDebug::dpSelect(unsigned addr)
 {
     /*

@@ -79,6 +79,7 @@ public:
 
     // Poll for an expected value
     bool memPoll(unsigned addr, uint32_t &data, uint32_t mask, uint32_t expected, unsigned retries = DEFAULT_RETRIES);
+    bool memPollByte(unsigned addr, uint8_t &data, uint8_t mask, uint8_t expected, unsigned retries = DEFAULT_RETRIES);
 
     // Write to the log, printf-style
     void log(int level, const char *fmt, ...);
