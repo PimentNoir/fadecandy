@@ -7,10 +7,25 @@
 #
 ########################### Configuration ###########################
 
-# Paths for all .hex files to include
+# Paths for all .hex files to include in the installation image
 SOURCE_FILES = [
     "../bin/fc-boot-v101.hex",
     "../firmware/fc-firmware.hex",
+    ]
+
+# ELF file corresponding to the firmware under test, for symbol lookups
+ELF_FILE = "../firmware/fc-firmware.elf"
+
+# Which GDB to use for the firmware image
+GDB_COMMAND = "arm-none-eabi-gdb"
+
+# Table of expressions to evaluate under GDB, and names to give them
+DEFINITIONS = [
+    ('fw_pFlags', '&buffers.flags'),
+    ('fw_pFbPrev', '&buffers.fbPrev'),
+    ('fw_pFbNext', '&buffers.fbNext'),
+    ('fw_pLUT', '&buffers.lutCurrent[0]'),
+    ('fw_usbPacketBufOffset', '&((usb_packet_t*)0)->buf'),
     ]
 
 # Where to generate output
@@ -18,7 +33,7 @@ OUTPUT_FILE = "production/firmware_data.h"
 
 #####################################################################
 
-import intelhex, time, hashlib, struct
+import intelhex, time, hashlib, struct, subprocess
 
 # Flash memory sector size
 SECTOR_SIZE = 1024
@@ -71,8 +86,22 @@ numBytes = numSectors * SECTOR_SIZE
 numWords = numBytes / 4
 image += chr(loader.padding) * (numBytes - len(image))
 
-output.write("static const unsigned firmwareSectorCount = %d;\n" % numSectors)
-output.write("static const uint32_t firmwareData[%d] = {\n" % numWords)
+# Use a GDB subprocess to evaluate symbols, and write those out to the file
+gdbArgs = [GDB_COMMAND, '--batch', ELF_FILE]
+for name, expression in DEFINITIONS:
+    gdbArgs.append('-ex')
+    gdbArgs.append('p (uint32_t)' + expression)
+lines = subprocess.Popen(gdbArgs, stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE).communicate()[0].split('\n')
+for i, (name, expression) in enumerate(DEFINITIONS):
+    addr = int(lines[i].split('=', 2)[1])
+    output.write("static const uint32_t %s = 0x%x;  // %s\n" % (name, addr, expression))
+
+output.write("\n")
+
+# Write the combined firmware image
+output.write("static const unsigned fw_sectorCount = %d;\n" % numSectors)
+output.write("static const uint32_t fw_data[%d] = {\n" % numWords)
 
 wordsPerLine = 4
 numLines = numWords / wordsPerLine
