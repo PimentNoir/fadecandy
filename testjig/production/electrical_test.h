@@ -48,10 +48,13 @@ private:
 
     void setPowerSupplyVoltage(float volts);
     float analogVolts(int pin);
+    bool analogThresholdFromSample(float volts, int pin, float nominal, float tolerance = 0.30);
     bool analogThreshold(int pin, float nominal, float tolerance = 0.30);
+
     bool testOutputPattern(uint8_t bits);
     bool testAllOutputPatterns();
     bool testUSBConnections();
+    bool testBoostConverter();
     bool testHighZ(int pin);
     bool testPull(int pin, bool state);
     bool initTarget();

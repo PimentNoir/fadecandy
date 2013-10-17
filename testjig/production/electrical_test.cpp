@@ -42,8 +42,11 @@ float ElectricalTest::analogVolts(int pin)
 bool ElectricalTest::analogThreshold(int pin, float nominal, float tolerance)
 {
     // Measure an analog input, and verify it's close enough to expected values.
+    return analogThresholdFromSample(analogVolts(pin), pin, nominal, tolerance);
+}
 
-    float volts = analogVolts(pin);
+bool ElectricalTest::analogThresholdFromSample(float volts, int pin, float nominal, float tolerance)
+{
     float lower = nominal - tolerance;
     float upper = nominal + tolerance;
 
@@ -135,6 +138,59 @@ void ElectricalTest::setPowerSupplyVoltage(float volts)
      * fast (<1ms), but the capacitors on the target need more time to charge.
      */
     delay(30);
+}
+
+bool ElectricalTest::testBoostConverter()
+{
+    target.log(logLevel, "ETEST: Testing boost converter");
+
+    // Test over a range of input voltages
+    for (float supply = 5.0; supply > 3.5; supply -= 0.2) {
+
+        // Turn all outputs on
+        if (!target.digitalWritePort(outPin(0), 0xFF))
+            return false;
+
+        // Adjust power supply
+        setPowerSupplyVoltage(supply);
+
+        // Collect all relevant voltages
+        float vusb = analogVolts(analogTargetVUsbPin);
+        float vcc = analogVolts(analogTarget33vPin);
+        float v0 = analogVolts(0);
+        float v1 = analogVolts(1);
+        float v2 = analogVolts(2);
+        float v3 = analogVolts(3);
+        float v4 = analogVolts(4);
+        float v5 = analogVolts(5);
+        float v6 = analogVolts(6);
+        float v7 = analogVolts(7);
+
+        target.log(logLevel,
+            "  Supply at %.1fv : Target vusb=%.2fv vcc=%.2fv outputs=["
+            "%.2fv %.2fv %.2fv %.2fv %.2fv %.2fv %.2fv %.2fv]",
+            supply, vusb, vcc, v0, v1, v2, v3, v4, v5, v6, v7);
+
+        if (!analogThresholdFromSample(vusb, analogTargetVUsbPin, supply)) return false;
+        if (!analogThresholdFromSample(vcc, analogTarget33vPin, 3.3)) return false;
+        if (!analogThresholdFromSample(v0, 0, 5.0)) return false;
+        if (!analogThresholdFromSample(v1, 1, 5.0)) return false;
+        if (!analogThresholdFromSample(v2, 2, 5.0)) return false;
+        if (!analogThresholdFromSample(v3, 3, 5.0)) return false;
+        if (!analogThresholdFromSample(v4, 4, 5.0)) return false;
+        if (!analogThresholdFromSample(v5, 5, 5.0)) return false;
+        if (!analogThresholdFromSample(v6, 6, 5.0)) return false;
+        if (!analogThresholdFromSample(v7, 7, 5.0)) return false;
+
+        // Also make sure we can turn outputs off properly
+        if (!target.digitalWritePort(outPin(0), 0x00))
+            return false;
+        for (unsigned n = 0; n < 8; n++)
+            if (!analogThreshold(n, 0))
+                return false;
+    }
+
+    return true;
 }
 
 void ElectricalTest::powerOff()
@@ -241,6 +297,10 @@ bool ElectricalTest::runAll()
 
     // Output patterns
     if (!testAllOutputPatterns())
+        return false;
+
+    // Now try dialing down the power supply voltage, and make sure it still works
+    if (!testBoostConverter())
         return false;
 
     target.log(logLevel, "ETEST: Successfully completed electrical test");
