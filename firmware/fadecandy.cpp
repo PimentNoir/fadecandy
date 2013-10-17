@@ -82,12 +82,15 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
      *
      * Remember that our LUT is 257 entries long. The final entry corresponds to an
      * input of 0x10000, which can't quite be reached.
+     *
+     * 'arg' is in the range [0, 0xFFFF]
      */
 
-    unsigned index = arg >> 8;
-    unsigned alpha = arg & 0xFF;
-    unsigned invAlpha = 0x100 - alpha;
+    unsigned index = arg >> 8;          // Range [0, 0xFF]
+    unsigned alpha = arg & 0xFF;        // Range [0, 0xFF]
+    unsigned invAlpha = 0x100 - alpha;  // Range [1, 0x100]
 
+    // Result in range [0, 0xFFFF]
     return (lut[index] * invAlpha + lut[index + 1] * alpha) >> 8;
 }
 
@@ -101,14 +104,20 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
      *    1. Interpolate framebuffer
      *    2. Interpolate LUT
      *    3. Dithering
+     *
+     * icPrev in range [0, 0x1010000]
+     * icNext in range [0, 0x1010000]
+     * icPrev + icNext = 0x1010000
      */
 
     // Per-channel linear interpolation and conversion to 16-bit color.
+    // Result range: [0, 0xFFFF] 
     int iR = (pixelPrev[0] * icPrev + pixelNext[0] * icNext) >> 16;
     int iG = (pixelPrev[1] * icPrev + pixelNext[1] * icNext) >> 16;
     int iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
 
     // Pass through our color LUT
+    // Result range: [0, 0xFFFF] 
     iR = lutInterpolate(&lut[0 * LUT_CH_SIZE], iR);
     iG = lutInterpolate(&lut[1 * LUT_CH_SIZE], iG);
     iB = lutInterpolate(&lut[2 * LUT_CH_SIZE], iB);
@@ -166,6 +175,10 @@ static void updateDrawBuffer(unsigned interpCoefficient)
      * Interpolation coefficients, including a multiply by 257 to convert 8-bit color to 16-bit color.
      * You'd think that it would save clock cycles to calculate icPrev in updatePixel(), but this doesn't
      * seem to be the case.
+     *
+     * icPrev in range [0, 0x1010000]
+     * icNext in range [0, 0x1010000]
+     * icPrev + icNext = 0x1010000
      */
 
     uint32_t icPrev = 257 * (0x10000 - interpCoefficient);
