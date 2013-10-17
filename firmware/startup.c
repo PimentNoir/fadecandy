@@ -34,6 +34,8 @@
 
 #include "mk20dx128.h"
 
+typedef void (*initFunc_t)(void);
+
 extern unsigned long _stext;
 extern unsigned long _etext;
 extern unsigned long _sdata;
@@ -41,6 +43,8 @@ extern unsigned long _edata;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
 extern unsigned long _estack;
+extern initFunc_t __init_array_start;
+extern initFunc_t __init_array_end;
 
 extern int main (void);
 void ResetHandler(void);
@@ -203,8 +207,11 @@ void ResetHandler(void)
     SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
 
     __enable_irq();
-
     _init_Teensyduino_internal_();
+
+    initFunc_t *p = &__init_array_start;
+    for (; p != &__init_array_end; p++)
+        p[0]();
 
     main();
     while (1) ;
