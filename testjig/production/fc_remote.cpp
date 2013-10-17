@@ -104,3 +104,65 @@ bool FcRemote::setPixel(unsigned index, int red, int green, int blue)
         target.memStoreByte(packet + idOffset + 1, constrain(green, 0, 255)) &&
         target.memStoreByte(packet + idOffset + 2, constrain(blue, 0, 255));
 }
+
+float FcRemote::measureFrameRate(float minDuration)
+{
+    // Use the end-to-end LED data signal to measure the overall system frame rate.
+    // Gaps of >50us indicate frame boundaries
+
+    pinMode(dataFeedbackPin, INPUT);
+
+    uint32_t minMicros = minDuration * 1000000;
+    uint32_t startTime = micros();
+    uint32_t gapStart = 0;
+    bool inGap = false;
+    uint32_t frames = 0;
+    uint32_t duration;
+
+    while (1) {
+        long now = micros();
+        duration = now - startTime;
+        if (duration >= minMicros)
+            break;
+
+        if (digitalRead(dataFeedbackPin)) {
+            // Definitely not in a gap, found some data
+            inGap = false;
+            gapStart = now;
+
+        } else if (inGap) {
+            // Already in a gap, wait for some data.
+
+        } else if (uint32_t(now - gapStart) >= 50) {
+            // We just found an inter-frame gap
+
+            inGap = true;
+            frames++;
+        }
+    }
+
+    return frames / (duration * 1e-6);
+}
+
+bool FcRemote::testFrameRate()
+{
+    const float goalFPS = 390;
+    const float maxFPS = 450;
+
+    target.log(target.LOG_NORMAL, "FPS: Measuring frame rate...");
+    float fps = measureFrameRate();
+    target.log(target.LOG_NORMAL, "FPS: Measured %.2f frames/sec", fps);
+
+    if (fps > maxFPS) {
+        target.log(target.LOG_ERROR, "FPS: ERROR, frame rate of %.2f frames/sec is unrealistically high!", fps);
+        return false;
+    }
+
+    if (fps < goalFPS) {
+        target.log(target.LOG_ERROR, "FPS: ERROR, frame rate of %.2f frames/sec is below goal of %.2f!",
+            fps, goalFPS);
+        return false;
+    }
+
+    return true;
+}

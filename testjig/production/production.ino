@@ -95,5 +95,13 @@ void loop()
     if (!remote.initLUT())
         return;
 
+    // Pixel pattern to display while running the frame rate test (white / green)
+    if (!remote.setPixel(0, 16, 16, 16)) return;
+    if (!remote.setPixel(1, 0, 24, 0)) return;
+
+    // Check the frame rate; make sure the firmware is going fast enough
+    if (!remote.testFrameRate())
+        return;
+
     success();
 }

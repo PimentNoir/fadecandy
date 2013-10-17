@@ -19,5 +19,8 @@ static const unsigned usbSignalGroundPin = 8;
 static const unsigned analogTarget33vPin = 8;
 static const unsigned analogTargetVUsbPin = 9;
 
+// LED functional testing (fast pin)
+static const unsigned dataFeedbackPin = 11;
+
 // Analog constants
 static const float powerSupplyFullScaleVoltage = 6.42;

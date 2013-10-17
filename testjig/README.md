@@ -43,8 +43,8 @@ Vin      | +5V power for testjig itself
 8        | Fadecandy USB signal ground
 9        | (No connection)
 10       | PWM out for power supply control
-11       | (No connection)
-12       | DOUT of second WS2811 LED, via 3.3K current limiting resistor
+11       | DOUT of second WS2811 LED, via 3.3K current limiting resistor
+12       | (No connection)
 13       | (Teensy built-in LED)
 14 (A0)  | Fadecandy output 0 (via resistor divider)
 15 (A1)  | Fadecandy output 1 (via resistor divider)

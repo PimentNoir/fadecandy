@@ -38,6 +38,10 @@ public:
     // Set control flags
     bool setFlags(uint8_t cflag);
 
+    // Measure actual frame rate of Fadecandy firmware
+    float measureFrameRate(float minDuration = 1.0);
+    bool testFrameRate();
+
     // Direct framebuffer access
     bool initLUT();
     bool setLUT(unsigned channel, unsigned index, int value);
