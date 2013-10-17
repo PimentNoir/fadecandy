@@ -190,6 +190,8 @@ bool ElectricalTest::testBoostConverter()
                 return false;
     }
 
+    // Done! Go back to a nominal 5V supply. We'll want this to be stable for flash programming.
+    setPowerSupplyVoltage(5.0);
     return true;
 }
 
