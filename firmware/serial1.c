@@ -35,14 +35,14 @@
 // UART0 and UART1 are clocked by F_CPU, UART2 is clocked by F_BUS
 // UART0 has 8 byte fifo, UART1 and UART2 have 1 byte buffer
 
-#define TX_BUFFER_SIZE 64
+#define TX_BUFFER_SIZE 8
 //#define TX_BUFFER_SIZE 40
 static volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
 static volatile uint8_t tx_buffer_head = 0;
 static volatile uint8_t tx_buffer_tail = 0;
 static volatile uint8_t transmitting = 0;
 
-#define RX_BUFFER_SIZE 64
+#define RX_BUFFER_SIZE 8
 static volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
 static volatile uint8_t rx_buffer_head = 0;
 static volatile uint8_t rx_buffer_tail = 0;
