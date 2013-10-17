@@ -146,7 +146,7 @@ float FcRemote::measureFrameRate(float minDuration)
 
 bool FcRemote::testFrameRate()
 {
-    const float goalFPS = 390;
+    const float goalFPS = 375;
     const float maxFPS = 450;
 
     target.log(target.LOG_NORMAL, "FPS: Measuring frame rate...");
