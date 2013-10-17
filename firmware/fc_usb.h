@@ -22,7 +22,6 @@
  */
 
 #pragma once
-#include <string.h>
 #include "WProgram.h"
 #include "usb_dev.h"
 #include "fc_defs.h"
@@ -43,7 +42,8 @@ struct fcPacketBuffer
         // Allocate packets. They'll have zero'ed contents initially.
         for (unsigned i = 0; i < tSize; ++i) {
             usb_packet_t *p = usb_malloc();
-            memset(p->buf, 0, sizeof p->buf);
+            for (unsigned j = 0; j < sizeof p->buf; j++)
+                p->buf[j] = 0;
             packets[i] = p;
         }
     }

@@ -73,8 +73,10 @@ void OctoWS2811z::begin(void)
     bufsize = stripLen*24;
 
     // Clear both front and back buffers
-    memset(frameBuffer, 0, bufsize);
-    memset(drawBuffer, 0, bufsize);
+    for (unsigned i = 0; i < bufsize; i++) {
+        ((uint8_t*)frameBuffer)[i] = 0;
+        ((uint8_t*)drawBuffer)[i] = 0;
+    }
     
     // configure the 8 output pins
     GPIOD_PCOR = 0xFF;

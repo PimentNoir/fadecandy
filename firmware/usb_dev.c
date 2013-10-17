@@ -651,7 +651,6 @@ restart:
             } else { // receive
                 packet->len = b->desc >> 16;
                 if (packet->len > 0) {
-                    packet->index = 0;
                     packet->next = NULL;
                     if (rx_first[endpoint] == NULL) {
                         rx_first[endpoint] = packet;

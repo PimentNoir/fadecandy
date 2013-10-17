@@ -496,7 +496,8 @@ extern "C" int main()
 
         // Optionally disable dithering by clearing our residual buffer every frame.
         if (buffers.flags & CFLAG_NO_DITHERING) {
-            memset(residual, 0, sizeof residual);
+            for (unsigned i = 0; i < CHANNELS_TOTAL; ++i)
+                residual[i] = 0;
         }
     }
 

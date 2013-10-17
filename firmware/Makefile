@@ -33,7 +33,8 @@ CPP_FILES = \
 INCLUDES = -I.
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -Wno-sign-compare -Wno-strict-aliasing -g -Os -mcpu=cortex-m4 -mthumb -nostdlib -MMD $(OPTIONS) $(INCLUDES)
+CPPFLAGS = -Wall -Wno-sign-compare -Wno-strict-aliasing -g -Os -mcpu=cortex-m4 \
+	-mthumb -nostdlib -MMD $(OPTIONS) $(INCLUDES)
 
 # compiler options for C++ only
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
@@ -45,7 +46,7 @@ CFLAGS =
 LDSCRIPT = fcb-app.ld
 
 # linker options
-LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -T$(LDSCRIPT)
+LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -nostdlib -T$(LDSCRIPT)
 
 # additional libraries to link
 LIBS = -lm
