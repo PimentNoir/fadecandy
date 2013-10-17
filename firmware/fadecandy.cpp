@@ -36,8 +36,10 @@ static fcBuffers buffers;
 static DMAMEM int ledBuffer[LEDS_PER_STRIP * 12];
 static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 
-// Residuals for temporal dithering
-static int8_t residual[CHANNELS_TOTAL];
+// Residuals for temporal dithering. Usually 8 bits is enough, but
+// there are edge cases when it isn't, and we don't have the spare CPU cycles
+// to saturate values before storing. So, 16-bit it is.
+static int16_t residual[CHANNELS_TOTAL];
 
 // Reserved RAM area for signalling entry to bootloader
 extern uint32_t boot_token;
@@ -96,7 +98,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
 
 static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
     const uint8_t *pixelPrev, const uint8_t *pixelNext,
-    const uint16_t *lut, int8_t *pResidual)
+    const uint16_t *lut, int16_t *pResidual)
 {
     /*
      * Update pipeline for one pixel:
@@ -142,12 +144,7 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
     int g8 = __USAT(iG + 0x80, 16) >> 8;
     int b8 = __USAT(iB + 0x80, 16) >> 8;
 
-    /*
-     * Compute the error, after expanding the 8-bit value back to 16-bit.
-     * Clamping (e.g. via __SSAT) is not necessary, since the error will not
-     * be greater than +/- 127.
-     */
-
+    // Compute the error, after expanding the 8-bit value back to 16-bit.
     pResidual[0] = iR - (r8 * 257);
     pResidual[1] = iG - (g8 * 257);
     pResidual[2] = iB - (b8 * 257);
@@ -190,7 +187,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
      * constant pool and some multiplication.
      */
 
-    int8_t *pResidual = residual;
+    int16_t *pResidual = residual;
 
     for (int i = 0; i < LEDS_PER_STRIP; ++i, pResidual += 3) {
 
