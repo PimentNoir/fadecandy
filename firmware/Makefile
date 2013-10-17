@@ -10,10 +10,16 @@ OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
 SIZE = arm-none-eabi-size
 
+# Bootloader to include in whole-chip .hex image
+FCBOOT_IMAGE = ../bin/fc-boot-v101.hex
+
 #######################################################
 
 # The name of your project (used to name the compiled .dfu file)
 TARGET = fc-firmware
+
+# Temporary .hex file for application image only, without bootloader
+APP_HEX = app-image.hex
 
 # Sources
 C_FILES = \
@@ -64,7 +70,8 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(DFU_SUFFIX) -a $@
 
 %.hex: %.elf
-	$(OBJCOPY) -O ihex $< $@
+	$(OBJCOPY) -O ihex $< $(APP_HEX)
+	(grep -v :00000001FF $(FCBOOT_IMAGE); cat $(APP_HEX)) > $@
 
 install: $(TARGET).dfu
 	$(DFU_UTIL) -d 1d50 -D $<
@@ -73,7 +80,7 @@ install: $(TARGET).dfu
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f *.d *.o $(TARGET).elf $(TARGET).dfu
+	rm -f *.d *.o $(TARGET).elf $(TARGET).dfu $(APP_HEX)
 
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
