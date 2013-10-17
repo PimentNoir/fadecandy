@@ -34,8 +34,9 @@
 #include <stdint.h>
 
 typedef struct usb_packet_struct {
-    struct usb_packet_struct *next;
     uint16_t len;
+    uint16_t reserved;
+    struct usb_packet_struct *next;
     uint8_t buf[64];
 } usb_packet_t;
 
