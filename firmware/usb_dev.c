@@ -120,6 +120,8 @@ static union {
 
 static uint8_t ep0_rx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_rx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
+static uint8_t ep0_tx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
+static uint8_t ep0_tx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static const uint8_t *ep0_tx_ptr = NULL;
 static uint16_t ep0_tx_len;
 static uint8_t ep0_tx_bdt_bank = 0;
@@ -137,8 +139,20 @@ static void endpoint0_stall(void)
 
 static void endpoint0_transmit(const void *data, uint32_t len)
 {
-    table[index(0, TX, ep0_tx_bdt_bank)].addr = (void *)data;
+    // Use a local transmit buffer pair in RAM, and copy in the source data (usually decriptors).
+    // We can't reliably serve USB data from flash apparently, and this is a little more RAM
+    // efficient than keeping all descriptors in RAM.
+
+    uint8_t *buffer = ep0_tx_bdt_bank ? ep0_tx1_buf : ep0_tx0_buf;
+    uint32_t count = len;
+    while (count--) {
+        *buffer = *(const uint8_t*)data;
+        data++;
+        buffer++;
+    }
+
     table[index(0, TX, ep0_tx_bdt_bank)].desc = BDT_DESC(len, ep0_tx_data_toggle);
+
     ep0_tx_data_toggle ^= 1;
     ep0_tx_bdt_bank ^= 1;
 }
@@ -695,8 +709,10 @@ restart:
         table[index(0, RX, ODD)].desc = BDT_DESC(EP0_SIZE, 0);
         table[index(0, RX, ODD)].addr = ep0_rx1_buf;
         table[index(0, TX, EVEN)].desc = 0;
+        table[index(0, TX, EVEN)].addr = ep0_tx0_buf;
         table[index(0, TX, ODD)].desc = 0;
-        
+        table[index(0, TX, ODD)].addr = ep0_tx1_buf;
+
         // activate endpoint 0
         USB0_ENDPT0 = USB_ENDPT_EPRXEN | USB_ENDPT_EPTXEN | USB_ENDPT_EPHSHK;
 

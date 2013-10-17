@@ -97,8 +97,8 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 
 // Microsoft Compatible ID Feature Descriptor
 #define MSFT_VENDOR_CODE    '~'     // Arbitrary, but should be printable ASCII
-extern uint8_t usb_microsoft_wcid[];
-extern uint8_t usb_microsoft_extprop[];
+extern const uint8_t usb_microsoft_wcid[];
+extern const uint8_t usb_microsoft_extprop[];
 
 // NUM_ENDPOINTS = number of non-zero endpoints (0 to 15)
 extern const uint8_t usb_endpoint_config_table[NUM_ENDPOINTS];

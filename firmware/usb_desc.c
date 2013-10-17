@@ -29,7 +29,6 @@
  */
 
 #include "usb_desc.h"
-#include "usb_names.h"
 #include "mk20dx128.h"
 
 // USB Descriptors are binary data which the USB host reads to
@@ -60,7 +59,7 @@
 
 // USB Device Descriptor.  The USB host reads this first, to learn
 // what type of device is connected.
-static uint8_t device_descriptor[] = {
+static const uint8_t device_descriptor[] = {
         18,                                     // bLength
         1,                                      // bDescriptorType
         0x00, 0x02,                             // bcdUSB
@@ -77,18 +76,13 @@ static uint8_t device_descriptor[] = {
         1                                       // bNumConfigurations
 };
 
-// These descriptors must NOT be "const", because the USB DMA
-// has trouble accessing flash memory with enough bandwidth
-// while the processor is executing from flash.
-
-
 // **************************************************************
 //   USB Configuration
 // **************************************************************
 
 // USB Configuration Descriptor.  This huge descriptor tells all
 // of the devices capbilities.
-static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
+static const uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         // configuration descriptor, USB spec 9.6.3, page 264-266, Table 9-10
         9,                                      // bLength;
         2,                                      // bDescriptorType;
@@ -148,55 +142,42 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
 //   String Descriptors
 // **************************************************************
 
-// The descriptors above can provide human readable strings,
-// referenced by index numbers.  These descriptors are the
-// actual string data
-
-/* defined in usb_names.h
 struct usb_string_descriptor_struct {
-        uint8_t bLength;
-        uint8_t bDescriptorType;
-        uint16_t wString[];
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wString[];
 };
-*/
 
-extern struct usb_string_descriptor_struct usb_string_manufacturer_name
-        __attribute__ ((weak, alias("usb_string_manufacturer_name_default")));
-extern struct usb_string_descriptor_struct usb_string_product_name
-        __attribute__ ((weak, alias("usb_string_product_name_default")));
-extern struct usb_string_descriptor_struct usb_string_serial_number
-        __attribute__ ((weak, alias("usb_string_serial_number_default")));
-
-struct usb_string_descriptor_struct string0 = {
+static const struct usb_string_descriptor_struct string0 = {
     4,
     3,
     {0x0409}
 };
 
-struct usb_string_descriptor_struct usb_string_manufacturer_name_default = {
+static const struct usb_string_descriptor_struct usb_string_manufacturer_name = {
     2 + MANUFACTURER_NAME_LEN * 2,
     3,
     MANUFACTURER_NAME
 };
-struct usb_string_descriptor_struct usb_string_product_name_default = {
+static const struct usb_string_descriptor_struct usb_string_product_name = {
     2 + PRODUCT_NAME_LEN * 2,
     3,
     PRODUCT_NAME
 };
-struct usb_string_descriptor_struct usb_string_dfu_name = {
+static const struct usb_string_descriptor_struct usb_string_dfu_name = {
     2 + DFU_NAME_LEN * 2,
     3,
     DFU_NAME
 };
 
 // Microsoft OS String Descriptor. See: https://github.com/pbatard/libwdi/wiki/WCID-Devices
-struct usb_string_descriptor_struct usb_string_microsoft = {
+static const struct usb_string_descriptor_struct usb_string_microsoft = {
     18, 3,
     {'M','S','F','T','1','0','0', MSFT_VENDOR_CODE}
 };
 
 // Microsoft WCID
-uint8_t usb_microsoft_wcid[] = {
+const uint8_t usb_microsoft_wcid[] = {
     16 + 2*24, 0, 0, 0,             // Length
     0x00, 0x01,                     // Version
     0x04, 0x00,                     // Compatibility ID descriptor index
@@ -217,7 +198,7 @@ uint8_t usb_microsoft_wcid[] = {
 };
 
 // Microsoft Extended Properties descriptor, necessary for WinUSB on a multi-interface device.
-uint8_t usb_microsoft_extprop[] = {
+const uint8_t usb_microsoft_extprop[] = {
     146, 0, 0, 0,                   // Length
     0x00, 0x01,                     // Version
     0x05, 0x00,                     // Extended Properties descriptor index
@@ -235,7 +216,7 @@ uint8_t usb_microsoft_extprop[] = {
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
-struct usb_string_descriptor_struct usb_string_serial_number_default = {
+static struct usb_string_descriptor_struct usb_string_serial_number = {
     2 + 16 * 2,
     3,
     {0,0,0,0,0,0,0,0,
@@ -276,7 +257,7 @@ void usb_init_serialnumber(void)
     // Output letters
     for (i = 0; i < 16; ++i) {
         hash = (hash ^ serial.bytes[i]) * 0x1000193;
-        usb_string_serial_number_default.wString[i] = 'A' + (hash % 26);
+        usb_string_serial_number.wString[i] = 'A' + (hash % 26);
     }
 }
 
