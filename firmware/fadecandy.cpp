@@ -36,10 +36,13 @@ static fcBuffers buffers;
 static DMAMEM int ledBuffer[LEDS_PER_STRIP * 12];
 static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 
-// Residuals for temporal dithering. Usually 8 bits is enough, but
-// there are edge cases when it isn't, and we don't have the spare CPU cycles
-// to saturate values before storing. So, 16-bit it is.
-static int16_t residual[CHANNELS_TOTAL];
+/*
+ * Residuals for temporal dithering. Usually 8 bits is enough, but
+ * there are edge cases when it isn't, and we don't have the spare CPU cycles
+ * to saturate values before storing. So, 16-bit it is.
+ */
+typedef int16_t residual_t;
+static residual_t residual[CHANNELS_TOTAL];
 
 // Reserved RAM area for signalling entry to bootloader
 extern uint32_t boot_token;
@@ -98,7 +101,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
 
 static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
     const uint8_t *pixelPrev, const uint8_t *pixelNext,
-    const uint16_t *lut, int16_t *pResidual)
+    const uint16_t *lut, residual_t *pResidual)
 {
     /*
      * Update pipeline for one pixel:
@@ -187,7 +190,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
      * constant pool and some multiplication.
      */
 
-    int16_t *pResidual = residual;
+    residual_t *pResidual = residual;
 
     for (int i = 0; i < LEDS_PER_STRIP; ++i, pResidual += 3) {
 
