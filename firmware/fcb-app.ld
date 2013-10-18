@@ -90,6 +90,7 @@ SECTIONS
         . = ALIGN(4);
         _sdata = .; 
         *(.data*)
+        *(.ramtext*)
         . = ALIGN(4);
         _edata = .; 
     } > RAM

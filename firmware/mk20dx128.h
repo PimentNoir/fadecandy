@@ -47,6 +47,9 @@ extern "C" {
 // Slower data can go into FlexRAM, to save space in faster RAM
 #define SLOW_DATA           __attribute__ ((section(".flexram")))
 
+// Performance-critical code can execute from RAM
+#define EXECUTE_FROM_RAM    __attribute__ ((section(".ramtext")))
+
 // chapter 11: Port control and interrupts (PORT)
 #define PORTA_PCR0              *(volatile uint32_t *)0x40049000 // Pin Control Register n
 #define PORT_PCR_ISF            (uint32_t)0x01000000        // Interrupt Status Flag
