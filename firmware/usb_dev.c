@@ -53,6 +53,8 @@ static usb_packet_t *tx_first[NUM_ENDPOINTS];
 static usb_packet_t *tx_last[NUM_ENDPOINTS];
 uint16_t usb_rx_byte_count_data[NUM_ENDPOINTS];
 
+static uint8_t reply_buffer[8];
+
 static uint8_t tx_state[NUM_ENDPOINTS];
 #define TX_STATE_BOTH_FREE_EVEN_FIRST   0
 #define TX_STATE_BOTH_FREE_ODD_FIRST    1
@@ -156,8 +158,6 @@ static void endpoint0_transmit(const void *data, uint32_t len)
     ep0_tx_data_toggle ^= 1;
     ep0_tx_bdt_bank ^= 1;
 }
-
-static SLOW_DATA uint8_t reply_buffer[8];
 
 static void usb_setup(void)
 {

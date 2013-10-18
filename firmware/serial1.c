@@ -36,15 +36,15 @@
 // UART0 has 8 byte fifo, UART1 and UART2 have 1 byte buffer
 
 #define TX_BUFFER_SIZE 8
-static SLOW_DATA volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
-static SLOW_DATA volatile uint8_t tx_buffer_head = 0;
-static SLOW_DATA volatile uint8_t tx_buffer_tail = 0;
-static SLOW_DATA volatile uint8_t transmitting = 0;
+static volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
+static volatile uint8_t tx_buffer_head = 0;
+static volatile uint8_t tx_buffer_tail = 0;
+static volatile uint8_t transmitting = 0;
 
 #define RX_BUFFER_SIZE 8
-static SLOW_DATA volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
-static SLOW_DATA volatile uint8_t rx_buffer_head = 0;
-static SLOW_DATA volatile uint8_t rx_buffer_tail = 0;
+static volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
+static volatile uint8_t rx_buffer_head = 0;
+static volatile uint8_t rx_buffer_tail = 0;
 
 #define C2_ENABLE		UART_C2_TE | UART_C2_RE | UART_C2_RIE | UART_C2_ILIE
 #define C2_TX_ACTIVE		C2_ENABLE | UART_C2_TIE

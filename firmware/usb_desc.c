@@ -216,7 +216,7 @@ const uint8_t usb_microsoft_extprop[] = {
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
-static SLOW_DATA struct usb_string_descriptor_struct usb_string_serial_number = {
+static struct usb_string_descriptor_struct usb_string_serial_number = {
     2 + 16 * 2,
     3,
     {0,0,0,0,0,0,0,0,
