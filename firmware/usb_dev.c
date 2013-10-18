@@ -157,7 +157,7 @@ static void endpoint0_transmit(const void *data, uint32_t len)
     ep0_tx_bdt_bank ^= 1;
 }
 
-static uint8_t reply_buffer[8];
+static SLOW_DATA uint8_t reply_buffer[8];
 
 static void usb_setup(void)
 {

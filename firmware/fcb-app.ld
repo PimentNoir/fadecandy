@@ -35,6 +35,7 @@ MEMORY
 {
     FLASH (rx) : ORIGIN = 0x00001000, LENGTH = 124K
     RAM  (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 16K
+    FLEXRAM (rwx) : ORIGIN = 0x14000000, LENGTH = 2K
 }
 
 
@@ -63,6 +64,11 @@ SECTIONS
         __exidx_end = .;
     } > FLASH
     _etext = .;
+
+    .flexram (NOLOAD) : {
+        . = ALIGN(4);
+        *(.flexram*)
+    } > FLEXRAM
 
     .usbdescriptortable (NOLOAD) : {
         /* . = ORIGIN(RAM); */
