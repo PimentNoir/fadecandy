@@ -137,7 +137,7 @@ void ElectricalTest::setPowerSupplyVoltage(float volts)
      * Time for the PSU to settle. Our testjig's power supply settles very
      * fast (<1ms), but the capacitors on the target need more time to charge.
      */
-    delay(30);
+    delay(150);
 }
 
 bool ElectricalTest::testBoostConverter()
