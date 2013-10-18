@@ -100,8 +100,7 @@ ALWAYS_INLINE static inline uint32_t lutInterpolate(const uint16_t *lut, uint32_
 }
 
 static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
-    const uint8_t *pixelPrev, const uint8_t *pixelNext,
-    const uint16_t *lut, residual_t *pResidual)
+    const uint8_t *pixelPrev, const uint8_t *pixelNext, residual_t *pResidual)
 {
     /*
      * Update pipeline for one pixel:
@@ -123,6 +122,7 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
 
     // Pass through our color LUT
     // Result range: [0, 0xFFFF] 
+    const uint16_t *lut = buffers.lutCurrent;
     iR = lutInterpolate(&lut[0 * LUT_CH_SIZE], iR);
     iG = lutInterpolate(&lut[1 * LUT_CH_SIZE], iG);
     iB = lutInterpolate(&lut[2 * LUT_CH_SIZE], iB);
@@ -214,7 +214,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p0 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 0),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 0),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 0);
+            pResidual + LEDS_PER_STRIP * 3 * 0);
 
         o5.p0d = p0;
         o5.p0c = p0 >> 1;
@@ -244,7 +244,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p1 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 1),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 1),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 1);
+            pResidual + LEDS_PER_STRIP * 3 * 1);
 
         o5.p1d = p1;
         o5.p1c = p1 >> 1;
@@ -274,7 +274,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p2 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 2),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 2),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 2);
+            pResidual + LEDS_PER_STRIP * 3 * 2);
 
         o5.p2d = p2;
         o5.p2c = p2 >> 1;
@@ -304,7 +304,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p3 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 3),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 3),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 3);
+            pResidual + LEDS_PER_STRIP * 3 * 3);
 
         o5.p3d = p3;
         o5.p3c = p3 >> 1;
@@ -334,7 +334,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p4 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 4),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 4),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 4);
+            pResidual + LEDS_PER_STRIP * 3 * 4);
 
         o5.p4d = p4;
         o5.p4c = p4 >> 1;
@@ -364,7 +364,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p5 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 5),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 5),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 5);
+            pResidual + LEDS_PER_STRIP * 3 * 5);
 
         o5.p5d = p5;
         o5.p5c = p5 >> 1;
@@ -394,7 +394,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p6 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 6),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 6),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 6);
+            pResidual + LEDS_PER_STRIP * 3 * 6);
 
         o5.p6d = p6;
         o5.p6c = p6 >> 1;
@@ -424,7 +424,7 @@ static void updateDrawBuffer(unsigned interpCoefficient)
         uint32_t p7 = updatePixel(icPrev, icNext,
             buffers.fbPrev->pixel(i + LEDS_PER_STRIP * 7),
             buffers.fbNext->pixel(i + LEDS_PER_STRIP * 7),
-            buffers.lutCurrent, pResidual + LEDS_PER_STRIP * 3 * 7);
+            pResidual + LEDS_PER_STRIP * 3 * 7);
 
         o5.p7d = p7;
         o5.p7c = p7 >> 1;
