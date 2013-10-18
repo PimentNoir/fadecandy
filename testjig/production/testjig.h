@@ -11,6 +11,8 @@ static const unsigned swclkPin = 3;
 static const unsigned swdioPin = 4;
 
 // Electrical testing
+static const unsigned fcTXPin = 0;
+static const unsigned fcRXPin = 1;
 static const unsigned powerPWMPin = 10;
 static const unsigned usbDMinusPin = 5;
 static const unsigned usbDPlusPin = 6;

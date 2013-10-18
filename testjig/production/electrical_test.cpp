@@ -286,6 +286,59 @@ bool ElectricalTest::testUSBConnections()
     return true;
 }
 
+bool ElectricalTest::testSerialConnections()
+{
+    target.log(logLevel, "ETEST: Testing serial connections");
+
+    // This tests serial RX, TX, and the DMA loopback, which are all adjacent.
+    target.pinMode(target.PTB0, OUTPUT);
+    target.pinMode(target.PTC0, INPUT);
+    for (unsigned i = 0; i < 10; i++) {
+        target.digitalWrite(target.PTB0, i&1);
+        if (target.digitalRead(target.PTC0) != (i&1)) {
+            target.log(LOG_ERROR, "ETEST: Bad connection between DMA loopback pins PTB0 and PTC0");
+            return false;
+        }
+    }
+
+    // Leave that connection driven, check for shorts to serial RX/TX
+    if (!testHighZ(fcTXPin)) {
+        target.log(LOG_ERROR, "ETEST: Fault on serial TX pin, expected High-Z");
+        return false;
+    }
+    if (!testHighZ(fcRXPin)) {
+        target.log(LOG_ERROR, "ETEST: Fault on serial RX pin, expected High-Z");
+        return false;
+    }
+
+    // Drive serial TX, check for results and make sure there's no short to RX
+    target.pinMode(target.PTB17, OUTPUT);
+    for (unsigned i = 0; i < 10; i++) {
+        target.digitalWrite(target.PTB17, i&1);
+        if (digitalRead(fcTXPin) != (i&1)) {
+            target.log(LOG_ERROR, "ETEST: Bad connection on serial TX pin");
+            return false;
+        }
+    }
+    if (!testHighZ(fcRXPin)) {
+        target.log(LOG_ERROR, "ETEST: Short between serial TX and RX");
+        return false;
+    }
+
+    // Drive RX, and test that
+    pinMode(fcRXPin, OUTPUT);
+    target.pinMode(target.PTB16, INPUT);
+    for (unsigned i = 0; i < 10; i++) {
+        digitalWrite(fcRXPin, i&1);
+        if (target.digitalRead(target.PTB16) != (i&1)) {
+            target.log(LOG_ERROR, "ETEST: Bad connection on serial RX pin");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ElectricalTest::runAll()
 {
     target.log(logLevel, "ETEST: Beginning electrical test");
@@ -299,6 +352,10 @@ bool ElectricalTest::runAll()
 
     // Output patterns
     if (!testAllOutputPatterns())
+        return false;
+
+    // Test serial connections, and the adjacent DMA loopback
+    if (!testSerialConnections())
         return false;
 
     // Now try dialing down the power supply voltage, and make sure it still works

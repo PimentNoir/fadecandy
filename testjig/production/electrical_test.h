@@ -55,6 +55,7 @@ private:
     bool testAllOutputPatterns();
     bool testUSBConnections();
     bool testBoostConverter();
+    bool testSerialConnections();
     bool testHighZ(int pin);
     bool testPull(int pin, bool state);
     bool initTarget();
