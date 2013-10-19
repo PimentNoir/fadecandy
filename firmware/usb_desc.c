@@ -216,12 +216,11 @@ const uint8_t usb_microsoft_extprop[] = {
 };
 
 // 32-digit hex string, corresponding to the MK20DX128's built-in unique 128-bit ID.
-static struct usb_string_descriptor_struct usb_string_serial_number = {
-    2 + 16 * 2,
-    3,
-    {0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0}
-};
+static FLEXRAM_DATA struct {
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wString[16];
+} usb_string_serial_number;
 
 void usb_init_serialnumber(void)
 {
@@ -233,6 +232,9 @@ void usb_init_serialnumber(void)
      * To make this more user-friendly, we mix up the serial number using
      * an FNV hash and alphabetically encode it.
      */
+
+    usb_string_serial_number.bLength = 2 + 16 * 2;
+    usb_string_serial_number.bDescriptorType = 3;
 
     union {
         uint8_t bytes[16];

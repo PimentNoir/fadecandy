@@ -44,6 +44,7 @@ typedef struct usb_packet_struct {
 extern "C" {
 #endif
 
+void usb_init_mem();
 usb_packet_t * usb_malloc(void);
 void usb_free(usb_packet_t *p);
 

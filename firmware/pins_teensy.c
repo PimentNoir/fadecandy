@@ -166,7 +166,7 @@ void _init_Teensyduino_internal_(void)
 // input capture can be FTM1_CH0, CMP0 or CMP1 or USB start of frame
 // 24 MHz with reload 49152 to match Arduino's speed = 488.28125 Hz
 
-static uint8_t analog_write_res = 8;
+static const uint8_t analog_write_res = 8;
 
 void analogWrite(uint8_t pin, int val)
 {
@@ -249,16 +249,6 @@ void analogWrite(uint8_t pin, int val)
         digitalWrite(pin, (val > 127) ? HIGH : LOW);
         pinMode(pin, OUTPUT);
     }
-}
-
-void analogWriteRes(uint32_t bits)
-{
-    if (bits < 1) {
-        bits = 1;
-    } else if (bits > 16) {
-        bits = 16;
-    }
-    analog_write_res = bits;
 }
 
 void analogWriteFrequency(uint8_t pin, uint32_t frequency)

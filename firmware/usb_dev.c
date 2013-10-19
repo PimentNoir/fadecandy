@@ -51,12 +51,11 @@ static usb_packet_t *rx_first[NUM_ENDPOINTS];
 static usb_packet_t *rx_last[NUM_ENDPOINTS];
 static usb_packet_t *tx_first[NUM_ENDPOINTS];
 static usb_packet_t *tx_last[NUM_ENDPOINTS];
-uint16_t usb_rx_byte_count_data[NUM_ENDPOINTS];
 
-static uint8_t reply_buffer[8];
+static FLEXRAM_DATA uint8_t reply_buffer[8];
 
 // Performance counters
-volatile uint32_t perf_frameCounter;
+volatile FLEXRAM_DATA uint32_t perf_frameCounter;
 
 static uint8_t tx_state[NUM_ENDPOINTS];
 #define TX_STATE_BOTH_FREE_EVEN_FIRST   0
@@ -127,14 +126,14 @@ static uint8_t ep0_rx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_rx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_tx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_tx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
-static const uint8_t *ep0_tx_ptr = NULL;
-static uint16_t ep0_tx_len;
-static uint8_t ep0_tx_bdt_bank = 0;
-static uint8_t ep0_tx_data_toggle = 0;
-uint8_t usb_rx_memory_needed = 0;
+static FLEXRAM_DATA const uint8_t *ep0_tx_ptr = NULL;
+static FLEXRAM_DATA uint16_t ep0_tx_len;
+static FLEXRAM_DATA uint8_t ep0_tx_bdt_bank = 0;
+static FLEXRAM_DATA uint8_t ep0_tx_data_toggle = 0;
+uint8_t FLEXRAM_DATA usb_rx_memory_needed = 0;
 
-volatile uint8_t usb_configuration = 0;
-volatile uint8_t usb_dfu_state = DFU_appIDLE;
+volatile FLEXRAM_DATA uint8_t usb_configuration = 0;
+volatile FLEXRAM_DATA uint8_t usb_dfu_state = DFU_appIDLE;
 
 static void endpoint0_stall(void)
 {
@@ -205,7 +204,6 @@ static void usb_setup(void)
             }
             tx_first[i] = NULL;
             tx_last[i] = NULL;
-            usb_rx_byte_count_data[i] = 0;
             switch (tx_state[i]) {
               case TX_STATE_EVEN_FREE:
               case TX_STATE_NONE_FREE_EVEN_FIRST:
@@ -472,7 +470,6 @@ usb_packet_t *usb_rx(uint32_t endpoint)
     __disable_irq();
     ret = rx_first[endpoint];
     if (ret) rx_first[endpoint] = ret->next;
-    usb_rx_byte_count_data[endpoint] -= ret->len;
     __enable_irq();
     return ret;
 }
@@ -488,17 +485,6 @@ static uint32_t usb_queue_byte_count(const usb_packet_t *p)
     __enable_irq();
     return count;
 }
-
-// TODO: make this an inline function...
-/*
-uint32_t usb_rx_byte_count(uint32_t endpoint)
-{
-    endpoint--;
-    if (endpoint >= NUM_ENDPOINTS) return 0;
-    return usb_rx_byte_count_data[endpoint];
-    //return usb_queue_byte_count(rx_first[endpoint]);
-}
-*/
 
 uint32_t usb_tx_byte_count(uint32_t endpoint)
 {
@@ -681,7 +667,6 @@ restart:
                         rx_last[endpoint]->next = packet;
                     }
                     rx_last[endpoint] = packet;
-                    usb_rx_byte_count_data[endpoint] += packet->len;
                     // TODO: implement a per-endpoint maximum # of allocated packets
                     // so a flood of incoming data on 1 endpoint doesn't starve
                     // the others if the user isn't reading it regularly
@@ -697,10 +682,6 @@ restart:
                     b->desc = BDT_DESC(64, ((uint32_t)b & 8) ? DATA1 : DATA0);
                 }
             }
-
-
-
-
         }
         USB0_ISTAT = USB_ISTAT_TOKDNE;
         goto restart;
@@ -767,6 +748,7 @@ void usb_init(void)
 {
     int i;
 
+    usb_init_mem();
     usb_init_serialnumber();
 
     for (i=0; i <= NUM_ENDPOINTS*4; i++) {

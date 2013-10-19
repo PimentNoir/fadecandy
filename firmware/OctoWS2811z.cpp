@@ -91,7 +91,6 @@ void OctoWS2811z::begin(void)
 
     // create the two waveforms for WS2811 low and high bits
     frequency = (params & WS2811_400kHz) ? 400000 : 800000;
-    analogWriteResolution(8);
     analogWriteFrequency(3, frequency);
     analogWriteFrequency(4, frequency);
     analogWrite(3, WS2811_TIMING_T0H);

@@ -36,7 +36,15 @@
 __attribute__ ((section(".usbbuffers"), used))
 unsigned char usb_buffer_memory[NUM_USB_BUFFERS * sizeof(usb_packet_t)];
 
-static uint32_t usb_buffer_available[4] = { -1, -1, -1, -1 };
+static FLEXRAM_DATA uint32_t usb_buffer_available[4];
+
+void usb_init_mem()
+{
+    usb_buffer_available[0] = -1;
+    usb_buffer_available[1] = -1;
+    usb_buffer_available[2] = -1;
+    usb_buffer_available[3] = -1;
+}
 
 // use bitmask and CLZ instruction to implement fast free list
 // http://www.archivum.info/gnu.gcc.help/2006-08/00148/Re-GCC-Inline-Assembly.html
