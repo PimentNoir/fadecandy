@@ -85,7 +85,10 @@ benchmark: install
 clean:
 	rm -f *.d *.o $(TARGET).elf $(TARGET).dfu $(APP_HEX)
 
-objdump: $(TARGET).elf
-	$(OBJDUMP) -d $<
+disassemble: $(TARGET).elf
+	$(OBJDUMP) -d $< | less
 
-.PHONY: all clean install objdump benchmark
+symbols: $(TARGET).elf
+	$(OBJDUMP) -t $< | sort | less
+
+.PHONY: all clean install disassemble symbols benchmark
