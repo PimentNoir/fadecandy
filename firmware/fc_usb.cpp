@@ -112,6 +112,6 @@ void fcBuffers::finalizeLUT()
      */
 
     for (unsigned i = 0; i < LUT_TOTAL_SIZE; ++i) {
-        lutCurrent[i] = lutNew.entry(i);
+        lutCurrent.entries[i] = lutNew.entry(i);
     }
 }

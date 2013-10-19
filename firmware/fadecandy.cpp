@@ -31,6 +31,8 @@
 
 // USB data buffers
 static fcBuffers buffers;
+fcLinearLUT fcBuffers::lutCurrent;
+
 
 // Double-buffered DMA memory for raw bit planes of output
 static DMAMEM int ledBuffer[LEDS_PER_STRIP * 12];
@@ -122,10 +124,9 @@ static uint32_t updatePixel(uint32_t icPrev, uint32_t icNext,
 
     // Pass through our color LUT
     // Result range: [0, 0xFFFF] 
-    const uint16_t *lut = buffers.lutCurrent;
-    iR = lutInterpolate(&lut[0 * LUT_CH_SIZE], iR);
-    iG = lutInterpolate(&lut[1 * LUT_CH_SIZE], iG);
-    iB = lutInterpolate(&lut[2 * LUT_CH_SIZE], iB);
+    iR = lutInterpolate(buffers.lutCurrent.r, iR);
+    iG = lutInterpolate(buffers.lutCurrent.g, iG);
+    iB = lutInterpolate(buffers.lutCurrent.b, iB);
 
     // Incorporate the residual from last frame
     iR += pResidual[0];

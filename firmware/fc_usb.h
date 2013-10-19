@@ -99,6 +99,19 @@ struct fcColorLUT : public fcPacketBuffer<PACKETS_PER_LUT>
 #define CFLAG_NO_ACTIVITY_LED   (1 << 2)
 #define CFLAG_LED_CONTROL       (1 << 3)
 
+/*
+ * Data type for current color LUT
+ */
+
+union fcLinearLUT
+{
+    uint16_t entries[LUT_TOTAL_SIZE];
+    struct {
+        uint16_t r[LUT_CH_SIZE];
+        uint16_t g[LUT_CH_SIZE];
+        uint16_t b[LUT_CH_SIZE];
+    };
+};
 
 /*
  * All USB-writable buffers
@@ -112,8 +125,8 @@ struct fcBuffers
 
     fcFramebuffer fb[3];        // Triple-buffered video frames
 
-    fcColorLUT lutNew;                      // Partial LUT, not yet finalized
-    uint16_t lutCurrent[LUT_TOTAL_SIZE];    // Active LUT, linearized for efficiency
+    fcColorLUT lutNew;                // Partial LUT, not yet finalized
+    static fcLinearLUT lutCurrent;    // Active LUT, linearized for efficiency
 
     uint8_t flags;              // Configuration flags
 
