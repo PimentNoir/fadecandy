@@ -162,6 +162,14 @@ Byte Offset | Bits   | Description
 1           | 0      | Disable dithering
 2 … 63      | 7 … 0  | (reserved)
 
+In addition to the OUT endpoint, the device also supports vendor-specific control requests:
+
+bmRequestType | bRequest | wValue | wIndex | wLength | Description
+------------- | -------- | ------ | ------ | ------- | ---------------------------------------------
+0xC0          | 0x01     | 0      | 0      | 4       | Read frame counter (32-bit, little endian)
+0xC0          | 0x7E     | x      | 4      | x       | Read Microsoft WCID descriptor
+0xC0          | 0x7E     | x      | 5      | x       | Read Microsoft Extended Properties descriptor
+
 Contact
 -------
 

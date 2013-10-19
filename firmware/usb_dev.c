@@ -55,6 +55,9 @@ uint16_t usb_rx_byte_count_data[NUM_ENDPOINTS];
 
 static uint8_t reply_buffer[8];
 
+// Performance counters
+volatile uint32_t perf_frameCounter;
+
 static uint8_t tx_state[NUM_ENDPOINTS];
 #define TX_STATE_BOTH_FREE_EVEN_FIRST   0
 #define TX_STATE_BOTH_FREE_ODD_FIRST    1
@@ -301,6 +304,12 @@ static void usb_setup(void)
         }
         endpoint0_stall();
         return;
+
+      case 0x01C0:      // Read frame counter
+      case 0x01C1:
+        data = (uint8_t*) &perf_frameCounter;
+        datalen = sizeof perf_frameCounter;
+        break;
 
       case (MSFT_VENDOR_CODE << 8) | 0xC0:      // Get Microsoft descriptor
       case (MSFT_VENDOR_CODE << 8) | 0xC1:

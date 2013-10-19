@@ -499,6 +499,9 @@ extern "C" int main()
             for (unsigned i = 0; i < CHANNELS_TOTAL; ++i)
                 residual[i] = 0;
         }
+
+        // Performance counter, for monitoring frame rate externally
+        perf_frameCounter++;
     }
 
     // Reboot into DFU bootloader

@@ -59,6 +59,9 @@ extern volatile uint8_t usb_dfu_state;
 #define DFU_appIDLE    0
 #define DFU_appDETACH  1
 
+// Performance counters
+extern volatile uint32_t perf_frameCounter;
+
 extern uint16_t usb_rx_byte_count_data[NUM_ENDPOINTS];
 static inline uint32_t usb_rx_byte_count(uint32_t endpoint) __attribute__((always_inline));
 static inline uint32_t usb_rx_byte_count(uint32_t endpoint)
