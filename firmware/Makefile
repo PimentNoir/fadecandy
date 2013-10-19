@@ -40,7 +40,7 @@ INCLUDES = -I.
 
 # CPPFLAGS = compiler options for C and C++
 CPPFLAGS = -Wall -Wno-sign-compare -Wno-strict-aliasing -g -Os -mcpu=cortex-m4 \
-	-mthumb -nostdlib -MMD $(OPTIONS) $(INCLUDES)
+	-mthumb -nostdlib -MMD -Werror $(OPTIONS) $(INCLUDES)
 
 # compiler options for C++ only
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
