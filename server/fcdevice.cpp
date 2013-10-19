@@ -445,25 +445,8 @@ void FCDevice::opcSetFirmwareConfiguration(const OPCSink::Message &msg)
 
 void FCDevice::writeFirmwareConfiguration()
 {
-    /*
-     * Write mFirmwareConfig to the device, and log it.
-     */
-
+    // Write mFirmwareConfig to the device
     submitTransfer(new Transfer(this, &mFirmwareConfig, sizeof mFirmwareConfig));
-
-    if (mVerbose) {
-        std::clog << "New Fadecandy firmware configuration:";
-        for (unsigned i = 0; i < sizeof mFirmwareConfig.data; i++) {
-            if (!(i & 31)) {
-                std::clog << "\n";
-            }
-
-            char hex[4];
-            sprintf(hex, " %02x", mFirmwareConfig.data[i]);
-            std::clog << hex;
-        }
-        std::clog << "\n";
-    }
 }
 
 std::string FCDevice::getName()
