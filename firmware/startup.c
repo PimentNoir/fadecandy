@@ -45,6 +45,8 @@ extern unsigned long _edata;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
 extern unsigned long _estack;
+extern unsigned long _flexram_begin;
+extern unsigned long _flexram_end;
 extern initFunc_t __init_array_start;
 extern initFunc_t __init_array_end;
 
@@ -238,8 +240,10 @@ void ResetHandler(void)
     SYST_RVR = (F_CPU / 1000) - 1;
     SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
 
-    // Use FlexRAM (dfu_buffer) as normal RAM.
+    // Use FlexRAM as normal RAM, and zero it
     ftfl_set_flexram_function(0xFF);
+    dest = &_flexram_begin;
+    while (dest < &_flexram_end) *dest++ = 0;
 
     __enable_irq();
     _init_Teensyduino_internal_();
