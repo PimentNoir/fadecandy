@@ -76,6 +76,9 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 install: $(TARGET).dfu
 	$(DFU_UTIL) -d 1d50 -D $<
 
+benchmark: install
+	../tools/benchmark.py
+
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
 
@@ -85,4 +88,4 @@ clean:
 objdump: $(TARGET).elf
 	$(OBJDUMP) -d $<
 
-.PHONY: all clean install objdump
+.PHONY: all clean install objdump benchmark

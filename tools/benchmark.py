@@ -22,16 +22,20 @@ def readFrameCounter():
     return struct.unpack('<I', dev.ctrl_transfer(0xC0, 0x01, 0, 0, 4, 1000))[0]
 
 sys.stderr.write("Calculating frame rate average...\n")
-t1 = time.time()
+duration = 5.0
+t1 = t2 = time.time()
 c1 = readFrameCounter()
 
+# Average the frame rate for up to 'duration' seconds.
 try:
-    while True:
+    while (t2 - t1) < duration:
         time.sleep(0.1)
         t2 = time.time()
         c2 = readFrameCounter()
         fps = ((c2 - c1) & 0xFFFFFFFF) / (t2 - t1)
-        sys.stderr.write("\r   %.3f FPS   " % fps)
+        sys.stderr.write("\r   %.2f FPS   " % fps)
 except KeyboardInterrupt:
-    sys.stderr.write("\n")
+    pass
+
+sys.stderr.write("\n")
 
