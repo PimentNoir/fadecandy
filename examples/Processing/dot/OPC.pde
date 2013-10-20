@@ -16,6 +16,8 @@ public class OPC {
   Client client;
   String host;
   int port;
+  byte firmwareConfig;
+  String colorCorrection;
   boolean enableShowLocations;
 
   OPC(PApplet app, String host, int port)
@@ -25,12 +27,6 @@ public class OPC {
     this.port = port;
 
     app.registerDraw(this);
-  }
-
-  // Should the pixel sampling locations be visible? This helps with debugging.
-  void showLocations(boolean enabled)
-  {
-    enableShowLocations = enabled;
   }
 
   // Set the location of a single LED
@@ -84,6 +80,110 @@ public class OPC {
     ledGrid(index, 8, 8, x, y, spacing, spacing, angle, true);
   }
 
+  // Should the pixel sampling locations be visible? This helps with debugging.
+  void showLocations(boolean enabled)
+  {
+    enableShowLocations = enabled;
+  }
+  
+  // Enable or disable dithering. Dithering avoids the "stair-stepping" artifact and increases color
+  // resolution by quickly jittering between adjacent 8-bit brightness levels about 400 times a second.
+  // Dithering is on by default.
+  void setDithering(boolean enabled)
+  {
+    if (enabled)
+      firmwareConfig &= ~0x01;
+    else
+      firmwareConfig |= 0x01;
+    sendFirmwareConfigPacket();
+  }
+
+  // Enable or disable frame interpolation. Interpolation automatically blends between consecutive frames
+  // in hardware, and it does so with 16-bit per channel resolution. Combined with dithering, this helps make
+  // fades very smooth. Interpolation is on by default.
+  void setInterpolation(boolean enabled)
+  {
+    if (enabled)
+      firmwareConfig &= ~0x02;
+    else
+      firmwareConfig |= 0x02;
+    sendFirmwareConfigPacket();
+  }
+
+  // Put the Fadecandy onboard LED under automatic control. It blinks any time the firmware processes a packet.
+  // This is the default configuration for the LED.
+  void statusLedAuto()
+  {
+    firmwareConfig &= 0x0C;
+    sendFirmwareConfigPacket();
+  }    
+
+  // Manually turn the Fadecandy onboard LED on or off. This disables automatic LED control.
+  void setStatusLed(boolean on)
+  {
+    firmwareConfig |= 0x04;   // Manual LED control
+    if (on)
+      firmwareConfig |= 0x08;
+    else
+      firmwareConfig &= ~0x08;
+    sendFirmwareConfigPacket();
+  } 
+
+  // Set the color correction parameters
+  void setColorCorrection(float gamma, float red, float green, float blue)
+  {
+    colorCorrection = "{ \"gamma\": " + gamma + ", \"whitepoint\": [" + red + "," + green + "," + blue + "]}";
+    sendColorCorrectionPacket();
+  }
+
+  // Send a packet with the current firmware configuration settings
+  void sendFirmwareConfigPacket()
+  {
+    if (client == null || !client.active()) {
+      // We'll do this when we reconnect
+      return;
+    }
+ 
+    byte[] packet = new byte[9];
+    packet[0] = 0;          // Channel (reserved)
+    packet[1] = (byte)0xFF; // Command (System Exclusive)
+    packet[2] = 0;          // Length high byte
+    packet[3] = 5;          // Length low byte
+    packet[4] = 0x00;       // System ID high byte
+    packet[5] = 0x01;       // System ID low byte
+    packet[6] = 0x00;       // Command ID high byte
+    packet[7] = 0x02;       // Command ID low byte
+    packet[8] = firmwareConfig;
+    client.write(packet);
+  }
+
+  // Send a packet with the current color correction settings
+  void sendColorCorrectionPacket()
+  {
+    if (colorCorrection == null) {
+      // No color correction defined
+      return;
+    }
+    if (client == null || !client.active()) {
+      // We'll do this when we reconnect
+      return;
+    }
+
+    byte[] content = colorCorrection.getBytes();
+    int packetLen = content.length + 4;
+    byte[] header = new byte[8];
+    header[0] = 0;          // Channel (reserved)
+    header[1] = (byte)0xFF; // Command (System Exclusive)
+    header[2] = (byte)(packetLen >> 8);
+    header[3] = (byte)(packetLen & 0xFF);
+    header[4] = 0x00;       // System ID high byte
+    header[5] = 0x01;       // System ID low byte
+    header[6] = 0x00;       // Command ID high byte
+    header[7] = 0x01;       // Command ID low byte
+    client.write(header);
+    client.write(content);
+  }
+
   // Automatically called at the end of each draw()
   void draw()
   {
@@ -95,7 +195,12 @@ public class OPC {
     if (client == null || !client.active()) {
       // Try to (re)connect
       client = new Client(app, host, port);
-      return;
+      if (!client.active())
+        return;
+      
+      // Resend state, now that we're connected
+      sendFirmwareConfigPacket();
+      sendColorCorrectionPacket();
     }
 
     int numPixels = pixelLocations.length;
