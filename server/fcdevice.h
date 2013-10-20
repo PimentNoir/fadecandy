@@ -75,15 +75,23 @@ private:
         uint8_t data[63];
     };
 
+    enum PacketType {
+        OTHER = 0,
+        FRAME,
+    };
+
     struct Transfer {
-        Transfer(FCDevice *device, void *buffer, int length);
+        Transfer(FCDevice *device, void *buffer, int length, PacketType type = OTHER);
         ~Transfer();
         libusb_transfer *transfer;
         FCDevice *device;
+        PacketType type;
     };
 
     const Value *mConfigMap;
     std::set<Transfer*> mPending;
+    int mNumFramesPending;
+    bool mFrameWaitingForSubmit;
 
     char mSerial[256];
     libusb_device_descriptor mDD;
@@ -91,7 +99,7 @@ private:
     Packet mColorLUT[LUT_PACKETS];
     Packet mFirmwareConfig;
 
-    void submitTransfer(Transfer *fct);
+    bool submitTransfer(Transfer *fct);
     void configureDevice(const Value &config);
     void writeFirmwareConfiguration();
     static void completeTransfer(struct libusb_transfer *transfer);

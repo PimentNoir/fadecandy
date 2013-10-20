@@ -28,9 +28,9 @@
 #include <stdio.h>
 
 
-FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length)
+FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length, PacketType type)
     : transfer(libusb_alloc_transfer(0)),
-      device(device)
+      device(device), type(type)
 {
     libusb_fill_bulk_transfer(transfer, device->mHandle,
         OUT_ENDPOINT, (uint8_t*) buffer, length, FCDevice::completeTransfer, this, 2000);
@@ -43,7 +43,7 @@ FCDevice::Transfer::~Transfer()
 
 FCDevice::FCDevice(libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
-      mConfigMap(0)
+      mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
     mSerial[0] = '\0';
 
@@ -143,7 +143,7 @@ void FCDevice::configureDevice(const Value &config)
     writeFirmwareConfiguration();
 }
 
-void FCDevice::submitTransfer(Transfer *fct)
+bool FCDevice::submitTransfer(Transfer *fct)
 {
     /*
      * Submit a new USB transfer. The Transfer object is guaranteed to be freed eventually.
@@ -157,8 +157,11 @@ void FCDevice::submitTransfer(Transfer *fct)
             std::clog << "Error submitting USB transfer: " << libusb_strerror(libusb_error(r)) << "\n";
         }
         delete fct;
+        return false;
+
     } else {
         mPending.insert(fct);
+        return true;
     }
 }
 
@@ -173,6 +176,19 @@ void FCDevice::completeTransfer(struct libusb_transfer *transfer)
     FCDevice *self = fct->device;
 
     if (self) {
+        switch (fct->type) {
+
+            case FRAME:
+                self->mNumFramesPending--;
+                if (self->mFrameWaitingForSubmit) {
+                    self->writeFramebuffer();
+                }
+                break;
+
+            default:
+                break;
+        }
+
         self->mPending.erase(fct);
     }
 
@@ -268,11 +284,21 @@ void FCDevice::writeFramebuffer()
      * Asynchronously write the current framebuffer.
      * Note that the OS will copy our framebuffer at submit-time.
      *
-     * XXX: To-do, flow control. If more than one frame is pending, we need to be able to
-     *      tell clients that we're going too fast, *or* we need to drop frames.
+     * TODO: Currently if this gets ahead of what the USB device is capable of,
+     *       we always drop frames. Alternatively, it would be nice to have end-to-end
+     *       flow control so that the client can produce frames slower.
      */
 
-    submitTransfer(new Transfer(this, &mFramebuffer, sizeof mFramebuffer));
+    if (mNumFramesPending >= 2) {
+        // Too many outstanding frames. Wait to submit until a previous frame completes.
+        mFrameWaitingForSubmit = true;
+        return;
+    }
+
+    if (submitTransfer(new Transfer(this, &mFramebuffer, sizeof mFramebuffer, FRAME))) {
+        mFrameWaitingForSubmit = false;
+        mNumFramesPending++;
+    }
 }
 
 void FCDevice::writeMessage(const OPCSink::Message &msg)
