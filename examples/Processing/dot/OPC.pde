@@ -25,7 +25,6 @@ public class OPC {
     this.port = port;
 
     app.registerDraw(this);
-    frameRate(30);
   }
 
   // Should the pixel sampling locations be visible? This helps with debugging.
