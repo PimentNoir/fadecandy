@@ -203,11 +203,24 @@ void FCDevice::writeColorCorrection(const Value &color)
      *
      * 'color' may be 'null' to load an identity-mapped LUT, or it may be
      * a dictionary of options including 'gamma' and 'whitepoint'.
+     *
+     * This calculates a compound curve with a linear section and a nonlinear
+     * section. The linear section, near zero, avoids creating very low output
+     * values that will cause distracting flicker when dithered. The change this
+     * makes to the resulting curve is subtle, but it helps a lot! The 'waves'
+     * example, at very low brightness, shows this effect clearly.
+     *
+     * The default value of 1/256 for linearCutoff corresponds to the lowest
+     * 8-bit PWM level, below which we're flickering between that level and
+     * fully off. That's the flickering that's the most distracting, so we want
+     * to avoid lingering in the space below that brightness level.
      */
 
     // Default color LUT parameters
-    double gamma = 1.0;
-    double whitepoint[3] = {1.0, 1.0, 1.0};
+    double gamma = 1.0;                         // Power for nonlinear portion of curve
+    double whitepoint[3] = {1.0, 1.0, 1.0};     // White-point RGB value (also, global brightness)
+    double linearSlope = 1.0;                   // Slope (output / input) of linear section of the curve, near zero
+    double linearCutoff = 1/256.0;              // Y (output) coordinate of intersection of linear and nonlinear curves
 
     /*
      * Parse the JSON object
@@ -216,11 +229,25 @@ void FCDevice::writeColorCorrection(const Value &color)
     if (color.IsObject()) {
         const Value &vGamma = color["gamma"];
         const Value &vWhitepoint = color["whitepoint"];
+        const Value &vLinearSlope = color["linearSlope"];
+        const Value &vLinearCutoff = color["linearCutoff"];
 
         if (vGamma.IsNumber()) {
             gamma = vGamma.GetDouble();
         } else if (!vGamma.IsNull() && mVerbose) {
             std::clog << "Gamma value must be a number.\n";
+        }
+
+        if (vLinearSlope.IsNumber()) {
+            linearSlope = vLinearSlope.GetDouble();
+        } else if (!vLinearSlope.IsNull() && mVerbose) {
+            std::clog << "Linear slope value must be a number.\n";
+        }
+
+        if (vLinearCutoff.IsNumber()) {
+            linearCutoff = vLinearCutoff.GetDouble();
+        } else if (!vLinearCutoff.IsNull() && mVerbose) {
+            std::clog << "Linear slope value must be a number.\n";
         }
 
         if (vWhitepoint.IsArray() &&
@@ -249,6 +276,7 @@ void FCDevice::writeColorCorrection(const Value &color)
 
     for (unsigned channel = 0; channel < 3; channel++) {
         for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
+            double output;
 
             /*
              * Normalized input value corresponding to this LUT entry.
@@ -257,8 +285,24 @@ void FCDevice::writeColorCorrection(const Value &color)
              */
             double input = (entry << 8) / 65535.0;
 
-            // Color conversion
-            double output = pow(input * whitepoint[channel], gamma);
+            // Scale by whitepoint before anything else
+            input *= whitepoint[channel];
+
+            // Is this entry part of the linear section still?
+            if (input * linearSlope <= linearCutoff) {
+
+                // Output value is below linearCutoff. We're still in the linear portion of the curve
+                output = input * linearSlope;
+
+            } else {
+
+                // Nonlinear portion of the curve. This starts right where the linear portion leaves
+                // off. We need to avoid any discontinuity.
+
+                double nonlinearInput = input - (linearSlope * linearCutoff);
+                double scale = 1.0 - linearCutoff;
+                output = linearCutoff + pow(nonlinearInput / scale, gamma) * scale;
+            }
 
             // Round to the nearest integer, and clamp. Overflow-safe.
             int64_t longValue = (output * 0xFFFF) + 0.5;
