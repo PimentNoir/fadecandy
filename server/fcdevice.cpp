@@ -410,9 +410,6 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
 
     // Mutable NUL-terminated copy of the message string
     std::string text((char*)msg.data + 4, msg.length() - 4);
-    if (mVerbose) {
-        std::clog << "New global color correction settings: " << text << "\n";
-    }
 
     // Parse it in-place
     rapidjson::Document doc;
