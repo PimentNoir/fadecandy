@@ -101,6 +101,7 @@ void fcBuffers::finalizeFramebuffer()
     fbPrev = fbNext;
     fbNext = fbNew;
     fbNew = recycle;
+    perf_receivedKeyframeCounter++;
 }
 
 void fcBuffers::finalizeLUT()
