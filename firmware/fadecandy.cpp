@@ -48,9 +48,51 @@ static residual_t residual[CHANNELS_TOTAL];
 // Reserved RAM area for signalling entry to bootloader
 extern uint32_t boot_token;
 
-// Low-level drawing code, which we want to compile in the same unit as the main loop
+/*
+ * Low-level drawing code, which we want to compile in the same unit as the main loop.
+ * We compile this multiple times, with different config flags.
+ */
+
+#define FCP_INTERPOLATION   0
+#define FCP_DITHERING       0
+#define FCP_FN(name)        name##_I0_D0
+#include "fc_pixel_lut.cpp"
 #include "fc_pixel.cpp"
 #include "fc_draw.cpp"
+#undef FCP_INTERPOLATION
+#undef FCP_DITHERING
+#undef FCP_FN
+
+#define FCP_INTERPOLATION   1
+#define FCP_DITHERING       0
+#define FCP_FN(name)        name##_I1_D0
+#include "fc_pixel_lut.cpp"
+#include "fc_pixel.cpp"
+#include "fc_draw.cpp"
+#undef FCP_INTERPOLATION
+#undef FCP_DITHERING
+#undef FCP_FN
+
+#define FCP_INTERPOLATION   0
+#define FCP_DITHERING       1
+#define FCP_FN(name)        name##_I0_D1
+#include "fc_pixel_lut.cpp"
+#include "fc_pixel.cpp"
+#include "fc_draw.cpp"
+#undef FCP_INTERPOLATION
+#undef FCP_DITHERING
+#undef FCP_FN
+
+#define FCP_INTERPOLATION   1
+#define FCP_DITHERING       1
+#define FCP_FN(name)        name##_I1_D1
+#include "fc_pixel_lut.cpp"
+#include "fc_pixel.cpp"
+#include "fc_draw.cpp"
+#undef FCP_INTERPOLATION
+#undef FCP_DITHERING
+#undef FCP_FN
+
 
 static inline uint32_t calculateInterpCoefficient()
 {
@@ -66,11 +108,6 @@ static inline uint32_t calculateInterpCoefficient()
      * position in the keyframe queue. The difference between fbPrev and fbNext indicate
      * how long the interpolation between those keyframes should take.
      */
-
-    if (buffers.flags & CFLAG_NO_INTERPOLATION) {
-        // Always use fbNext
-        return 0x10000;
-    }
 
     uint32_t now = millis();
     uint32_t tsPrev = buffers.fbPrev->timestamp;
@@ -113,14 +150,26 @@ extern "C" int main()
         watchdog_refresh();
 
         buffers.handleUSB();
-        updateDrawBuffer(calculateInterpCoefficient());
-        leds.show();
 
-        // Optionally disable dithering by clearing our residual buffer every frame.
-        if (buffers.flags & CFLAG_NO_DITHERING) {
-            for (unsigned i = 0; i < CHANNELS_TOTAL; ++i)
-                residual[i] = 0;
+        // Select a different drawing loop based on our firmware config flags
+        switch (buffers.flags & (CFLAG_NO_INTERPOLATION | CFLAG_NO_DITHERING)) {
+            case 0:
+            default:
+                updateDrawBuffer_I1_D1(calculateInterpCoefficient());
+                break;
+            case CFLAG_NO_INTERPOLATION:
+                updateDrawBuffer_I0_D1(0x10000);
+                break;
+            case CFLAG_NO_DITHERING:
+                updateDrawBuffer_I1_D0(calculateInterpCoefficient());
+                break;
+            case CFLAG_NO_INTERPOLATION | CFLAG_NO_DITHERING:
+                updateDrawBuffer_I0_D0(0x10000);
+                break;
         }
+
+        // Start sending the next frame over DMA
+        leds.show();
 
         // Performance counter, for monitoring frame rate externally
         perf_frameCounter++;
