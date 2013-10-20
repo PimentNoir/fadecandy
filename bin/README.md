@@ -3,6 +3,12 @@ Fadecandy: Pre-compiled Binaries
 
 This directory contains convenient precompiled firmware and server binaries for Fadecandy. This file explains the conventions for the various types of files here.
 
+Fadecandy Server
+----------------
+
+* fcserver-osx
+  * Ready-to-run fcserver for Mac OS
+
 Firmware Images
 ---------------
 
