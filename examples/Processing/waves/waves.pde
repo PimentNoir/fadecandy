@@ -11,6 +11,7 @@ OPC opc;
 
 void setup() {
   size(640, 360, P2D);
+  frameRate(30);
   
   effect = loadShader("effect.glsl");
   effect.set("resolution", float(width), float(height));
@@ -62,6 +63,7 @@ void draw() {
 
   // Status text
   textSize(12);
+  text("Keys: [D]ithering off, [I]nterpolation off, Status [L]ED", 10, 330);
   text("FW Config: " + opc.firmwareConfig + ", " + "  Color: " + opc.colorCorrection, 10, 350);
 }
 
