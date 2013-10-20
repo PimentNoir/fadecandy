@@ -11,11 +11,12 @@ void setup()
   opc = new OPC(this, "127.0.0.1", 7890);
 
   // Map an 8x8 grid of LEDs to the center of the window, scaled to take up most of the space
-  opc.ledGrid8x8(0, width/2, height/2, height/14, 0);
+  float spacing = height / 16.0;
+  opc.ledGrid8x8(0, width/2, height/2, spacing, 0);
 
   // Put two more 8x8 grids to the left and to the right of that one.
-  opc.ledGrid8x8(64, width/2 - height/14 * 8, height/2, height/14, 0);
-  opc.ledGrid8x8(128, width/2 + height/14 * 8, height/2, height/14, 0);
+  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0);
+  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0);
 
   // Make the LED grid visible on-screen. By default, the LED sampling locations
   // are hidden and don't affect Processing's output.
