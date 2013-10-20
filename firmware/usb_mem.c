@@ -36,7 +36,7 @@
 __attribute__ ((section(".usbbuffers"), used))
 unsigned char usb_buffer_memory[NUM_USB_BUFFERS * sizeof(usb_packet_t)];
 
-static FLEXRAM_DATA uint32_t usb_buffer_available[4];
+static uint32_t usb_buffer_available[4];
 
 void usb_init_mem()
 {

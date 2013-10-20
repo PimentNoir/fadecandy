@@ -52,11 +52,11 @@ static usb_packet_t *rx_last[NUM_ENDPOINTS];
 static usb_packet_t *tx_first[NUM_ENDPOINTS];
 static usb_packet_t *tx_last[NUM_ENDPOINTS];
 
-static FLEXRAM_DATA uint8_t reply_buffer[8];
+static uint8_t reply_buffer[8];
 
 // Performance counters
-volatile FLEXRAM_DATA uint32_t perf_frameCounter;
-volatile FLEXRAM_DATA uint32_t perf_receivedKeyframeCounter;
+volatile uint32_t perf_frameCounter;
+volatile uint32_t perf_receivedKeyframeCounter;
 
 static uint8_t tx_state[NUM_ENDPOINTS];
 #define TX_STATE_BOTH_FREE_EVEN_FIRST   0
@@ -127,14 +127,14 @@ static uint8_t ep0_rx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_rx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_tx0_buf[EP0_SIZE] __attribute__ ((aligned (4)));
 static uint8_t ep0_tx1_buf[EP0_SIZE] __attribute__ ((aligned (4)));
-static FLEXRAM_DATA const uint8_t *ep0_tx_ptr = NULL;
-static FLEXRAM_DATA uint16_t ep0_tx_len;
-static FLEXRAM_DATA uint8_t ep0_tx_bdt_bank = 0;
-static FLEXRAM_DATA uint8_t ep0_tx_data_toggle = 0;
-uint8_t FLEXRAM_DATA usb_rx_memory_needed = 0;
+static const uint8_t *ep0_tx_ptr = NULL;
+static uint16_t ep0_tx_len;
+static uint8_t ep0_tx_bdt_bank = 0;
+static uint8_t ep0_tx_data_toggle = 0;
+uint8_t usb_rx_memory_needed = 0;
 
-volatile FLEXRAM_DATA uint8_t usb_configuration = 0;
-volatile FLEXRAM_DATA uint8_t usb_dfu_state = DFU_appIDLE;
+volatile uint8_t usb_configuration = 0;
+volatile uint8_t usb_dfu_state = DFU_appIDLE;
 
 static void endpoint0_stall(void)
 {
