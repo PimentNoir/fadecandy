@@ -8,8 +8,8 @@
 ########################### Configuration ###########################
 
 # Firmware image to deploy
-HEX_FILE = "../bin/fc-firmware-v105.hex"
-ELF_FILE = "../bin/fc-firmware-v105.elf"
+HEX_FILE = "../bin/fc-firmware-v106.hex"
+ELF_FILE = "../bin/fc-firmware-v106.elf"
 
 # Which GDB to use for the firmware image
 GDB_COMMAND = "arm-none-eabi-gdb"
@@ -19,7 +19,7 @@ DEFINITIONS = [
     ('fw_pFlags', '&buffers.flags'),
     ('fw_pFbPrev', '&buffers.fbPrev'),
     ('fw_pFbNext', '&buffers.fbNext'),
-    ('fw_pLUT', '&buffers.lutCurrent[0]'),
+    ('fw_pLUT', '&buffers.lutCurrent.entries[0]'),
     ('fw_usbPacketBufOffset', '&((usb_packet_t*)0)->buf'),
     ]
 
