@@ -1,8 +1,7 @@
 #define PROCESSING_COLOR_SHADER
 
-uniform float time;
+uniform float time, hue;
 uniform vec2 resolution;
-uniform vec2 mouse;
 
 vec3 hsv2rgb(vec3 c)
 {
@@ -18,9 +17,9 @@ void main(void)
   vec2 centerDist = gl_FragCoord.xy - resolution.xy * 0.5;
   float d = dot(centerDist, centerDist);
 
-  // Some interesting colors, in HSV, based on the mouse position
-  vec3 color1 = vec3(mouse.x, mouse.y, 0.0);
-  vec3 color2 = vec3(mouse.x, mouse.y, 0.5);
+  // Interpolation endpoints in HSV
+  vec3 color1 = vec3(hue, 0.25, 0.0);
+  vec3 color2 = vec3(hue, 0.25, 0.75);
 
   // Mixing factor
   float m = 0.5 * (1.0 + sin(d * 1e-4 - time * 1.2));
