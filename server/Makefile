@@ -2,11 +2,22 @@
 # Environment setup
 
 INCLUDES = -I/usr/local/include/libusb-1.0
-LIBS = -L/usr/local/lib -lstdc++ -lm -lusb-1.0 -lev
+LIBS = -L/usr/local/lib -lstdc++ -lm
+
+ifeq ($(BUILD_TYPE), osx_release)
+	# Janky OSX release build, using static libs.
+	LIBS += /usr/local/Cellar/libev/4.15/lib/libev.a
+	LIBS += /usr/local/Cellar/libusbx/1.0.16/lib/libusb-1.0.a
+	LIBS += -framework CoreFoundation -framework IOKit -lobjc
+	TARGET := fcserver-osx
+	POSTBUILD_CMD = strip $(TARGET); otool -L $(TARGET)
+else
+	# Generic build
+	LIBS += -lev -lusb-1.0
+	TARGET := fcserver
+endif
 
 #######################################################
-
-TARGET := fcserver
 
 CPP_FILES = \
 	main.cpp \
@@ -33,6 +44,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(POSTBUILD_CMD)
 
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
