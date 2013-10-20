@@ -29,30 +29,70 @@
 #include <signal.h>
 #include <cstdio>
 
+const char *defaultConfig =
+    "    {\n"
+    "        \"listen\": [null, 7890],\n"
+    "        \"verbose\": true,\n"
+    "    \n"
+    "        \"color\": {\n"
+    "            \"gamma\": 2.5,\n"
+    "            \"whitepoint\": [1.0, 1.0, 1.0]\n"
+    "        },\n"
+    "    \n"
+    "        \"devices\": [\n"
+    "            {\n"
+    "                \"type\": \"fadecandy\",\n"
+    "                \"map\": [[ 0, 0, 0, 512 ]]\n"
+    "            }\n"
+    "        ]\n"
+    "    }\n";
+
+
 int main(int argc, char **argv)
 {
-    if (argc != 2) {
+    rapidjson::Document config;
+
+    if (argc == 2 && argv[1][0] != '-') {
+        // Load config from file
+
+        FILE *configFile = fopen(argv[1], "r");
+        if (!configFile) {
+            perror("Error opening config file");
+            return 2;
+        }
+
+        rapidjson::FileStream istr(configFile);
+        config.ParseStream<0>(istr);
+
+    } else if (argc == 1) {
+        // Load default configuration
+
+        config.Parse<0>(defaultConfig);
+
+    } else {
+        // Unknown, show usage message.
+
         fprintf(stderr,
             "\n"
             "Fadecandy Open Pixel Control server\n"
             "\n"
-            "usage: fcserver <config.json>\n"
+            "usage: fcserver [<config.json>]\n"
+            "\n"
+            "To use multiple Fadecandy devices or to set up a custom mapping from\n"
+            "OPC pixel to Fadecandy pixel, you can provide a JSON configuration file.\n"
+            "By default, all detected Fadecandy boards map directly to OPC pixels using\n"
+            "the following default configuration. For more information about the config\n"
+            "file format, see the README.\n"
+            "\n"
+            "%s"
             "\n"
             "Copyright (c) 2013 Micah Elizabeth Scott <micah@scanlime.org>\n"
             "https://github.com/scanlime/fadecandy\n"
-            "\n");
+            "\n",
+            defaultConfig);
         return 1;
     }
 
-    FILE *configFile = fopen(argv[1], "r");
-    if (!configFile) {
-        perror("Error opening config file");
-        return 2;
-    }
-
-    rapidjson::FileStream istr(configFile);
-    rapidjson::Document config;
-    config.ParseStream<0>(istr);
     if (config.HasParseError()) {
         fprintf(stderr, "Parse error at character %d: %s\n",
             int(config.GetErrorOffset()), config.GetParseError());
