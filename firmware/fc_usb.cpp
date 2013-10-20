@@ -109,9 +109,11 @@ void fcBuffers::finalizeLUT()
      * To keep LUT lookups super-fast, we copy the LUT into a linear array at this point.
      * LUT changes are intended to be infrequent (initialization or configuration-time only),
      * so this isn't a performance bottleneck.
+     *
+     * Note the right shift by 1. See lutInterpolate() for an explanation.
      */
 
     for (unsigned i = 0; i < LUT_TOTAL_SIZE; ++i) {
-        lutCurrent.entries[i] = lutNew.entry(i);
+        lutCurrent.entries[i] = lutNew.entry(i) >> 1;
     }
 }
