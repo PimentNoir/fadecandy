@@ -456,7 +456,10 @@ std::string FCDevice::getName()
     if (mSerial[0]) {
         unsigned major = mDD.bcdDevice >> 8;
         unsigned minor = mDD.bcdDevice & 0xFF;
-        s << " (Serial# " << mSerial << ", Version " << major << "." << minor << ")";
+        char version[10];
+        snprintf(version, sizeof version, "%x.%02x", major, minor);
+
+        s << " (Serial# " << mSerial << ", Version " << version << ")";
     }
     return s.str();
 }
