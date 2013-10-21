@@ -118,18 +118,27 @@ void OPCSink::cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents)
         return;
     }
 
+    // Enqueue new packet
     cli->bufferPos += r;
-    if (cli->bufferPos >= offsetof(Message, data)) {
-        // We have a header, at least.
+
+    // Process any and all complete packets from our buffer
+    while (1) {
+        if (cli->bufferPos < offsetof(Message, data)) {
+            // Still waiting for a header
+            return;
+        }
 
         unsigned length = offsetof(Message, data) + cli->buffer.length();
-        if (cli->bufferPos >= length) {
-            // Complete packet.
-            self->mCallback(cli->buffer, self->mContext);
-
-            // Save any part of the following packet we happened to grab.
-            memmove(&cli->buffer, length + (uint8_t*)&cli->buffer, cli->bufferPos - length);
-            cli->bufferPos -= length;
+        if (cli->bufferPos < length) {
+            // Waiting for more data
+            return;
         }
+
+        // Complete packet.
+        self->mCallback(cli->buffer, self->mContext);
+
+        // Save any part of the following packet we happened to grab.
+        memmove(&cli->buffer, length + (uint8_t*)&cli->buffer, cli->bufferPos - length);
+        cli->bufferPos -= length;
     }
 }
