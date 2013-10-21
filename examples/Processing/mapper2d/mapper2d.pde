@@ -175,6 +175,8 @@ void draw()
       showFrameSequence();
     else
       showPatternSequence();
+      
+    allPixelsOff();
     return;
   }
 
