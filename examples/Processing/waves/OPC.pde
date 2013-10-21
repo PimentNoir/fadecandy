@@ -280,6 +280,9 @@ public class OPC
     } catch (IOException e) {
       dispose();
     }
+    
+    sendColorCorrectionPacket();
+    sendFirmwareConfigPacket();
   }
 }
 
