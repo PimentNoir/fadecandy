@@ -31,7 +31,7 @@
 
 const char *defaultConfig =
     "    {\n"
-    "        \"listen\": [null, 7890],\n"
+    "        \"listen\": [\"127.0.0.1\", 7890],\n"
     "        \"verbose\": true,\n"
     "    \n"
     "        \"color\": {\n"
