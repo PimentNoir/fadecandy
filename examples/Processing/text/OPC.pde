@@ -135,6 +135,13 @@ public class OPC {
     colorCorrection = "{ \"gamma\": " + gamma + ", \"whitepoint\": [" + red + "," + green + "," + blue + "]}";
     sendColorCorrectionPacket();
   }
+  
+  // Set custom color correction parameters from a string
+  void setColorCorrection(String s)
+  {
+    colorCorrection = s;
+    sendColorCorrectionPacket();
+  }
 
   // Send a packet with the current firmware configuration settings
   void sendFirmwareConfigPacket()
