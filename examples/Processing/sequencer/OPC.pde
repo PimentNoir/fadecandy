@@ -6,27 +6,27 @@
  * This file is released into the public domain.
  */
 
-import processing.net.Client;
+import java.net.*;
 import java.util.Arrays;
 
-public class OPC {
-  PApplet app;
-  int[] pixelLocations;
-  byte[] packetData;
-  Client client;
+public class OPC
+{
+  Socket socket;
+  OutputStream output;
   String host;
   int port;
+
+  int[] pixelLocations;
+  byte[] packetData;
   byte firmwareConfig;
   String colorCorrection;
   boolean enableShowLocations;
 
-  OPC(PApplet app, String host, int port)
+  OPC(PApplet parent, String host, int port)
   {
-    this.app = app;
     this.host = host;
     this.port = port;
-
-    app.registerDraw(this);
+    parent.registerDraw(this);
   }
 
   // Set the location of a single LED
@@ -146,7 +146,7 @@ public class OPC {
   // Send a packet with the current firmware configuration settings
   void sendFirmwareConfigPacket()
   {
-    if (client == null || !client.active()) {
+    if (output == null) {
       // We'll do this when we reconnect
       return;
     }
@@ -161,7 +161,12 @@ public class OPC {
     packet[6] = 0x00;       // Command ID high byte
     packet[7] = 0x02;       // Command ID low byte
     packet[8] = firmwareConfig;
-    client.write(packet);
+
+    try {
+      output.write(packet);
+    } catch (Exception e) {
+      dispose();
+    }
   }
 
   // Send a packet with the current color correction settings
@@ -171,7 +176,7 @@ public class OPC {
       // No color correction defined
       return;
     }
-    if (client == null || !client.active()) {
+    if (output == null) {
       // We'll do this when we reconnect
       return;
     }
@@ -187,8 +192,13 @@ public class OPC {
     header[5] = 0x01;       // System ID low byte
     header[6] = 0x00;       // Command ID high byte
     header[7] = 0x01;       // Command ID low byte
-    client.write(header);
-    client.write(content);
+
+    try {
+      output.write(header);
+      output.write(content);
+    } catch (Exception e) {
+      dispose();
+    }
   }
 
   // Automatically called at the end of each draw()
@@ -199,15 +209,12 @@ public class OPC {
       return;
     }
  
-    if (client == null || !client.active()) {
+    if (output == null) {
       // Try to (re)connect
-      client = new Client(app, host, port);
-      if (!client.active())
-        return;
-      
-      // Resend state, now that we're connected
-      sendFirmwareConfigPacket();
-      sendColorCorrectionPacket();
+      connect();
+    }
+    if (output == null) {
+      return;
     }
 
     int numPixels = pixelLocations.length;
@@ -239,10 +246,39 @@ public class OPC {
       }
     }
 
-    client.write(packetData);
+    try {
+      output.write(packetData);
+    } catch (Exception e) {
+      dispose();
+    }
 
     if (enableShowLocations) {
       updatePixels();
+    }
+  }
+
+  void dispose()
+  {
+    // Destroy the socket. Called internally when we've disconnected.
+    if (output != null) {
+      println("Disconnected from OPC server");
+    }
+    socket = null;
+    output = null;
+  }
+
+  void connect()
+  {
+    // Try to connect to the OPC server. This normally happens automatically in draw()
+    try {
+      socket = new Socket(host, port);
+      socket.setTcpNoDelay(true);
+      output = socket.getOutputStream();
+      println("Connected to OPC server");
+    } catch (ConnectException e) {
+      dispose();
+    } catch (IOException e) {
+      dispose();
     }
   }
 }
