@@ -76,21 +76,6 @@ void setup()
   opc.ledGrid8x8(64, ledX - ledSpacing * 8, ledY, ledSpacing, 0);
   opc.ledGrid8x8(128, ledX + ledSpacing * 8, ledY, ledSpacing, 0);
   opc.showLocations(true);
-
-  /*
-   * Set up custom color management settings. We want all of the dynamic range we can
-   * get, and it's okay if the very darkest parts of the display flicker a little due to
-   * the dithering. We can get this effect by setting linearCutoff to zero, to disable
-   * the linear portion of the gamma curve. This makes our "flash" effect roll off very
-   * smoothly, instead of stuttering right before it completely shuts off.
-   *
-   * For more information about these settings, see the fcserver README. This is a JSON
-   * blob in the same format as used by fcserver's config file.
-   */
-  opc.setColorCorrection("{ \"gamma\": 2.5, \"linearCutoff\": 0.0 }");
-
-  // If the Fadecandy board's status LED is bothersome, it's easy to turn off or repurpose.
-  opc.setStatusLed(false);
   
   // Init timekeeping, start the pattern from the beginning
   startPattern();

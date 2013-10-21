@@ -206,21 +206,21 @@ void FCDevice::writeColorCorrection(const Value &color)
      *
      * This calculates a compound curve with a linear section and a nonlinear
      * section. The linear section, near zero, avoids creating very low output
-     * values that will cause distracting flicker when dithered. The change this
-     * makes to the resulting curve is subtle, but it helps a lot! The 'waves'
-     * example, at very low brightness, shows this effect clearly.
+     * values that will cause distracting flicker when dithered. This isn't a problem
+     * when the LEDs are viewed indirectly such that the flicker is below the threshold
+     * of perception, but in cases where the flicker is a problem this linear section can
+     * eliminate it entierly at the cost of some dynamic range.
      *
-     * The default value of 1/256 for linearCutoff corresponds to the lowest
-     * 8-bit PWM level, below which we're flickering between that level and
-     * fully off. That's the flickering that's the most distracting, so we want
-     * to avoid lingering in the space below that brightness level.
+     * By default, the linear section is disabled (linearCutoff is zero). To enable the
+     * linear section, set linearCutoff to some nonzero value. A good starting point is
+     * 1/256.0, correspnding to the lowest 8-bit PWM level.
      */
 
     // Default color LUT parameters
     double gamma = 1.0;                         // Power for nonlinear portion of curve
     double whitepoint[3] = {1.0, 1.0, 1.0};     // White-point RGB value (also, global brightness)
     double linearSlope = 1.0;                   // Slope (output / input) of linear section of the curve, near zero
-    double linearCutoff = 1/256.0;              // Y (output) coordinate of intersection of linear and nonlinear curves
+    double linearCutoff = 0.0;                  // Y (output) coordinate of intersection of linear and nonlinear curves
 
     /*
      * Parse the JSON object
