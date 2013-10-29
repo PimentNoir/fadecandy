@@ -90,7 +90,9 @@ ifneq ("$(MINGW)", "")
 endif
 
 INCLUDES += -Ilibusbx/libusb
-CLEAN_FILES += libusbx/libusb/*.d libusbx/libusb/*.o
+CLEAN_FILES += \
+	libusbx/libusb/*.d libusbx/libusb/*.o \
+	libusbx/libusb/os/*.d libusbx/libusb/os/*.o
 
 ###########################################################################
 # Build Rules
