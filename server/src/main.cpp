@@ -29,7 +29,9 @@
 #include <signal.h>
 #include <cstdio>
 
-const char *defaultConfig =
+extern const char *kFCServerVersion;
+
+const char *kDefaultConfig =
     "    {\n"
     "        \"listen\": [\"127.0.0.1\", 7890],\n"
     "        \"verbose\": true,\n"
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
     } else if (argc == 1) {
         // Load default configuration
 
-        config.Parse<0>(defaultConfig);
+        config.Parse<0>(kDefaultConfig);
 
     } else {
         // Unknown, show usage message.
@@ -75,21 +77,28 @@ int main(int argc, char **argv)
         fprintf(stderr,
             "\n"
             "Fadecandy Open Pixel Control server\n"
+            "%s\n"
             "\n"
             "usage: fcserver [<config.json>]\n"
             "\n"
-            "To use multiple Fadecandy devices or to set up a custom mapping from\n"
-            "OPC pixel to Fadecandy pixel, you can provide a JSON configuration file.\n"
-            "By default, all detected Fadecandy boards map directly to OPC pixels using\n"
-            "the following default configuration. For more information about the config\n"
-            "file format, see the README.\n"
+            "To use multiple Fadecandy devices or to set up a custom\n"
+            "mapping from OPC pixel to Fadecandy pixel, you can provide\n"
+            "a JSON configuration file. By default, all detected Fadecandy\n"
+            "boards map directly to OPC pixels using the following default\n"
+            "configuration. For more information about the config file\n"
+            "format, see the README.\n"
             "\n"
             "%s"
             "\n"
             "Copyright (c) 2013 Micah Elizabeth Scott <micah@scanlime.org>\n"
             "https://github.com/scanlime/fadecandy\n"
+            "\n"
+            "Portions of this software are licensed under the GNU General\n"
+            "Public License. Full license information and source code are\n"
+            "available at the URL above.\n"
             "\n",
-            defaultConfig);
+            kFCServerVersion,
+            kDefaultConfig);
         return 1;
     }
 

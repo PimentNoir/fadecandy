@@ -10,7 +10,8 @@ CPP_FILES += \
 	src/usbdevice.cpp \
 	src/fcdevice.cpp \
 	src/enttecdmxdevice.cpp \
-	src/fcserver.cpp
+	src/fcserver.cpp \
+	src/version.cpp
 
 CLEAN_FILES += src/*.d src/*.o
 CPPFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing
@@ -21,6 +22,8 @@ CPPFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing
 UNAME := $(shell uname)
 MINGW := $(findstring MINGW32, $(UNAME))
 LIBS += -lstdc++ -lm
+VERSION := $(shell git describe --match "fcserver-*")
+CXXFLAGS += -DFCSERVER_VERSION=$(VERSION)
 
 ifeq ($(UNAME), Darwin)
 	# Mac OS X (32-bit build)
@@ -110,6 +113,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(POSTBUILD_CMD)
+	rm -f src/version.o
 
 -include $(OBJS:.o=.d)
 
