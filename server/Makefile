@@ -1,26 +1,9 @@
-#######################################################
-# Environment setup
+###########################################################################
+# Fadecandy Server
 
-INCLUDES = -I/usr/local/include/libusb-1.0
-LIBS = -L/usr/local/lib -lstdc++ -lm
+TARGET := fcserver
 
-ifeq ($(BUILD_TYPE), osx_release)
-	# Janky 32-bit OSX release build, using static libs.
-	LIBS += /usr/local/Cellar/libusbx/1.0.16/lib/libusb-1.0.a
-	LIBS += -framework CoreFoundation -framework IOKit -lobjc
-	TARGET := fcserver-osx
-	POSTBUILD_CMD = strip $(TARGET); otool -L $(TARGET)
-	CPPFLAGS += -m32
-	LDFLAGS += -m32
-else
-	# Generic build
-	LIBS += -lusb-1.0
-	TARGET := fcserver
-endif
-
-#######################################################
-
-CPP_FILES = \
+CPP_FILES += \
 	src/main.cpp \
 	src/opcsink.cpp \
 	src/libusbev.cpp \
@@ -29,24 +12,94 @@ CPP_FILES = \
 	src/enttecdmxdevice.cpp \
 	src/fcserver.cpp
 
-C_FILES = \
-	libev/ev.c
+CLEAN_FILES += src/*.d src/*.o
+CPPFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing
 
-INCLUDES += -I. -Ilibev
+###########################################################################
+# System Support
 
-# libev configuration
-CFLAGS += -DEV_STANDALONE -Wno-comment -Wno-unused-variable -Wno-extern-initializer \
-	-Wno-unused-value -Wno-bitwise-op-parentheses
+UNAME := $(shell uname)
+MINGW := $(findstring MINGW32, $(UNAME))
+LIBS += -lstdc++ -lm
 
-# CPPFLAGS = compiler options for C and C++
-CPPFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing \
-	-g -Os -MMD $(INCLUDES)
+ifeq ($(UNAME), Darwin)
+	# Mac OS X (32-bit build)
+	LDFLAGS += -m32
+	CPPFLAGS += -m32
+endif
 
-# compiler options for C++ only
+ifneq ("$(MINGW)", "")
+	# Windows
+	TARGET := $(TARGET).exe
+endif
+
+ifneq ("$(DEBUG)", "")
+	# Debug build
+	TARGET := debug-$(TARGET)
+	CPPFLAGS += -g -DDEBUG
+else
+	# Optimized build	
+	POSTBUILD_CMD := strip $(TARGET)
+	CPPFLAGS += -Os -DNDEBUG
+	LDFLAGS += -Os
+endif
+
+###########################################################################
+# Built-in libev
+
+C_FILES += libev/ev.c
+
+CFLAGS += -DEV_STANDALONE -Wno-comment -Wno-unused-variable \
+	-Wno-extern-initializer -Wno-unused-value -Wno-bitwise-op-parentheses
+
+INCLUDES += -Ilibev
+CLEAN_FILES += libev/*.d libev/*.o
+
+###########################################################################
+# Built-in rapidjson
+
+INCLUDES += -I.
+
+###########################################################################
+# Built-in libusbx
+
+C_FILES += \
+	libusbx/libusb/core.c \
+	libusbx/libusb/descriptor.c \
+	libusbx/libusb/hotplug.c \
+	libusbx/libusb/io.c \
+	libusbx/libusb/strerror.c \
+	libusbx/libusb/sync.c
+
+ifeq ($(UNAME), Darwin)
+	# Mac OS X
+
+	C_FILES += \
+		libusbx/libusb/os/darwin_usb.c \
+		libusbx/libusb/os/poll_posix.c \
+		libusbx/libusb/os/threads_posix.c
+
+	LIBS += -framework CoreFoundation -framework IOKit -lobjc
+	CFLAGS += -DOS_DARWIN -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t \
+		-DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY
+endif
+
+ifneq ("$(MINGW)", "")
+	# Windows
+	CPPFLAGS += -DOS_WINDOWS
+endif
+
+INCLUDES += -Ilibusbx/libusb
+CLEAN_FILES += libusbx/libusb/*.d libusbx/libusb/*.o
+
+###########################################################################
+# Build Rules
+
+# Compiler options for C and C++
+CPPFLAGS += -MMD $(INCLUDES)
+
+# Compiler options for C++ only
 CXXFLAGS += -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
-
-# linker options and libraries
-LDFLAGS += -Os
 
 OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
@@ -56,10 +109,9 @@ $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(POSTBUILD_CMD)
 
-# compiler generated dependency info
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f src/*.d src/*.o libev/*.d libev/*.o $(TARGET)
+	rm -f $(CLEAN_FILES) $(TARGET)
 
 .PHONY: clean all
