@@ -20,23 +20,25 @@ endif
 #######################################################
 
 CPP_FILES = \
-	main.cpp \
-	opcsink.cpp \
-	libusbev.cpp \
-	usbdevice.cpp \
-	fcdevice.cpp \
-	enttecdmxdevice.cpp \
-	fcserver.cpp
+	src/main.cpp \
+	src/opcsink.cpp \
+	src/libusbev.cpp \
+	src/usbdevice.cpp \
+	src/fcdevice.cpp \
+	src/enttecdmxdevice.cpp \
+	src/fcserver.cpp
+
+INCLUDES += -I.
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing \
+CPPFLAGS += -Wall -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing \
 	-g -Os -MMD $(INCLUDES)
 
 # compiler options for C++ only
-CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
+CXXFLAGS += -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 
 # linker options and libraries
-LDFLAGS = -Os
+LDFLAGS += -Os
 
 OBJS := $(CPP_FILES:.cpp=.o)
 
