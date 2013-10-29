@@ -1,4 +1,7 @@
 *.o
 *.d
+debug-fcserver
+debug-fcserver.exe
 fcserver
-fcserver-osx
+fcserver.exe
+
