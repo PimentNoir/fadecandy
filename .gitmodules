@@ -1,0 +1,4 @@
+[submodule "server/libusbx"]
+	path = server/libusbx
+	url = https://github.com/manuelnaranjo/libusbx.git
+	branch = windows-hotplug-4
