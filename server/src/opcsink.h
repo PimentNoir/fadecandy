@@ -23,11 +23,9 @@
 
 #pragma once
 #include <ev.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <stdint.h>
 
+struct addrinfo;
 
 class OPCSink {
 public:
@@ -59,6 +57,11 @@ public:
 
     OPCSink(callback_t cb, void *context, bool verbose = false);
     void start(struct ev_loop *loop, struct addrinfo *listenAddr);
+
+    // Portable socket utilities
+    static bool socketInit();
+    static struct addrinfo* newAddr(const char *host, int port);
+    static void freeAddr(struct addrinfo* addr);
 
 private:
     bool mVerbose;

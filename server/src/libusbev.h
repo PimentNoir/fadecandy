@@ -22,6 +22,12 @@
  */
 
 #pragma once
+
+#ifdef _WIN32
+// Must include winsock2 before libusb.h, or it will include winsock.h
+# include <winsock2.h>
+#endif
+
 #include <ev.h>
 #include <libusb.h>
 #include <map>
@@ -44,6 +50,6 @@ private:
     std::map<int, Watcher*> mWatchers;
 
     static void cbEvent(struct ev_loop *loop, ev_io *io, int revents);
-    static void cbAdded(int fd, short events, void *user_data);
-    static void cbRemoved(int fd, void *user_data);
+    static LIBUSB_CALL void cbAdded(int fd, short events, void *user_data);
+    static LIBUSB_CALL void cbRemoved(int fd, void *user_data);
 };

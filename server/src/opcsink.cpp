@@ -22,14 +22,34 @@
  */
 
 #include "opcsink.h"
-#include "util.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <iostream>
+#include <sstream>
+
+#ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <winsock2.h>
+# include <windows.h>
+# include <ws2tcpip.h>
+# define SOCKOPT_ARG(x)     ((const char*)(x))
+# define RECV_BUF(x)        ((char*)(x))
+#else
+# include <netinet/in.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netdb.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <netinet/tcp.h>
+# include <unistd.h>
+# include <signal.h>
+# define SOCKOPT_ARG(x)     (x)
+# define RECV_BUF(x)        (x)
+#endif
+
+#include <libusbi.h>
 
 
 OPCSink::OPCSink(callback_t cb, void *context, bool verbose)
@@ -44,7 +64,7 @@ void OPCSink::start(struct ev_loop *loop, struct addrinfo *listenAddr)
     }
 
     int arg = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &arg, sizeof arg);
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, SOCKOPT_ARG(&arg), sizeof arg);
 
     if (bind(sock, listenAddr->ai_addr, listenAddr->ai_addrlen)) {
         perror("bind");
@@ -79,7 +99,7 @@ void OPCSink::cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents)
     }
 
     int arg = 1;
-    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &arg, sizeof arg);
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, SOCKOPT_ARG(&arg), sizeof arg);
 
     Client *cli = new Client();
     cli->bufferPos = 0;
@@ -98,7 +118,7 @@ void OPCSink::cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents)
     Client *cli = container_of(watcher, Client, ioRead);
     OPCSink *self = cli->self;
 
-    int r = recv(watcher->fd, cli->bufferPos + (uint8_t*)&cli->buffer,
+    int r = recv(watcher->fd, RECV_BUF(cli->bufferPos + (uint8_t*)&cli->buffer),
         sizeof(cli->buffer) - cli->bufferPos, 0);
 
     if (r < 0) {
@@ -141,4 +161,48 @@ void OPCSink::cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents)
         memmove(&cli->buffer, length + (uint8_t*)&cli->buffer, cli->bufferPos - length);
         cli->bufferPos -= length;
     }
+}
+
+struct addrinfo* OPCSink::newAddr(const char *host, int port)
+{
+    std::ostringstream portStr;
+    portStr << port;
+
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_flags = AI_PASSIVE;
+
+    struct addrinfo *ai = 0;
+    int error = getaddrinfo(host, portStr.str().c_str(), &hints, &ai);
+
+    if (error) {
+        std::clog << "getaddrinfo: " << gai_strerror(error) << "\n";
+        ai = 0;
+    }
+
+    return ai;
+}
+
+void OPCSink::freeAddr(struct addrinfo* addr)
+{
+    freeaddrinfo(addr);
+}
+
+bool OPCSink::socketInit()
+{
+#ifdef _WIN32
+    WSADATA wsaData;
+    int error;
+
+    error = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (error) {
+        std::clog << "WSAStartup failed (Error " << error << ")\n";
+        return false;
+    }
+#else
+    signal(SIGPIPE, SIG_IGN);    
+#endif
+
+    return true;
 }

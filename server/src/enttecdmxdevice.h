@@ -71,7 +71,7 @@ private:
     std::set<Transfer*> mPending;
 
     void submitTransfer(Transfer *fct);
-    static void completeTransfer(struct libusb_transfer *transfer);
+    static LIBUSB_CALL void completeTransfer(struct libusb_transfer *transfer);
 
     void opcSetPixelColors(const OPCSink::Message &msg);
     void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);

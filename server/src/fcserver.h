@@ -30,9 +30,6 @@
 #include <sstream>
 #include <vector>
 #include <ev.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
 
 class FCServer
 {
@@ -64,7 +61,7 @@ private:
     std::vector<USBDevice*> mUSBDevices;
 
     static void cbMessage(OPCSink::Message &msg, void *context);
-    static int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+    static LIBUSB_CALL int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
     void startUSB(struct ev_loop *loop);
     void usbDeviceArrived(libusb_device *device);

@@ -102,7 +102,7 @@ private:
     bool submitTransfer(Transfer *fct);
     void configureDevice(const Value &config);
     void writeFirmwareConfiguration();
-    static void completeTransfer(struct libusb_transfer *transfer);
+    static LIBUSB_CALL void completeTransfer(struct libusb_transfer *transfer);
 
     void opcSetPixelColors(const OPCSink::Message &msg);
     void opcSysEx(const OPCSink::Message &msg);

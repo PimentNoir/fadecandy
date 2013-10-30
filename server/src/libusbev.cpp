@@ -22,9 +22,8 @@
  */
 
 #include "libusbev.h"
-#include "util.h"
+#include <libusbi.h>
 #include <stdlib.h>
-#include <poll.h>
 
 
 void LibUSBEventBridge::cbEvent(struct ev_loop *loop, ev_io *io, int revents)
@@ -68,10 +67,12 @@ void LibUSBEventBridge::init(struct libusb_context *ctx, struct ev_loop *loop)
 
     // Handle FDs that are already registered
     const struct libusb_pollfd **fds = libusb_get_pollfds(ctx);
-    for (const struct libusb_pollfd **i = fds; *i; ++i) {
-        cbAdded((*i)->fd, (*i)->events, this);
+    if (fds) {
+        for (const struct libusb_pollfd **i = fds; *i; ++i) {
+            cbAdded((*i)->fd, (*i)->events, this);
+        }
+        free(fds);
     }
-    free(fds);
 
     // Get notified when future callbacks are added
     libusb_set_pollfd_notifiers(ctx, cbAdded, cbRemoved, this);

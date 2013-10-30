@@ -21,12 +21,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "util.h"
 #include "fcserver.h"
 #include "usbdevice.h"
 #include "fcdevice.h"
 #include "enttecdmxdevice.h"
-#include <netdb.h>
+#include <libusbi.h>
 #include <ctype.h>
 #include <iostream>
 
@@ -48,7 +47,6 @@ FCServer::FCServer(rapidjson::Document &config)
         const Value &host = mListen[0u];
         const Value &port = mListen[1];
         const char *hostStr = 0;
-        std::ostringstream portStr;
 
         if (host.IsString()) {
             hostStr = host.GetString();
@@ -57,18 +55,12 @@ FCServer::FCServer(rapidjson::Document &config)
         }
 
         if (port.IsUint()) {
-            portStr << port.GetUint();
+            mListenAddr = OPCSink::newAddr(hostStr, port.GetUint());
+            if (!mListenAddr) {
+                mError << "Failed to resolve hostname '" << hostStr << "'\n";
+            }
         } else {
             mError << "The 'listen' port must be an integer.\n";
-        }
-
-        struct addrinfo hints;
-        memset(&hints, 0, sizeof hints);
-        hints.ai_family = PF_UNSPEC;
-        hints.ai_flags = AI_PASSIVE;
-
-        if (getaddrinfo(hostStr, portStr.str().c_str(), &hints, &mListenAddr) || !mListenAddr) {
-            mError << "Failed to resolve hostname '" << host.GetString() << "'\n";
         }
     } else {
         mError << "The required 'listen' configuration key must be a [host, port] list.\n";
@@ -86,7 +78,7 @@ FCServer::FCServer(rapidjson::Document &config)
 FCServer::~FCServer()
 {
     if (mListenAddr) {
-        freeaddrinfo(mListenAddr);
+        OPCSink::freeAddr(mListenAddr);
     }
 }
 

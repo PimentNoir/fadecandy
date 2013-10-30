@@ -13,8 +13,9 @@ CPP_FILES += \
 	src/fcserver.cpp \
 	src/version.cpp
 
+INCLUDES += -Isrc
 CLEAN_FILES += src/*.d src/*.o
-CPPFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-strict-aliasing
+CPPFLAGS += -Wno-strict-aliasing
 
 ###########################################################################
 # System Support
@@ -28,12 +29,13 @@ CXXFLAGS += -DFCSERVER_VERSION=$(VERSION)
 ifeq ($(UNAME), Darwin)
 	# Mac OS X (32-bit build)
 	LDFLAGS += -m32
-	CPPFLAGS += -m32
+	CPPFLAGS += -m32 -Wno-tautological-constant-out-of-range-compare -DHAVE_POLL_H
 endif
 
 ifneq ("$(MINGW)", "")
 	# Windows
 	TARGET := $(TARGET).exe
+	CPPFLAGS += -D_WIN32_WINNT=0x0501
 endif
 
 ifneq ("$(DEBUG)", "")
@@ -83,13 +85,23 @@ ifeq ($(UNAME), Darwin)
 		libusbx/libusb/os/threads_posix.c
 
 	LIBS += -framework CoreFoundation -framework IOKit -lobjc
-	CFLAGS += -DOS_DARWIN -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t \
+	CPPFLAGS += -DOS_DARWIN -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t \
 		-DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY
 endif
 
 ifneq ("$(MINGW)", "")
 	# Windows
-	CPPFLAGS += -DOS_WINDOWS
+
+	C_FILES += \
+		libusbx/libusb/os/windows_usb.c \
+		libusbx/libusb/os/poll_windows.c \
+		libusbx/libusb/os/threads_windows.c
+
+	LIBS += -lws2_32
+	CPPFLAGS += -DOS_WINDOWS -DPOLL_NFDS_TYPE=int -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY
+
+	# Use libusb's handy poll() compatibility layer in libev
+	CPPFLAGS += -DEV_LIBUSBI_POLL=1
 endif
 
 INCLUDES += -Ilibusbx/libusb
@@ -119,5 +131,10 @@ $(TARGET): $(OBJS)
 
 clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
+
+# Git submodule setup
+libusbx/libusb/core.c:
+	git submodule init
+	git submodule update
 
 .PHONY: clean all

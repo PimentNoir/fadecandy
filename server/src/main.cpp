@@ -25,8 +25,6 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/filestream.h"
 #include "fcserver.h"
-#include <unistd.h>
-#include <signal.h>
 #include <cstdio>
 
 extern const char *kFCServerVersion;
@@ -53,6 +51,10 @@ const char *kDefaultConfig =
 int main(int argc, char **argv)
 {
     rapidjson::Document config;
+
+    if (!OPCSink::socketInit()) {
+        return 6;
+    }
 
     if (argc == 2 && argv[1][0] != '-') {
         // Load config from file
@@ -116,7 +118,6 @@ int main(int argc, char **argv)
 
     struct ev_loop *loop = EV_DEFAULT;
     server.start(loop);
-    signal(SIGPIPE, SIG_IGN);
     ev_run(loop, 0);
 
     return 0;
