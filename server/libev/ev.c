@@ -164,6 +164,21 @@
  
 #endif
 
+
+/*
+ * This is a compatibility hack for using libusbx's poll() on Win32.
+ * --Micah
+ */
+#if EV_LIBUSBI_POLL
+# define EV_USE_POLL 1
+# define WIN32_LEAN_AND_MEAN
+# define poll usbi_poll
+# include <winsock2.h>
+# include <windows.h>
+# include <libusbi.h>
+#endif
+
+
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -1787,7 +1802,9 @@ fd_reify (EV_P)
             {
               unsigned long arg;
 
+              #ifndef EV_LIBUSBI_POLL
               assert (("libev: only socket fds supported in this configuration", ioctlsocket (handle, FIONREAD, &arg) == 0));
+              #endif
 
               /* handle changed, but fd didn't - we need to do it in two steps */
               backend_modify (EV_A_ fd, anfd->events, 0);

@@ -37,7 +37,9 @@
  * either the BSD or the GPL.
  */
 
-#include <poll.h>
+#ifndef EV_LIBUSBI_POLL
+# include <poll.h>
+#endif
 
 void inline_size
 pollidx_init (int *base, int count)
