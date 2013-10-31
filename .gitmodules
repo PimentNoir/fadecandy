@@ -1,4 +1,3 @@
 [submodule "server/libusbx"]
 	path = server/libusbx
 	url = https://github.com/libusbx/libusbx.git
-	branch = master
