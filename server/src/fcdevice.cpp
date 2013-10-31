@@ -30,7 +30,7 @@
 
 FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length, PacketType type)
     : transfer(libusb_alloc_transfer(0)),
-      device(device), type(type)
+      type(type), finished(false)
 {
     libusb_fill_bulk_transfer(transfer, device->mHandle,
         OUT_ENDPOINT, (uint8_t*) buffer, length, FCDevice::completeTransfer, this, 2000);
@@ -41,10 +41,9 @@ FCDevice::Transfer::~Transfer()
     libusb_free_transfer(transfer);
 }
 
-FCDevice::FCDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose)
+FCDevice::FCDevice(libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
-      mEventMutex(eventMutex), mConfigMap(0),
-      mNumFramesPending(0), mFrameWaitingForSubmit(false)
+      mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
     mSerial[0] = '\0';
 
@@ -69,15 +68,14 @@ FCDevice::FCDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, 
 FCDevice::~FCDevice()
 {
     /*
-     * If we have pending transfers, cancel them and jettison them
-     * from the FCDevice. The Transfer objects themselves will be freed
+     * If we have pending transfers, cancel them.
+     * The Transfer objects themselves will be freed
      * once libusb completes them.
      */
 
     for (std::set<Transfer*>::iterator i = mPending.begin(), e = mPending.end(); i != e; ++i) {
         Transfer *fct = *i;
         libusb_cancel_transfer(fct->transfer);
-        fct->device = 0;
     }
 }
 
@@ -168,33 +166,43 @@ bool FCDevice::submitTransfer(Transfer *fct)
 
 void FCDevice::completeTransfer(libusb_transfer *transfer)
 {
-    /*
-     * Transfer complete. The FCDevice may or may not still exist; if the device was unplugged,
-     * fct->device will be set to 0 by ~FCDevice().
-     */
-
     FCDevice::Transfer *fct = static_cast<FCDevice::Transfer*>(transfer->user_data);
-    FCDevice *self = fct->device;
-    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
+    fct->finished = true;
+}
 
-    if (self) {
-        switch (fct->type) {
+void FCDevice::flush()
+{
+    // Erase any finished transfers
 
-            case FRAME:
-                self->mNumFramesPending--;
-                if (self->mFrameWaitingForSubmit) {
-                    self->writeFramebuffer();
-                }
-                break;
+    std::set<Transfer*>::iterator current = mPending.begin();
+    while (current != mPending.end()) {
+        std::set<Transfer*>::iterator next = current;
+        next++;
 
-            default:
-                break;
+        Transfer *fct = *current;
+        if (fct->finished) {
+            switch (fct->type) {
+
+                case FRAME:
+                    mNumFramesPending--;
+                    break;
+
+                default:
+                    break;
+            }
+
+            mPending.erase(current);
+            delete fct;
         }
 
-        self->mPending.erase(fct);
+        current = next;
     }
 
-    delete fct;
+    // Submit new frames, if we had a queued frame waiting
+
+    if (mFrameWaitingForSubmit && mNumFramesPending < MAX_FRAMES_PENDING) {
+        writeFramebuffer();
+    }
 }
 
 void FCDevice::writeColorCorrection(const Value &color)
@@ -335,7 +343,7 @@ void FCDevice::writeFramebuffer()
      *       flow control so that the client can produce frames slower.
      */
 
-    if (mNumFramesPending >= 2) {
+    if (mNumFramesPending >= MAX_FRAMES_PENDING) {
         // Too many outstanding frames. Wait to submit until a previous frame completes.
         mFrameWaitingForSubmit = true;
         return;
@@ -532,4 +540,3 @@ std::string FCDevice::getName()
     }
     return s.str();
 }
-    

@@ -23,14 +23,13 @@
 
 #pragma once
 #include "usbdevice.h"
-#include "tinythread.h"
 #include <set>
 
 
 class FCDevice : public USBDevice
 {
 public:
-    FCDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose);
+    FCDevice(libusb_device *device, bool verbose);
     virtual ~FCDevice();
 
     static bool probe(libusb_device *device);
@@ -40,6 +39,7 @@ public:
     virtual void writeMessage(const OPCSink::Message &msg);
     virtual void writeColorCorrection(const Value &color);
     virtual std::string getName();
+    virtual void flush();
 
     static const unsigned NUM_PIXELS = 512;
 
@@ -60,6 +60,7 @@ private:
     static const unsigned LUT_PACKETS = 25;
     static const unsigned LUT_ENTRIES = 257;
     static const unsigned OUT_ENDPOINT = 1;
+    static const unsigned MAX_FRAMES_PENDING = 2;
 
     static const uint8_t TYPE_FRAMEBUFFER = 0x00;
     static const uint8_t TYPE_LUT = 0x40;
@@ -85,11 +86,10 @@ private:
         Transfer(FCDevice *device, void *buffer, int length, PacketType type = OTHER);
         ~Transfer();
         libusb_transfer *transfer;
-        FCDevice *device;
         PacketType type;
+        bool finished;
     };
 
-    tthread::recursive_mutex &mEventMutex;
     const Value *mConfigMap;
     std::set<Transfer*> mPending;
     int mNumFramesPending;

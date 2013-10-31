@@ -23,14 +23,13 @@
 
 #pragma once
 #include "usbdevice.h"
-#include "tinythread.h"
 #include <set>
 
 
 class EnttecDMXDevice : public USBDevice
 {
 public:
-    EnttecDMXDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose);
+    EnttecDMXDevice(libusb_device *device, bool verbose);
     virtual ~EnttecDMXDevice();
 
     static bool probe(libusb_device *device);
@@ -40,6 +39,7 @@ public:
     virtual bool matchConfiguration(const Value &config);
     virtual void writeMessage(const OPCSink::Message &msg);
     virtual std::string getName();
+    virtual void flush();
 
     void writeDMXPacket();
     void setChannel(unsigned n, uint8_t value);
@@ -62,10 +62,9 @@ private:
         Transfer(EnttecDMXDevice *device, void *buffer, int length);
         ~Transfer();
         libusb_transfer *transfer;
-        EnttecDMXDevice *device;
+        bool finished;
     };
 
-    tthread::recursive_mutex &mEventMutex;
     char mSerial[256];
     bool mFoundEnttecStrings;
     const Value *mConfigMap;

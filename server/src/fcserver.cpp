@@ -115,18 +115,21 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
      */
 
     FCServer *self = static_cast<FCServer*>(context);
-    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
+    self->mEventMutex.lock();
 
     for (std::vector<USBDevice*>::iterator i = self->mUSBDevices.begin(), e = self->mUSBDevices.end(); i != e; ++i) {
         USBDevice *dev = *i;
         dev->writeMessage(msg);
     }
+
+    self->mEventMutex.unlock();
 }
 
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
 {
     FCServer *self = static_cast<FCServer*>(user_data);
-    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
+
+    self->mEventMutex.lock();
 
     if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
         self->usbDeviceArrived(device);
@@ -135,6 +138,7 @@ int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotpl
         self->usbDeviceLeft(device);
     }
 
+    self->mEventMutex.unlock();
     return false;
 }
 
@@ -147,10 +151,10 @@ void FCServer::usbDeviceArrived(libusb_device *device)
     USBDevice *dev;
 
     if (FCDevice::probe(device)) {
-        dev = new FCDevice(mEventMutex, device, mVerbose);
+        dev = new FCDevice(device, mVerbose);
 
     } else if (EnttecDMXDevice::probe(device)) {
-        dev = new EnttecDMXDevice(mEventMutex, device, mVerbose);
+        dev = new EnttecDMXDevice(device, mVerbose);
 
     } else {
         return;
@@ -235,8 +239,16 @@ void FCServer::mainLoop()
         int err = libusb_handle_events_completed(mUSB, 0);
         if (err) {
             std::clog << "Error handling USB events: " << libusb_strerror(libusb_error(err)) << "\n";
-            return;
+            // Sometimes this happens on Windows during normal operation if we're queueing a lot of output URBs. Meh.
         }
+
+        // Flush completed transfers
+        mEventMutex.lock();
+        for (std::vector<USBDevice*>::iterator i = mUSBDevices.begin(), e = mUSBDevices.end(); i != e; ++i) {
+            USBDevice *dev = *i;
+            dev->flush();
+        }
+        mEventMutex.unlock();
     }
 }
 
@@ -259,7 +271,7 @@ bool FCServer::usbHotplugPoll()
     }
 
     // Take the lock after get_device_list completes
-    tthread::lock_guard<tthread::recursive_mutex> guard(mEventMutex);
+    mEventMutex.lock();
 
     // Look for devices that were added
     for (ssize_t listItem = 0; listItem < listSize; ++listItem) {
@@ -294,6 +306,7 @@ bool FCServer::usbHotplugPoll()
         }
     }
 
+    mEventMutex.unlock();
     libusb_free_device_list(list, true);
     return true;
 }

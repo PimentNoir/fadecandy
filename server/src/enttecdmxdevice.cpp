@@ -27,8 +27,7 @@
 
 
 EnttecDMXDevice::Transfer::Transfer(EnttecDMXDevice *device, void *buffer, int length)
-    : transfer(libusb_alloc_transfer(0)),
-      device(device)
+    : transfer(libusb_alloc_transfer(0)), finished(false)
 {
     libusb_fill_bulk_transfer(transfer, device->mHandle,
         OUT_ENDPOINT, (uint8_t*) buffer, length, EnttecDMXDevice::completeTransfer, this, 2000);
@@ -39,9 +38,9 @@ EnttecDMXDevice::Transfer::~Transfer()
     libusb_free_transfer(transfer);
 }
 
-EnttecDMXDevice::EnttecDMXDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose)
+EnttecDMXDevice::EnttecDMXDevice(libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
-      mEventMutex(eventMutex), mFoundEnttecStrings(false),
+      mFoundEnttecStrings(false),
       mConfigMap(0)
 {
     mSerial[0] = '\0';
@@ -57,15 +56,13 @@ EnttecDMXDevice::EnttecDMXDevice(tthread::recursive_mutex &eventMutex, libusb_de
 EnttecDMXDevice::~EnttecDMXDevice()
 {
     /*
-     * If we have pending transfers, cancel them and jettison them
-     * from the EnttecDMXDevice. The Transfer objects themselves will be freed
-     * once libusb completes them.
+     * If we have pending transfers, cancel them.
+     * The Transfer objects themselves will be freed once libusb completes them.
      */
 
     for (std::set<Transfer*>::iterator i = mPending.begin(), e = mPending.end(); i != e; ++i) {
         Transfer *fct = *i;
         libusb_cancel_transfer(fct->transfer);
-        fct->device = 0;
     }
 }
 
@@ -203,20 +200,27 @@ void EnttecDMXDevice::submitTransfer(Transfer *fct)
 
 void EnttecDMXDevice::completeTransfer(struct libusb_transfer *transfer)
 {
-    /*
-     * Transfer complete. The EnttecDMXDevice may or may not still exist; if the device was unplugged,
-     * fct->device will be set to 0 by ~EnttecDMXDevice().
-     */
-
     EnttecDMXDevice::Transfer *fct = static_cast<EnttecDMXDevice::Transfer*>(transfer->user_data);
-    EnttecDMXDevice *self = fct->device;
-    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
+    fct->finished = true;
+}
 
-    if (self) {
-        self->mPending.erase(fct);
+void EnttecDMXDevice::flush()
+{
+    // Erase any finished transfers
+
+    std::set<Transfer*>::iterator current = mPending.begin();
+    while (current != mPending.end()) {
+        std::set<Transfer*>::iterator next = current;
+        next++;
+
+        Transfer *fct = *current;
+        if (fct->finished) {
+            mPending.erase(current);
+            delete fct;
+        }
+
+        current = next;
     }
-
-    delete fct;
 }
 
 void EnttecDMXDevice::writeDMXPacket()

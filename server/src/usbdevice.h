@@ -52,6 +52,9 @@ public:
     // Write color LUT from parsed JSON
     virtual void writeColorCorrection(const Value &color);
 
+    // Deal with any I/O that results from completed transfers, outside the context of a completion callback
+    virtual void flush() = 0;
+
     virtual std::string getName() = 0;
     libusb_device *getDevice() { return mDevice; };
 
