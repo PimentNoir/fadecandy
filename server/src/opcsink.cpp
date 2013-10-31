@@ -51,6 +51,14 @@
 # define RECV_BUF(x)        (x)
 #endif
 
+#ifndef offsetof
+#  define offsetof(st, m) __builtin_offsetof(st, m)
+#endif
+
+#ifdef _WIN32
+#  define EWOULDBLOCK   WSAEWOULDBLOCK
+#endif
+
 
 OPCSink::OPCSink(callback_t cb, void *context, bool verbose)
     : mVerbose(verbose), mCallback(cb), mContext(context), mSocket(-1), mThread(0)
@@ -88,7 +96,12 @@ void OPCSink::start(struct addrinfo *listenAddr)
 
 void OPCSink::setNonBlock(int fd)
 {
-    fcntl(fd, F_SETFL, O_NONBLOCK);
+    #if _WIN32
+        u_long mode = 1;
+        ioctlsocket(fd, FIONBIO, &mode);
+    #else
+        fcntl(fd, F_SETFL, O_NONBLOCK);
+    #endif
 }
 
 void OPCSink::threadWrapper(void *arg)
@@ -190,11 +203,20 @@ bool OPCSink::pollClient(Client &client)
         sizeof(client.buffer) - client.bufferPos, 0);
 
     if (r < 0) {
-        if (errno == EWOULDBLOCK) {
-            return true;
-        } else {
-            perror("read error");
-            return false;
+        switch (errno) {
+
+            case EWOULDBLOCK:
+                return true;
+
+            case 0:
+            case EBADF:
+                // Client disconnecting
+                return false;
+
+            default:
+                std::clog << "Error " << errno << "\n";
+                perror("read error");
+                return false;
         }
     }
 
