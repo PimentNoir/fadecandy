@@ -23,13 +23,14 @@
 
 #pragma once
 #include "usbdevice.h"
+#include "tinythread.h"
 #include <set>
 
 
 class EnttecDMXDevice : public USBDevice
 {
 public:
-    EnttecDMXDevice(libusb_device *device, bool verbose);
+    EnttecDMXDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose);
     virtual ~EnttecDMXDevice();
 
     static bool probe(libusb_device *device);
@@ -64,6 +65,7 @@ private:
         EnttecDMXDevice *device;
     };
 
+    tthread::mutex &mEventMutex;
     char mSerial[256];
     bool mFoundEnttecStrings;
     const Value *mConfigMap;

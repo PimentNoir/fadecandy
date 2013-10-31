@@ -25,7 +25,6 @@
 #include "usbdevice.h"
 #include "fcdevice.h"
 #include "enttecdmxdevice.h"
-#include <libusbi.h>
 #include <ctype.h>
 #include <iostream>
 
@@ -82,21 +81,15 @@ FCServer::~FCServer()
     }
 }
 
-void FCServer::start(struct ev_loop *loop)
+void FCServer::start(libusb_context *usb)
 {
-    mOPCSink.start(loop, mListenAddr);
-    startUSB(loop);
+    mOPCSink.start(mListenAddr);
+    startUSB(usb);
 }
 
-void FCServer::startUSB(struct ev_loop *loop)
+void FCServer::startUSB(libusb_context *usb)
 {   
-    if (libusb_init(&mUSB)) {
-        std::clog << "Error initializing USB library!\n";
-        return;
-    }
-
-    // Attach to our libev event loop
-    mUSBEvent.init(mUSB, loop);
+    mUSB = usb;
 
     // Enumerate all attached devices, and get notified of hotplug events
     libusb_hotplug_register_callback(mUSB,
@@ -116,6 +109,7 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
      */
 
     FCServer *self = static_cast<FCServer*>(context);
+    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
 
     for (std::vector<USBDevice*>::iterator i = self->mUSBDevices.begin(), e = self->mUSBDevices.end(); i != e; ++i) {
         USBDevice *dev = *i;
@@ -126,6 +120,7 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
 {
     FCServer *self = static_cast<FCServer*>(user_data);
+    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
 
     if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
         self->usbDeviceArrived(device);
@@ -146,10 +141,10 @@ void FCServer::usbDeviceArrived(libusb_device *device)
     USBDevice *dev;
 
     if (FCDevice::probe(device)) {
-        dev = new FCDevice(device, mVerbose);
+        dev = new FCDevice(mEventMutex, device, mVerbose);
 
     } else if (EnttecDMXDevice::probe(device)) {
-        dev = new EnttecDMXDevice(device, mVerbose);
+        dev = new EnttecDMXDevice(mEventMutex, device, mVerbose);
 
     } else {
         return;

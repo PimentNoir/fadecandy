@@ -6,12 +6,12 @@ TARGET := fcserver
 CPP_FILES += \
 	src/main.cpp \
 	src/opcsink.cpp \
-	src/libusbev.cpp \
 	src/usbdevice.cpp \
 	src/fcdevice.cpp \
 	src/enttecdmxdevice.cpp \
 	src/fcserver.cpp \
-	src/version.cpp
+	src/version.cpp \
+	src/tinythread.cpp
 
 INCLUDES += -Isrc
 CLEAN_FILES += src/*.d src/*.o
@@ -48,17 +48,6 @@ else
 	CPPFLAGS += -Os -DNDEBUG
 	LDFLAGS += -Os
 endif
-
-###########################################################################
-# Built-in libev
-
-C_FILES += libev/ev.c
-
-CFLAGS += -DEV_STANDALONE -Wno-comment -Wno-unused-variable \
-	-Wno-extern-initializer -Wno-unused-value -Wno-bitwise-op-parentheses
-
-INCLUDES += -Ilibev
-CLEAN_FILES += libev/*.d libev/*.o
 
 ###########################################################################
 # Built-in rapidjson
@@ -99,9 +88,6 @@ ifneq ("$(MINGW)", "")
 
 	LIBS += -lws2_32
 	CPPFLAGS += -DOS_WINDOWS -DPOLL_NFDS_TYPE=int -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY
-
-	# Use libusb's handy poll() compatibility layer in libev
-	CPPFLAGS += -DEV_LIBUSBI_POLL=1
 endif
 
 INCLUDES += -Ilibusbx/libusb

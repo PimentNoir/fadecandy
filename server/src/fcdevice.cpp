@@ -41,9 +41,10 @@ FCDevice::Transfer::~Transfer()
     libusb_free_transfer(transfer);
 }
 
-FCDevice::FCDevice(libusb_device *device, bool verbose)
+FCDevice::FCDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
-      mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
+      mEventMutex(eventMutex), mConfigMap(0),
+      mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
     mSerial[0] = '\0';
 
@@ -165,7 +166,7 @@ bool FCDevice::submitTransfer(Transfer *fct)
     }
 }
 
-void FCDevice::completeTransfer(struct libusb_transfer *transfer)
+void FCDevice::completeTransfer(libusb_transfer *transfer)
 {
     /*
      * Transfer complete. The FCDevice may or may not still exist; if the device was unplugged,
@@ -174,6 +175,7 @@ void FCDevice::completeTransfer(struct libusb_transfer *transfer)
 
     FCDevice::Transfer *fct = static_cast<FCDevice::Transfer*>(transfer->user_data);
     FCDevice *self = fct->device;
+    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
 
     if (self) {
         switch (fct->type) {

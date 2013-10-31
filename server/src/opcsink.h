@@ -22,8 +22,9 @@
  */
 
 #pragma once
-#include <ev.h>
 #include <stdint.h>
+#include <list>
+#include "tinythread.h"
 
 struct addrinfo;
 
@@ -56,7 +57,9 @@ public:
     typedef void (*callback_t)(Message &msg, void *context);
 
     OPCSink(callback_t cb, void *context, bool verbose = false);
-    void start(struct ev_loop *loop, struct addrinfo *listenAddr);
+
+    // Start the event loop on a separate thread
+    void start(struct addrinfo *listenAddr);
 
     // Portable socket utilities
     static bool socketInit();
@@ -64,18 +67,22 @@ public:
     static void freeAddr(struct addrinfo* addr);
 
 private:
+    struct Client {
+        unsigned bufferPos;
+        int socket;
+        Message buffer;
+    };
+
     bool mVerbose;
     callback_t mCallback;
     void *mContext;
-    struct ev_io mIOAccept;
+    int mSocket;
+    tthread::thread *mThread;
+    std::list<Client> mClients;
 
-    struct Client {
-        struct ev_io ioRead;
-        Message buffer;
-        unsigned bufferPos;
-        OPCSink *self;
-    };
+    static void threadWrapper(void *arg);
+    void threadFunc();
 
-    static void cbAccept(struct ev_loop *loop, struct ev_io *watcher, int revents);
-    static void cbRead(struct ev_loop *loop, struct ev_io *watcher, int revents);
+    void pollAccept();
+    bool pollClient(Client &client);
 };

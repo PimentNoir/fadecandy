@@ -23,15 +23,10 @@
 
 #pragma once
 
-#ifdef _WIN32
-// Must include winsock2 before libusb.h, or it will include winsock.h
-# include <winsock2.h>
-#endif
-
 #include "rapidjson/document.h"
 #include "opcsink.h"
-#include <libusb.h>
 #include <string>
+#include <libusb.h>
 
 
 class USBDevice

@@ -39,9 +39,9 @@ EnttecDMXDevice::Transfer::~Transfer()
     libusb_free_transfer(transfer);
 }
 
-EnttecDMXDevice::EnttecDMXDevice(libusb_device *device, bool verbose)
+EnttecDMXDevice::EnttecDMXDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
-      mFoundEnttecStrings(false),
+      mEventMutex(eventMutex), mFoundEnttecStrings(false),
       mConfigMap(0)
 {
     mSerial[0] = '\0';
@@ -210,6 +210,7 @@ void EnttecDMXDevice::completeTransfer(struct libusb_transfer *transfer)
 
     EnttecDMXDevice::Transfer *fct = static_cast<EnttecDMXDevice::Transfer*>(transfer->user_data);
     EnttecDMXDevice *self = fct->device;
+    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
 
     if (self) {
         self->mPending.erase(fct);

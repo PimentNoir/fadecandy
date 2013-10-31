@@ -26,6 +26,7 @@
 #include "rapidjson/filestream.h"
 #include "fcserver.h"
 #include <cstdio>
+#include <iostream>
 
 extern const char *kFCServerVersion;
 
@@ -54,6 +55,12 @@ int main(int argc, char **argv)
 
     if (!OPCSink::socketInit()) {
         return 6;
+    }
+
+    libusb_context *usb;
+    if (libusb_init(&usb)) {
+        std::clog << "Error initializing USB library!\n";
+        return 7;
     }
 
     if (argc == 2 && argv[1][0] != '-') {
@@ -116,9 +123,14 @@ int main(int argc, char **argv)
         return 5;
     }
 
-    struct ev_loop *loop = EV_DEFAULT;
-    server.start(loop);
-    ev_run(loop, 0);
+    server.start(usb);
 
-    return 0;
+    // libusbx event loop runs on the main thread
+    for (;;) {
+        int err = libusb_handle_events_completed(usb, 0);
+        if (err) {
+            std::clog << "Error handling USB events: " << libusb_strerror(libusb_error(err)) << "\n";
+            return 8;
+        }
+    }
 }
