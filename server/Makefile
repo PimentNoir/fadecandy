@@ -41,7 +41,7 @@ endif
 ifneq ("$(DEBUG)", "")
 	# Debug build
 	TARGET := debug-$(TARGET)
-	CPPFLAGS += -g -DDEBUG
+	CPPFLAGS += -g -DDEBUG -DENABLE_LOGGING
 else
 	# Optimized build	
 	POSTBUILD_CMD := strip $(TARGET)
@@ -119,7 +119,7 @@ clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
 
 # Git submodule setup
-libusbx/libusb/core.c:
+libusbx/libusb/libusb.h:
 	git submodule init
 	git submodule update
 
