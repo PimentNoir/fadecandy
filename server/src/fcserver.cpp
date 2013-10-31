@@ -115,7 +115,7 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
      */
 
     FCServer *self = static_cast<FCServer*>(context);
-    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
+    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
 
     for (std::vector<USBDevice*>::iterator i = self->mUSBDevices.begin(), e = self->mUSBDevices.end(); i != e; ++i) {
         USBDevice *dev = *i;
@@ -126,7 +126,7 @@ void FCServer::cbMessage(OPCSink::Message &msg, void *context)
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
 {
     FCServer *self = static_cast<FCServer*>(user_data);
-    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
+    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
 
     if (event & LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
         self->usbDeviceArrived(device);
@@ -259,7 +259,7 @@ bool FCServer::usbHotplugPoll()
     }
 
     // Take the lock after get_device_list completes
-    tthread::lock_guard<tthread::mutex> guard(mEventMutex);
+    tthread::lock_guard<tthread::recursive_mutex> guard(mEventMutex);
 
     // Look for devices that were added
     for (ssize_t listItem = 0; listItem < listSize; ++listItem) {

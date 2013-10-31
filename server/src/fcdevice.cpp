@@ -41,7 +41,7 @@ FCDevice::Transfer::~Transfer()
     libusb_free_transfer(transfer);
 }
 
-FCDevice::FCDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose)
+FCDevice::FCDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose)
     : USBDevice(device, verbose),
       mEventMutex(eventMutex), mConfigMap(0),
       mNumFramesPending(0), mFrameWaitingForSubmit(false)
@@ -175,7 +175,7 @@ void FCDevice::completeTransfer(libusb_transfer *transfer)
 
     FCDevice::Transfer *fct = static_cast<FCDevice::Transfer*>(transfer->user_data);
     FCDevice *self = fct->device;
-    tthread::lock_guard<tthread::mutex> guard(self->mEventMutex);
+    tthread::lock_guard<tthread::recursive_mutex> guard(self->mEventMutex);
 
     if (self) {
         switch (fct->type) {

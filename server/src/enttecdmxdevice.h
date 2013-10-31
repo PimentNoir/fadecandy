@@ -30,7 +30,7 @@
 class EnttecDMXDevice : public USBDevice
 {
 public:
-    EnttecDMXDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose);
+    EnttecDMXDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose);
     virtual ~EnttecDMXDevice();
 
     static bool probe(libusb_device *device);
@@ -65,7 +65,7 @@ private:
         EnttecDMXDevice *device;
     };
 
-    tthread::mutex &mEventMutex;
+    tthread::recursive_mutex &mEventMutex;
     char mSerial[256];
     bool mFoundEnttecStrings;
     const Value *mConfigMap;

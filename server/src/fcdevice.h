@@ -30,7 +30,7 @@
 class FCDevice : public USBDevice
 {
 public:
-    FCDevice(tthread::mutex &eventMutex, libusb_device *device, bool verbose);
+    FCDevice(tthread::recursive_mutex &eventMutex, libusb_device *device, bool verbose);
     virtual ~FCDevice();
 
     static bool probe(libusb_device *device);
@@ -89,7 +89,7 @@ private:
         PacketType type;
     };
 
-    tthread::mutex &mEventMutex;
+    tthread::recursive_mutex &mEventMutex;
     const Value *mConfigMap;
     std::set<Transfer*> mPending;
     int mNumFramesPending;

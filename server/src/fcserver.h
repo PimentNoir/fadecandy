@@ -55,7 +55,7 @@ private:
 
     struct addrinfo *mListenAddr;
     OPCSink mOPCSink;
-    tthread::mutex mEventMutex;
+    tthread::recursive_mutex mEventMutex;
     tthread::thread *mUSBHotplugThread;    
 
     std::vector<USBDevice*> mUSBDevices;
