@@ -36,18 +36,24 @@ ifneq ("$(MINGW)", "")
 	# Windows
 	TARGET := $(TARGET).exe
 	CPPFLAGS += -D_WIN32_WINNT=0x0501
+
+	# Static build makes it portable but big, UPX packer decreases size a lot.
+	LDFLAGS += -static
+	PACK_CMD := upx\upx391w.exe $(TARGET)
 endif
 
 ifneq ("$(DEBUG)", "")
 	# Debug build
 	TARGET := debug-$(TARGET)
 	CPPFLAGS += -g -DDEBUG -DENABLE_LOGGING
+	PACK_CMD :=
 else
 	# Optimized build	
-	POSTBUILD_CMD := strip $(TARGET)
+	STRIP_CMD := strip $(TARGET)
 	CPPFLAGS += -Os -DNDEBUG
 	LDFLAGS += -Os
 endif
+
 
 ###########################################################################
 # Built-in rapidjson
@@ -110,7 +116,8 @@ all: $(TARGET)
 
 $(TARGET): libusbx/libusb/libusb.h $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-	$(POSTBUILD_CMD)
+	$(STRIP_CMD)
+	$(PACK_CMD)
 	rm -f src/version.o
 
 -include $(OBJS:.o=.d)
