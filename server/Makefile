@@ -120,7 +120,6 @@ clean:
 
 # Git submodule setup
 libusbx/libusb/libusb.h:
-	git submodule init
-	git submodule update
+	(cd ..; git submodule update --init)
 
 .PHONY: clean all
