@@ -66,7 +66,7 @@ void OPCSink::start(struct addrinfo *listenAddr)
 
     int arg = 1;
     setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, SOCKOPT_ARG(&arg), sizeof arg);
-    fcntl(mSocket, F_SETFL, O_NONBLOCK);
+    setNonBlock(mSocket);
 
     if (bind(mSocket, listenAddr->ai_addr, listenAddr->ai_addrlen)) {
         perror("bind");
@@ -84,6 +84,11 @@ void OPCSink::start(struct addrinfo *listenAddr)
     }
 
     mThread = new tthread::thread(threadWrapper, this);
+}
+
+void OPCSink::setNonBlock(int fd)
+{
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
 void OPCSink::threadWrapper(void *arg)
@@ -158,6 +163,8 @@ void OPCSink::pollAccept()
         }
         return;
     }
+
+    setNonBlock(mSocket);
 
     // Disable nagle algorithm, we want low-latency
     int arg = 1;

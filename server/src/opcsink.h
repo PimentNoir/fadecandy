@@ -82,6 +82,7 @@ private:
 
     static void threadWrapper(void *arg);
     void threadFunc();
+    void setNonBlock(int fd);
 
     void pollAccept();
     bool pollClient(Client &client);
