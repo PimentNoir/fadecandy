@@ -43,7 +43,8 @@ public:
     bool hasError() const { return !mError.str().empty(); }
 
     void start(libusb_context *usb);
- 
+    void mainLoop();
+
 private:
     std::ostringstream mError;
 
@@ -55,6 +56,7 @@ private:
     struct addrinfo *mListenAddr;
     OPCSink mOPCSink;
     tthread::mutex mEventMutex;
+    tthread::thread *mUSBHotplugThread;    
 
     std::vector<USBDevice*> mUSBDevices;
     struct libusb_context *mUSB;
@@ -65,4 +67,8 @@ private:
     void startUSB(libusb_context *usb);
     void usbDeviceArrived(libusb_device *device);
     void usbDeviceLeft(libusb_device *device);
+    void usbDeviceLeft(std::vector<USBDevice*>::iterator iter);
+    bool usbHotplugPoll();
+
+    static void usbHotplugThreadFunc(void *arg);
 };

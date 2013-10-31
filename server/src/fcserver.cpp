@@ -36,6 +36,7 @@ FCServer::FCServer(rapidjson::Document &config)
       mVerbose(config["verbose"].IsTrue()),
       mListenAddr(0),
       mOPCSink(cbMessage, this, mVerbose),
+      mUSBHotplugThread(0),
       mUSB(0)
 {
     /*
@@ -100,6 +101,11 @@ void FCServer::startUSB(libusb_context *usb)
         LIBUSB_HOTPLUG_MATCH_ANY,
         LIBUSB_HOTPLUG_MATCH_ANY,
         cbHotplug, this, 0);
+
+    // On platforms without real USB hotplug, emulate it with a polling thread
+    if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        mUSBHotplugThread = new tthread::thread(usbHotplugThreadFunc, this);
+    }
 }
 
 void FCServer::cbMessage(OPCSink::Message &msg, void *context)
@@ -153,7 +159,20 @@ void FCServer::usbDeviceArrived(libusb_device *device)
     int r = dev->open();
     if (r < 0) {
         if (mVerbose) {
-            std::clog << "Error opening " << dev->getName() << ": " << libusb_strerror(libusb_error(r)) << "\n";
+            switch (r) {
+
+                // Errors that may occur transiently while WinUSB is installing...
+                #ifdef _WIN32
+                case LIBUSB_ERROR_NOT_FOUND:
+                case LIBUSB_ERROR_NOT_SUPPORTED:
+                    std::clog << "Waiting for Windows to install " << dev->getName() << " driver. This may take a moment...\n";
+                    break;
+                #endif
+
+                default:
+                    std::clog << "Error opening " << dev->getName() << ": " << libusb_strerror(libusb_error(r)) << "\n";
+                    break;
+            }
         }
         delete dev;
         return;
@@ -194,12 +213,96 @@ void FCServer::usbDeviceLeft(libusb_device *device)
     for (std::vector<USBDevice*>::iterator i = mUSBDevices.begin(), e = mUSBDevices.end(); i != e; ++i) {
         USBDevice *dev = *i;
         if (dev->getDevice() == device) {
-            if (mVerbose) {
-                std::clog << "USB device " << dev->getName() << " removed.\n";
-            }
-            mUSBDevices.erase(i);
-            delete dev;
+            usbDeviceLeft(i);
             break;
         }
+    }
+}
+
+void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
+{
+    USBDevice *dev = *iter;
+    if (mVerbose) {
+        std::clog << "USB device " << dev->getName() << " removed.\n";
+    }
+    mUSBDevices.erase(iter);
+    delete dev;
+}
+
+void FCServer::mainLoop()
+{
+    for (;;) {
+        int err = libusb_handle_events_completed(mUSB, 0);
+        if (err) {
+            std::clog << "Error handling USB events: " << libusb_strerror(libusb_error(err)) << "\n";
+            return;
+        }
+    }
+}
+
+bool FCServer::usbHotplugPoll()
+{
+    /*
+     * For platforms without libusbx hotplug support,
+     * see if we can fake it by polling for new devices. This can
+     * happen on a different thread, and it probably should.
+     * Returns true on success.
+     */
+
+    libusb_device **list;
+    ssize_t listSize;
+
+    listSize = libusb_get_device_list(mUSB, &list);
+    if (listSize < 0) {
+        std::clog << "Error polling for USB devices: " << libusb_strerror(libusb_error(listSize)) << "\n";
+        return false;
+    }
+
+    // Take the lock after get_device_list completes
+    tthread::lock_guard<tthread::mutex> guard(mEventMutex);
+
+    // Look for devices that were added
+    for (ssize_t listItem = 0; listItem < listSize; ++listItem) {
+        bool isNew = true;
+
+        for (std::vector<USBDevice*>::iterator i = mUSBDevices.begin(), e = mUSBDevices.end(); i != e; ++i) {
+            USBDevice *dev = *i;
+            if (dev->getDevice() == list[listItem]) {
+                isNew = false;
+            }
+        }
+
+        if (isNew) {
+            usbDeviceArrived(list[listItem]);
+        }
+    }
+
+    // Look for devices that were removed
+    for (std::vector<USBDevice*>::iterator i = mUSBDevices.begin(), e = mUSBDevices.end(); i != e; ++i) {
+        USBDevice *dev = *i;
+        libusb_device *usbdev = dev->getDevice();
+        bool isRemoved = true;
+
+        for (ssize_t listItem = 0; listItem < listSize; ++listItem) {
+            if (list[listItem] == usbdev) {
+                isRemoved = false;
+            }
+        }
+
+        if (isRemoved) {
+            usbDeviceLeft(i);
+        }
+    }
+
+    libusb_free_device_list(list, true);
+    return true;
+}
+
+void FCServer::usbHotplugThreadFunc(void *arg)
+{
+    FCServer *self = (FCServer*) arg;
+
+    while (self->usbHotplugPoll()) {
+        tthread::this_thread::sleep_for(tthread::chrono::seconds(1));
     }
 }

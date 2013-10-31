@@ -124,13 +124,8 @@ int main(int argc, char **argv)
     }
 
     server.start(usb);
+    server.mainLoop();
 
-    // libusbx event loop runs on the main thread
-    for (;;) {
-        int err = libusb_handle_events_completed(usb, 0);
-        if (err) {
-            std::clog << "Error handling USB events: " << libusb_strerror(libusb_error(err)) << "\n";
-            return 8;
-        }
-    }
+    // If mainLoop() exits, it was an error
+    return 8;
 }

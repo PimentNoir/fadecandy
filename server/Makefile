@@ -108,7 +108,7 @@ OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): libusbx/libusb/libusb.h $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(POSTBUILD_CMD)
 	rm -f src/version.o
