@@ -1,6 +1,8 @@
 Fadecandy
 =========
 
+Fadecandy is a project that makes LED art easier, tastier, and more creative! There isn't much documentation online yet, but you can read the [introductory blog post about Fadecandy](http://scanlime.org/2013/11/fadecandy-easier-tastier-and-more-creative-led-art/) for more information, or peruse the READMEs included in this repository.
+
 Fadecandy drives addressable LED strips with the WS2811 and WS2812 controllers. These LED strips are common and inexpensive, available from [many suppliers](http://www.aliexpress.com/item/5M-WS2811-LED-digital-strip-60leds-m-with-60pcs-WS2811-built-in-tthe-5050-smd-rgb/635563383.html?tracelog=back_to_detail_a) for around $0.25 per pixel.
 
 Fadecandy makes it easy to drive these LEDs from anything with USB, and it includes unique algorithms which eliminate many of the common visual glitches you see when using these LEDs.
@@ -16,11 +18,6 @@ The LED drive engine is based on Stoffregen's excellent [OctoWS2811](http://www.
 * A fully open source bootloader
 
 These features add up to give *very smooth* fades and high dynamic range. Ever notice that annoying stair-stepping effect when fading LEDs from off to dim? Fadecandy avoids that using a form of [delta-sigma modulation](http://en.wikipedia.org/wiki/Delta-sigma_modulation). It rapidly wiggles each pixel's value up or down by one 8-bit step, in order to achieve 16-bit resolution for fades.
-
-Example videos:
-
-* [Smooth interpolation](http://youtu.be/JilFl-xTdJ4)
-* [Multiple Fadecandy boards running in unison](http://youtu.be/OXvY6aQAGcs)
 
 Platform
 --------
