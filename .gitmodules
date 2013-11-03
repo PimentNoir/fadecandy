@@ -1,3 +1,6 @@
 [submodule "server/libusbx"]
 	path = server/libusbx
 	url = https://github.com/libusbx/libusbx.git
+[submodule "server/libwebsockets"]
+	path = server/libwebsockets
+	url = https://github.com/warmcat/libwebsockets.git
