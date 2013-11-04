@@ -25,10 +25,9 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/filestream.h"
 #include "fcserver.h"
+#include "version.h"
 #include <cstdio>
 #include <iostream>
-
-extern const char *kFCServerVersion;
 
 const char *kDefaultConfig =
     "    {\n"
