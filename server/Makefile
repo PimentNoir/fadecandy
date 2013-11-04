@@ -5,16 +5,17 @@ TARGET := fcserver
 
 CPP_FILES += \
 	src/main.cpp \
-	src/opcsink.cpp \
+	src/netserver.cpp \
 	src/usbdevice.cpp \
 	src/fcdevice.cpp \
 	src/enttecdmxdevice.cpp \
 	src/fcserver.cpp \
 	src/version.cpp \
-	src/tinythread.cpp
+	src/tinythread.cpp \
+	src/httpdocs.cpp
 
 INCLUDES += -Isrc
-CLEAN_FILES += src/*.d src/*.o
+CLEAN_FILES += src/*.d src/*.o src/httpdocs.cpp
 CPPFLAGS += -Wno-strict-aliasing
 
 ###########################################################################
@@ -59,6 +60,28 @@ endif
 # Built-in rapidjson
 
 INCLUDES += -I.
+
+###########################################################################
+# Built-in libwebsockets
+
+C_FILES += \
+	libwebsockets/lib/handshake.c \
+	libwebsockets/lib/libwebsockets.c \
+	libwebsockets/lib/parsers.c \
+	libwebsockets/lib/server-handshake.c \
+	libwebsockets/lib/server.c \
+	libwebsockets/lib/output.c \
+	libwebsockets/lib/sha-1.c \
+	libwebsockets/lib/base64-decode.c
+
+# For lws_get_library_version(), which we don't use.
+CPPFLAGS += -DLWS_LIBRARY_VERSION= -DLWS_BUILD_HASH=
+
+# Disable a bunch of features
+CPPFLAGS += -DLWS_NO_DAEMONIZE -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT
+
+INCLUDES += -Ilibwebsockets/lib
+CLEAN_FILES += libwebsockets/lib/*.d libwebsockets/lib/*.o
 
 ###########################################################################
 # Built-in libusbx
@@ -121,6 +144,9 @@ $(TARGET): libusbx/libusb/libusb.h $(OBJS)
 	rm -f src/version.o
 
 -include $(OBJS:.o=.d)
+
+src/httpdocs.cpp: http/*
+	(cd http; python manifest.py) > $@
 
 clean:
 	rm -f $(CLEAN_FILES) $(TARGET)

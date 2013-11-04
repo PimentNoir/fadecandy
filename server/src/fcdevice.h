@@ -23,6 +23,7 @@
 
 #pragma once
 #include "usbdevice.h"
+#include "opc.h"
 #include <set>
 
 
@@ -36,7 +37,7 @@ public:
 
     virtual int open();
     virtual bool matchConfiguration(const Value &config);
-    virtual void writeMessage(const OPCSink::Message &msg);
+    virtual void writeMessage(const OPC::Message &msg);
     virtual void writeColorCorrection(const Value &color);
     virtual std::string getName();
     virtual void flush();
@@ -106,9 +107,9 @@ private:
     void writeFirmwareConfiguration();
     static LIBUSB_CALL void completeTransfer(libusb_transfer *transfer);
 
-    void opcSetPixelColors(const OPCSink::Message &msg);
-    void opcSysEx(const OPCSink::Message &msg);
-    void opcSetGlobalColorCorrection(const OPCSink::Message &msg);
-    void opcSetFirmwareConfiguration(const OPCSink::Message &msg);
-    void opcMapPixelColors(const OPCSink::Message &msg, const Value &inst);
+    void opcSetPixelColors(const OPC::Message &msg);
+    void opcSysEx(const OPC::Message &msg);
+    void opcSetGlobalColorCorrection(const OPC::Message &msg);
+    void opcSetFirmwareConfiguration(const OPC::Message &msg);
+    void opcMapPixelColors(const OPC::Message &msg, const Value &inst);
 };

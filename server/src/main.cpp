@@ -52,10 +52,6 @@ int main(int argc, char **argv)
 {
     rapidjson::Document config;
 
-    if (!OPCSink::socketInit()) {
-        return 6;
-    }
-
     libusb_context *usb;
     if (libusb_init(&usb)) {
         std::clog << "Error initializing USB library!\n";
@@ -121,8 +117,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "Configuration errors:\n%s", server.errorText());
         return 5;
     }
+    if (!server.start(usb)) {
+        return 9;
+    }
 
-    server.start(usb);
     server.mainLoop();
 
     // If mainLoop() exits, it was an error

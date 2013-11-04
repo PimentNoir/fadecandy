@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control and HTTP server for Fadecandy
+ * Open Pixel Control protocol definitions
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -23,14 +23,9 @@
 
 #pragma once
 #include <stdint.h>
-#include <list>
-#include "tinythread.h"
-#include "libwebsockets.h"
 
-struct addrinfo;
+namespace OPC {
 
-class OPCSink {
-public:
     enum Command {
         SetPixelColors = 0x00,
         SystemExclusive = 0xFF,
@@ -55,63 +50,7 @@ public:
         }
     };
 
+    static const unsigned HEADER_BYTES = 4;
+
     typedef void (*callback_t)(Message &msg, void *context);
-
-    OPCSink(callback_t cb, void *context, bool verbose = false);
-
-    // Start the event loop on a separate thread
-    void start(const char *host, int port);
-
-private:
-    enum ClientState {
-        CLIENT_STATE_PROTOCOL_DETECT = 0,
-        CLIENT_STATE_OPEN_PIXEL_CONTROL,
-        CLIENT_STATE_HTTP
-    };
-
-    // In-memory database of static files to serve over HTTP
-    struct HTTPDocument {
-        const char *path;
-        const char *body;
-        const char *contentType;
-    };
-
-    struct Client {
-        // Overall socket state
-        int socket;
-        ClientState state;
-        struct libwebsocket *wsi;
-
-        // HTTP response state
-        const char *httpBody;
-
-        // Low-level receive buffer
-        unsigned bufferPos;
-        uint8_t buffer[2 * sizeof(struct Message)];
-    };
-
-    bool mVerbose;
-    callback_t mCallback;
-    void *mContext;
-    int mSocket;
-    tthread::thread *mThread;
-    std::list<Client> mClients;
-    struct libwebsocket_context *mLWS;
-
-    static HTTPDocument httpDocumentList[];
-
-    bool startListening(struct addrinfo *listenAddr);
-    bool startWebSockets();
-
-    static void threadWrapper(void *arg);
-    void threadFunc();
-    void setNonBlock(int fd);
-
-    void pollAccept();
-    bool pollClient(Client &client);
-    int handleBufferedPacket(Client &client);
-
-    // libwebsockets callbacks
-    static int callback_http(struct libwebsocket_context *context, struct libwebsocket *wsi,
-        enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len);
-};
+}

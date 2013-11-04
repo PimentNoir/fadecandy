@@ -34,13 +34,12 @@ FCServer::FCServer(rapidjson::Document &config)
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
-      mListenAddr(0),
-      mOPCSink(cbMessage, this, mVerbose),
+      mNetServer(cbMessage, this, mVerbose),
       mUSBHotplugThread(0),
       mUSB(0)
 {
     /*
-     * Parse the listen [host, port] list.
+     * Validate the listen [host, port] list.
      */
 
     if (mListen.IsArray() && mListen.Size() == 2) {
@@ -54,12 +53,7 @@ FCServer::FCServer(rapidjson::Document &config)
             mError << "Hostname in 'listen' must be null (any) or a hostname string.\n";
         }
 
-        if (port.IsUint()) {
-            mListenAddr = OPCSink::newAddr(hostStr, port.GetUint());
-            if (!mListenAddr) {
-                mError << "Failed to resolve hostname '" << hostStr << "'\n";
-            }
-        } else {
+        if (!port.IsUint()) {
             mError << "The 'listen' port must be an integer.\n";
         }
     } else {
@@ -75,20 +69,16 @@ FCServer::FCServer(rapidjson::Document &config)
     }
 }
 
-FCServer::~FCServer()
+bool FCServer::start(libusb_context *usb)
 {
-    if (mListenAddr) {
-        OPCSink::freeAddr(mListenAddr);
-    }
+    const Value &host = mListen[0u];
+    const Value &port = mListen[1];
+    const char *hostStr = host.IsString() ? host.GetString() : NULL;
+
+    return mNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
 }
 
-void FCServer::start(libusb_context *usb)
-{
-    mOPCSink.start(mListenAddr);
-    startUSB(usb);
-}
-
-void FCServer::startUSB(libusb_context *usb)
+bool FCServer::startUSB(libusb_context *usb)
 {   
     mUSB = usb;
 
@@ -106,9 +96,11 @@ void FCServer::startUSB(libusb_context *usb)
     if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         mUSBHotplugThread = new tthread::thread(usbHotplugThreadFunc, this);
     }
+
+    return true;
 }
 
-void FCServer::cbMessage(OPCSink::Message &msg, void *context)
+void FCServer::cbMessage(OPC::Message &msg, void *context)
 {
     /*
      * Broadcast the OPC message to all configured devices.

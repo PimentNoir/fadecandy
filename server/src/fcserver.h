@@ -23,7 +23,8 @@
 
 #pragma once
 #include "rapidjson/document.h"
-#include "opcsink.h"
+#include "opc.h"
+#include "netserver.h"
 #include "usbdevice.h"
 #include <sstream>
 #include <vector>
@@ -37,12 +38,11 @@ public:
     typedef rapidjson::Value Value;
 
     FCServer(rapidjson::Document &config);
-    ~FCServer();
 
     const char *errorText() const { return mError.str().c_str(); }
     bool hasError() const { return !mError.str().empty(); }
 
-    void start(libusb_context *usb);
+    bool start(libusb_context *usb);
     void mainLoop();
 
 private:
@@ -53,18 +53,17 @@ private:
     const Value& mDevices;
     bool mVerbose;
 
-    struct addrinfo *mListenAddr;
-    OPCSink mOPCSink;
+    NetServer mNetServer;
     tthread::recursive_mutex mEventMutex;
     tthread::thread *mUSBHotplugThread;    
 
     std::vector<USBDevice*> mUSBDevices;
     struct libusb_context *mUSB;
 
-    static void cbMessage(OPCSink::Message &msg, void *context);
+    static void cbMessage(OPC::Message &msg, void *context);
     static LIBUSB_CALL int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
-    void startUSB(libusb_context *usb);
+    bool startUSB(libusb_context *usb);
     void usbDeviceArrived(libusb_device *device);
     void usbDeviceLeft(libusb_device *device);
     void usbDeviceLeft(std::vector<USBDevice*>::iterator iter);

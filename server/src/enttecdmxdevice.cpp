@@ -236,7 +236,7 @@ void EnttecDMXDevice::writeDMXPacket()
     submitTransfer(new Transfer(this, &mChannelBuffer, mChannelBuffer.length + 5));
 }
 
-void EnttecDMXDevice::writeMessage(const OPCSink::Message &msg)
+void EnttecDMXDevice::writeMessage(const OPC::Message &msg)
 {
     /*
      * Dispatch an incoming OPC command
@@ -244,12 +244,12 @@ void EnttecDMXDevice::writeMessage(const OPCSink::Message &msg)
 
     switch (msg.command) {
 
-        case OPCSink::SetPixelColors:
+        case OPC::SetPixelColors:
             opcSetPixelColors(msg);
             writeDMXPacket();
             return;
 
-        case OPCSink::SystemExclusive:
+        case OPC::SystemExclusive:
             // No relevant SysEx for this device
             return;
     }
@@ -259,7 +259,7 @@ void EnttecDMXDevice::writeMessage(const OPCSink::Message &msg)
     }
 }
 
-void EnttecDMXDevice::opcSetPixelColors(const OPCSink::Message &msg)
+void EnttecDMXDevice::opcSetPixelColors(const OPC::Message &msg)
 {
     /*
      * Parse through our device's mapping, and store any relevant portions of 'msg'
@@ -277,7 +277,7 @@ void EnttecDMXDevice::opcSetPixelColors(const OPCSink::Message &msg)
     }
 }
 
-void EnttecDMXDevice::opcMapPixelColors(const OPCSink::Message &msg, const Value &inst)
+void EnttecDMXDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
 {
     /*
      * Parse one JSON mapping instruction, and copy any relevant parts of 'msg'

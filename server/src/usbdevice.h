@@ -24,7 +24,7 @@
 #pragma once
 
 #include "rapidjson/document.h"
-#include "opcsink.h"
+#include "opc.h"
 #include <string>
 #include <libusb.h>
 
@@ -47,7 +47,7 @@ public:
     virtual bool matchConfiguration(const Value &config) = 0;
 
     // Handle an incoming OPC message
-    virtual void writeMessage(const OPCSink::Message &msg) = 0;
+    virtual void writeMessage(const OPC::Message &msg) = 0;
 
     // Write color LUT from parsed JSON
     virtual void writeColorCorrection(const Value &color);

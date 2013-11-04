@@ -1,5 +1,5 @@
 /*
- * Open Pixel Control server for Fadecandy
+ * Open Pixel Control and HTTP server for Fadecandy
  * 
  * Copyright (c) 2013 Micah Elizabeth Scott
  * 
@@ -25,65 +25,58 @@
 #include <stdint.h>
 #include <list>
 #include "tinythread.h"
+#include "libwebsockets.h"
+#include "opc.h"
 
-struct addrinfo;
 
-class OPCSink {
+class NetServer {
 public:
-    enum Command {
-        SetPixelColors = 0x00,
-        SystemExclusive = 0xFF,
-    };
-
-    // SysEx system and command IDs
-    enum SysEx {
-        FCSetGlobalColorCorrection = 0x00010001,
-        FCSetFirmwareConfiguration = 0x00010002
-    };
-
-    struct Message
-    {
-        uint8_t channel;
-        uint8_t command;
-        uint8_t lenHigh;
-        uint8_t lenLow;
-        uint8_t data[0xFFFF];
-
-        unsigned length() const {
-            return lenLow | (unsigned(lenHigh) << 8);
-        }
-    };
-
-    typedef void (*callback_t)(Message &msg, void *context);
-
-    OPCSink(callback_t cb, void *context, bool verbose = false);
+    NetServer(OPC::callback_t messageCallback, void *context, bool verbose = false);
 
     // Start the event loop on a separate thread
-    void start(struct addrinfo *listenAddr);
-
-    // Portable socket utilities
-    static bool socketInit();
-    static struct addrinfo* newAddr(const char *host, int port);
-    static void freeAddr(struct addrinfo* addr);
+    bool start(const char *host, int port);
 
 private:
-    struct Client {
-        unsigned bufferPos;
-        int socket;
-        Message buffer;
+    enum ClientState {
+        CLIENT_STATE_PROTOCOL_DETECT = 0,
+        CLIENT_STATE_OPEN_PIXEL_CONTROL,
+        CLIENT_STATE_HTTP
     };
 
-    bool mVerbose;
-    callback_t mCallback;
-    void *mContext;
-    int mSocket;
+    // In-memory database of static files to serve over HTTP
+    struct HTTPDocument {
+        const char *path;
+        const char *body;
+        const char *contentType;
+    };
+
+    struct Client {
+        ClientState state;
+
+        // HTTP response state
+        const char *httpBody;
+
+        // Low-level OPC and protocol detection receive buffer
+        unsigned bufferLength;
+        uint8_t buffer[2 * sizeof(OPC::Message)];
+    };
+
+    OPC::callback_t mMessageCallback;
+    void *mUserContext;
     tthread::thread *mThread;
-    std::list<Client> mClients;
+    bool mVerbose;
 
-    static void threadWrapper(void *arg);
-    void threadFunc();
-    void setNonBlock(int fd);
+    static HTTPDocument httpDocumentList[];
 
-    void pollAccept();
-    bool pollClient(Client &client);
+    static void threadFunc(void *arg);
+
+    // HTTP Server
+    static int httpCallback(libwebsocket_context *context, libwebsocket *wsi,
+        enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len);
+    int httpBegin(libwebsocket_context *context, libwebsocket *wsi, Client &client, const char *path);
+    int httpWrite(libwebsocket_context *context, libwebsocket *wsi, Client &client);
+    static bool httpPathEqual(const char *a, const char *b);
+
+    // Open Pixel Control server
+    int opcRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len);
 };

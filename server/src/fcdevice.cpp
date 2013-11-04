@@ -22,6 +22,7 @@
  */
 
 #include "fcdevice.h"
+#include "opc.h"
 #include <math.h>
 #include <iostream>
 #include <sstream>
@@ -355,7 +356,7 @@ void FCDevice::writeFramebuffer()
     }
 }
 
-void FCDevice::writeMessage(const OPCSink::Message &msg)
+void FCDevice::writeMessage(const OPC::Message &msg)
 {
     /*
      * Dispatch an incoming OPC command
@@ -363,12 +364,12 @@ void FCDevice::writeMessage(const OPCSink::Message &msg)
 
     switch (msg.command) {
 
-        case OPCSink::SetPixelColors:
+        case OPC::SetPixelColors:
             opcSetPixelColors(msg);
             writeFramebuffer();
             return;
 
-        case OPCSink::SystemExclusive:
+        case OPC::SystemExclusive:
             opcSysEx(msg);
             return;
     }
@@ -378,7 +379,7 @@ void FCDevice::writeMessage(const OPCSink::Message &msg)
     }
 }
 
-void FCDevice::opcSysEx(const OPCSink::Message &msg)
+void FCDevice::opcSysEx(const OPC::Message &msg)
 {
     if (msg.length() < 4) {
         if (mVerbose) {
@@ -394,10 +395,10 @@ void FCDevice::opcSysEx(const OPCSink::Message &msg)
 
     switch (id) {
 
-        case OPCSink::FCSetGlobalColorCorrection:
+        case OPC::FCSetGlobalColorCorrection:
             return opcSetGlobalColorCorrection(msg);
 
-        case OPCSink::FCSetFirmwareConfiguration:
+        case OPC::FCSetFirmwareConfiguration:
             return opcSetFirmwareConfiguration(msg);
 
     }
@@ -405,7 +406,7 @@ void FCDevice::opcSysEx(const OPCSink::Message &msg)
     // Quietly ignore unhandled SysEx messages.
 }
 
-void FCDevice::opcSetPixelColors(const OPCSink::Message &msg)
+void FCDevice::opcSetPixelColors(const OPC::Message &msg)
 {
     /*
      * Parse through our device's mapping, and store any relevant portions of 'msg'
@@ -423,7 +424,7 @@ void FCDevice::opcSetPixelColors(const OPCSink::Message &msg)
     }
 }
 
-void FCDevice::opcMapPixelColors(const OPCSink::Message &msg, const Value &inst)
+void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
 {
     /*
      * Parse one JSON mapping instruction, and copy any relevant parts of 'msg'
@@ -481,7 +482,7 @@ void FCDevice::opcMapPixelColors(const OPCSink::Message &msg, const Value &inst)
     }
 }
 
-void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
+void FCDevice::opcSetGlobalColorCorrection(const OPC::Message &msg)
 {
     /*
      * Parse the message as JSON text, and if successful, write new
@@ -510,7 +511,7 @@ void FCDevice::opcSetGlobalColorCorrection(const OPCSink::Message &msg)
     writeColorCorrection(doc);
 }
 
-void FCDevice::opcSetFirmwareConfiguration(const OPCSink::Message &msg)
+void FCDevice::opcSetFirmwareConfiguration(const OPC::Message &msg)
 {
     /*
      * Raw firmware configuration packet
