@@ -55,7 +55,6 @@ else
 	LDFLAGS += -Os
 endif
 
-
 ###########################################################################
 # Built-in rapidjson
 
@@ -78,10 +77,18 @@ C_FILES += \
 CPPFLAGS += -DLWS_LIBRARY_VERSION= -DLWS_BUILD_HASH=
 
 # Disable a bunch of features
-CPPFLAGS += -DLWS_NO_DAEMONIZE -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT
+CPPFLAGS += -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT -DLWS_NO_WSAPOLL
 
 INCLUDES += -Ilibwebsockets/lib
 CLEAN_FILES += libwebsockets/lib/*.d libwebsockets/lib/*.o
+
+ifneq ("$(MINGW)", "")
+	# Windows
+	INCLUDES += -Ilibwebsockets/win32port/win32helpers
+else
+	# This is redundant on Windows, but we want it on other platforms
+	CPPFLAGS += -DLWS_NO_DAEMONIZE
+endif
 
 ###########################################################################
 # Built-in libusbx
