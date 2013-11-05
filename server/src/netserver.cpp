@@ -308,6 +308,10 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
     /*
      * We have a new plain HTTP request. Match it against our document list, and send
      * back headers for the response.
+     *
+     * Note: To keep the size of fcserver down, we compress our HTTP documents.
+     *       We don't bother supporting decompressing them. Instead, we always send
+     *       them back with deflate content-encoding.
      */
 
     HTTPDocument *doc = httpDocumentList;
@@ -326,6 +330,7 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
         "Server: %s\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %u\r\n"
+        "Content-Encoding: deflate\r\n"
         "Connection: close\r\n"
         "\r\n",
         doc->path ? 200 : 404,

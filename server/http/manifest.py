@@ -9,7 +9,7 @@ manifest = [
     (None, '404.html', 'text/html'),
 ]
 
-import json, sys, os
+import json, sys, os, zlib
 
 sys.stdout.write("""/*
  * HTTP Document data.
@@ -48,7 +48,7 @@ for path, filename, contentType in manifest:
     else:
         mode = 'rb'
 
-    data = open(filename, mode).read()
+    data = zlib.compress(open(filename, mode).read())
     sys.stdout.write("{ %s, %s, %s, %d },\n" %
         (quote(path), quote(data), quote(contentType), len(data)))
 
