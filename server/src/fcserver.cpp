@@ -326,12 +326,16 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
     }
     const char *type = vtype.GetString();
 
+    // Hold the event lock while dispatching
+    self->mEventMutex.lock();
+
     if (!strcmp(type, "list_connected_devices")) {
         self->jsonListConectedDevices(message);
     } else {
         message.AddMember("error", "Unknown message type", message.GetAllocator());
     }
 
+    self->mEventMutex.unlock();
     self->mNetServer.jsonReply(wsi, message);
 }
 
