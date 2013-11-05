@@ -190,6 +190,7 @@ void FCServer::usbDeviceArrived(libusb_device *device)
             if (mVerbose) {
                 std::clog << "USB device " << dev->getName() << " attached.\n";
             }
+            jsonConnectedDevicesChanged();
             return;
         }
     }
@@ -223,6 +224,7 @@ void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
     }
     mUSBDevices.erase(iter);
     delete dev;
+    jsonConnectedDevicesChanged();
 }
 
 void FCServer::mainLoop()
@@ -330,7 +332,7 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
     self->mEventMutex.lock();
 
     if (!strcmp(type, "list_connected_devices")) {
-        self->jsonListConectedDevices(message);
+        self->jsonListConnectedDevices(message);
     } else {
         message.AddMember("error", "Unknown message type", message.GetAllocator());
     }
@@ -339,7 +341,7 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
     self->mNetServer.jsonReply(wsi, message);
 }
 
-void FCServer::jsonListConectedDevices(rapidjson::Document &message)
+void FCServer::jsonListConnectedDevices(rapidjson::Document &message)
 {
     message.AddMember("devices", rapidjson::kArrayType, message.GetAllocator());
     Value &list = message["devices"];
@@ -349,4 +351,16 @@ void FCServer::jsonListConectedDevices(rapidjson::Document &message)
         list.PushBack(rapidjson::kObjectType, message.GetAllocator());
         mUSBDevices[i]->describe(list[i], message.GetAllocator());
     }
+}
+
+void FCServer::jsonConnectedDevicesChanged()
+{
+    rapidjson::Document message;
+
+    message.SetObject();
+    message.AddMember("type", "connected_devices_changed", message.GetAllocator());
+
+    jsonListConnectedDevices(message);
+
+    mNetServer.jsonBroadcast(message);
 }

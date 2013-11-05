@@ -73,6 +73,9 @@ private:
 
     static void usbHotplugThreadFunc(void *arg);
 
+    // JSON event broadcasters
+    void jsonConnectedDevicesChanged();
+
     // JSON message handlers
-    void jsonListConectedDevices(rapidjson::Document &message);
+    void jsonListConnectedDevices(rapidjson::Document &message);
 };

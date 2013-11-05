@@ -23,8 +23,10 @@
 
 #pragma once
 #include <stdint.h>
-#include <list>
+#include <vector>
+#include <set>
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
 #include "tinythread.h"
 #include "libwebsockets.h"
 #include "opc.h"
@@ -42,6 +44,9 @@ public:
 
     // Reply callback, for use only on the NetServer thread. Call this inside jsonCallback.
     int jsonReply(libwebsocket *wsi, rapidjson::Document &message);
+
+    // Broadcast JSON to all clients, from any thread.
+    void jsonBroadcast(rapidjson::Document &message);
 
 private:
     enum ClientState {
@@ -79,6 +84,11 @@ private:
     void *mUserContext;
     tthread::thread *mThread;
     bool mVerbose;
+    std::set<libwebsocket*> mClients;
+
+    typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<>> jsonBuffer_t;
+    std::vector<jsonBuffer_t*> mBroadcastList;
+    tthread::mutex mBroadcastMutex;
 
     static HTTPDocument httpDocumentList[];
 
@@ -97,4 +107,7 @@ private:
 
     // WebSockets server
     int wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len);
+    void jsonBufferPrepare(jsonBuffer_t &buffer, rapidjson::Value &value);
+    int jsonBufferSend(jsonBuffer_t &buffer, libwebsocket *wsi);
+    void flushBroadcastList();
 };

@@ -92,7 +92,22 @@ bool NetServer::start(const char *host, int port)
 void NetServer::threadFunc(void *arg)
 {
     struct libwebsocket_context *context = (libwebsocket_context*) arg;
-    while (libwebsocket_service(context, 1000) >= 0);
+    NetServer *self = (NetServer*) libwebsocket_context_user(context);
+
+    /*
+     * Mostly we're just handling incoming events from libwebsocket's poll(),
+     * but we do have some non-latency-critical broadcast events to flush out
+     * periodically.
+     *
+     * These would be faster if we could wake up libwebsocket's poll() from another
+     * thread, but there isn't an easy way to do that now, and we don't really care
+     * that much. During normal operation we'll be receiving lots of data over the
+     * network anyway.
+     */
+    while (libwebsocket_service(context, 100) >= 0) {
+        self->flushBroadcastList();
+    }
+
     libwebsocket_context_destroy(context);
 }
 
@@ -119,6 +134,11 @@ int NetServer::lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
                 free(client->opcBuffer);
                 client->opcBuffer = NULL;
             }
+            self->mClients.erase(wsi);
+            break;
+
+        case LWS_CALLBACK_ESTABLISHED:
+            self->mClients.insert(wsi);
             break;
 
         case LWS_CALLBACK_HTTP:
@@ -396,20 +416,53 @@ int NetServer::wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &
 
 int NetServer::jsonReply(libwebsocket *wsi, rapidjson::Document &message)
 {
-    rapidjson::GenericStringBuffer<rapidjson::UTF8<>> buffer;
+    jsonBuffer_t buffer;
+    jsonBufferPrepare(buffer, message);
+    return jsonBufferSend(buffer, wsi);
+}
 
+void NetServer::jsonBufferPrepare(jsonBuffer_t &buffer, rapidjson::Value &value)
+{
     // Pre-packet padding
     rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_PRE_PADDING);
 
     // Write serialized message
     rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
-    message.Accept(writer);
+    value.Accept(writer);
 
     // Post-packet padding
     rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_POST_PADDING);
+}
 
+int NetServer::jsonBufferSend(jsonBuffer_t &buffer, libwebsocket *wsi)
+{
     const char *string = buffer.GetString() + LWS_SEND_BUFFER_PRE_PADDING;
     size_t len = buffer.Size() - LWS_SEND_BUFFER_PRE_PADDING - LWS_SEND_BUFFER_POST_PADDING;
-
     return libwebsocket_write(wsi, (unsigned char *) string, len, LWS_WRITE_TEXT);
+}
+
+void NetServer::flushBroadcastList()
+{
+    // Send any pending broadcast packets. These are enqueued by other threads on a list
+    // protected by mBroadcastMutex.
+
+    mBroadcastMutex.lock();
+    for (std::vector<jsonBuffer_t*>::iterator buf = mBroadcastList.begin(); buf != mBroadcastList.end(); ++buf) {
+        for (std::set<libwebsocket*>::iterator cli = mClients.begin(); cli != mClients.end(); ++cli) {
+            jsonBufferSend(**buf, *cli);
+        }
+        delete *buf;
+    }
+    mBroadcastList.clear();
+    mBroadcastMutex.unlock();
+}
+
+void NetServer::jsonBroadcast(rapidjson::Document &message)
+{
+    jsonBuffer_t *buffer = new jsonBuffer_t();
+    jsonBufferPrepare(*buffer, message);
+
+    mBroadcastMutex.lock();
+    mBroadcastList.push_back(buffer);
+    mBroadcastMutex.unlock();
 }
