@@ -332,7 +332,7 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
         doc->path ? "OK" : "Not Found",
         kFCServerVersion,
         doc->contentType,
-        (int) strlen(doc->body)
+        doc->contentLength
     );
 
     if (libwebsocket_write(wsi, (unsigned char*) buffer, size, LWS_WRITE_HTTP) < 0) {
@@ -341,6 +341,7 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
 
     // Write the body asynchronously
     client.httpBody = doc->body;
+    client.httpLength = doc->contentLength;
     libwebsocket_callback_on_writable(context, wsi);
 
     return 0;
@@ -353,16 +354,16 @@ int NetServer::httpWrite(libwebsocket_context *context, libwebsocket *wsi, Clien
     }
 
     do {
-        int len = (int) strlen(client.httpBody);
-        if (len == 0) {
+        if (client.httpLength <= 0) {
             // End of document
             return -1;
         }
-        int m = libwebsocket_write(wsi, (unsigned char *) client.httpBody, len, LWS_WRITE_HTTP);
+        int m = libwebsocket_write(wsi, (unsigned char *) client.httpBody, client.httpLength, LWS_WRITE_HTTP);
         if (m < 0) {
             return -1;
         }
         client.httpBody += m;
+        client.httpLength -= m;
     } while (!lws_send_pipe_choked(wsi));
 
     libwebsocket_callback_on_writable(context, wsi);

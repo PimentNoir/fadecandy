@@ -60,6 +60,7 @@ private:
         const char *path;
         const char *body;
         const char *contentType;
+        int contentLength;
     };
 
     // Buffer used for protocol-detection and Open Pixel Control. Big enough for two OPC packets.
@@ -74,6 +75,7 @@ private:
 
         // HTTP response state
         const char *httpBody;
+        int httpLength;
 
         // OPC and protocol-detection receive buffer.
         OPCBuffer *opcBuffer;

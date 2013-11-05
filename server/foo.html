@@ -29,16 +29,16 @@ frameCallback = function() {
 
   websocket.send(packet.buffer);
 
-  websocket.send(JSON.stringify({
-    "type": "list_connected_devices"
-  }));
-
   setTimeout(frameCallback, 100);
 }
 
 websocket.onopen = function(evt) {
   console.log("Connected");
   frameCallback();
+
+  websocket.send(JSON.stringify({
+    "type": "list_connected_devices"
+  }));
 }
 
 websocket.onmessage = function(evt) {
