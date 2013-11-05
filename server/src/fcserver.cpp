@@ -24,13 +24,15 @@
 #include "fcserver.h"
 #include "usbdevice.h"
 #include "fcdevice.h"
+#include "version.h"
 #include "enttecdmxdevice.h"
 #include <ctype.h>
 #include <iostream>
 
 
 FCServer::FCServer(rapidjson::Document &config)
-    : mListen(config["listen"]),
+    : mConfig(config),
+      mListen(config["listen"]),
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
@@ -333,6 +335,8 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
 
     if (!strcmp(type, "list_connected_devices")) {
         self->jsonListConnectedDevices(message);
+    } else if (!strcmp(type, "server_info")) {
+        self->jsonServerInfo(message);
     } else {
         message.AddMember("error", "Unknown message type", message.GetAllocator());
     }
@@ -351,6 +355,18 @@ void FCServer::jsonListConnectedDevices(rapidjson::Document &message)
         list.PushBack(rapidjson::kObjectType, message.GetAllocator());
         mUSBDevices[i]->describe(list[i], message.GetAllocator());
     }
+}
+
+void FCServer::jsonServerInfo(rapidjson::Document &message)
+{
+    // Server version
+    message.AddMember("version", kFCServerVersion, message.GetAllocator());
+
+#if 0
+    rapidjson::Document configCopy;
+    mConfig.Accept(configCopy);
+    message.AddMember("config", configCopy, message.GetAllocator());
+#endif
 }
 
 void FCServer::jsonConnectedDevicesChanged()

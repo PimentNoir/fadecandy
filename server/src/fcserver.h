@@ -36,6 +36,7 @@ class FCServer
 {
 public:
     typedef rapidjson::Value Value;
+    typedef rapidjson::Document Document;
 
     FCServer(rapidjson::Document &config);
 
@@ -48,6 +49,7 @@ public:
 private:
     std::ostringstream mError;
 
+    const Document& mConfig;
     const Value& mListen;
     const Value& mColor;
     const Value& mDevices;
@@ -78,4 +80,5 @@ private:
 
     // JSON message handlers
     void jsonListConnectedDevices(rapidjson::Document &message);
+    void jsonServerInfo(rapidjson::Document &message);
 };
