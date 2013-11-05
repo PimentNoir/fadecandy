@@ -109,6 +109,10 @@ int FCDevice::open()
         return r;
     }
 
+    unsigned major = mDD.bcdDevice >> 8;
+    unsigned minor = mDD.bcdDevice & 0xFF;
+    snprintf(mVersionString, sizeof mVersionString, "%x.%02x", major, minor);
+
     return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
 }
 
@@ -532,12 +536,15 @@ std::string FCDevice::getName()
     std::ostringstream s;
     s << "Fadecandy";
     if (mSerial[0]) {
-        unsigned major = mDD.bcdDevice >> 8;
-        unsigned minor = mDD.bcdDevice & 0xFF;
-        char version[10];
-        snprintf(version, sizeof version, "%x.%02x", major, minor);
-
-        s << " (Serial# " << mSerial << ", Version " << version << ")";
+        s << " (Serial# " << mSerial << ", Version " << mVersionString << ")";
     }
     return s.str();
+}
+
+void FCDevice::describe(rapidjson::Value &object, Allocator &alloc)
+{
+    object.AddMember("type", "Fadecandy", alloc);
+    object.AddMember("serial", mSerial, alloc);
+    object.AddMember("version", mVersionString, alloc);
+    object.AddMember("bcd_version", mDD.bcdDevice, alloc);
 }

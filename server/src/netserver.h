@@ -24,6 +24,7 @@
 #pragma once
 #include <stdint.h>
 #include <list>
+#include "rapidjson/document.h"
 #include "tinythread.h"
 #include "libwebsockets.h"
 #include "opc.h"
@@ -31,10 +32,16 @@
 
 class NetServer {
 public:
-    NetServer(OPC::callback_t messageCallback, void *context, bool verbose = false);
+    typedef void (*jsonCallback_t)(libwebsocket *wsi, rapidjson::Document &message, void *context);
+
+    NetServer(OPC::callback_t opcCallback, jsonCallback_t jsonCallback,
+        void *context, bool verbose = false);
 
     // Start the event loop on a separate thread
     bool start(const char *host, int port);
+
+    // Reply callback, for use only on the NetServer thread. Call this inside jsonCallback.
+    int jsonReply(libwebsocket *wsi, rapidjson::Document &message);
 
 private:
     enum ClientState {
@@ -67,7 +74,8 @@ private:
         OPCBuffer *opcBuffer;
     };
 
-    OPC::callback_t mMessageCallback;
+    OPC::callback_t mOpcCallback;
+    jsonCallback_t mJsonCallback;
     void *mUserContext;
     tthread::thread *mThread;
     bool mVerbose;

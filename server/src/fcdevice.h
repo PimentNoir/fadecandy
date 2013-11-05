@@ -41,6 +41,7 @@ public:
     virtual void writeColorCorrection(const Value &color);
     virtual std::string getName();
     virtual void flush();
+    virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
     static const unsigned NUM_PIXELS = 512;
 
@@ -97,6 +98,8 @@ private:
     bool mFrameWaitingForSubmit;
 
     char mSerial[256];
+    char mVersionString[10];
+
     libusb_device_descriptor mDD;
     Packet mFramebuffer[FRAMEBUFFER_PACKETS];
     Packet mColorLUT[LUT_PACKETS];

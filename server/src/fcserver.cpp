@@ -34,7 +34,7 @@ FCServer::FCServer(rapidjson::Document &config)
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
-      mNetServer(cbMessage, this, mVerbose),
+      mNetServer(cbOpcMessage, cbJsonMessage, this, mVerbose),
       mUSBHotplugThread(0),
       mUSB(0)
 {
@@ -100,7 +100,7 @@ bool FCServer::startUSB(libusb_context *usb)
     return true;
 }
 
-void FCServer::cbMessage(OPC::Message &msg, void *context)
+void FCServer::cbOpcMessage(OPC::Message &msg, void *context)
 {
     /*
      * Broadcast the OPC message to all configured devices.
@@ -309,5 +309,40 @@ void FCServer::usbHotplugThreadFunc(void *arg)
 
     while (self->usbHotplugPoll()) {
         tthread::this_thread::sleep_for(tthread::chrono::seconds(1));
+    }
+}
+
+void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, void *context)
+{
+    // Received a JSON message from a WebSockets client.
+    // Replies are formed by modifying the original message.
+
+    FCServer *self = (FCServer*) context;
+
+    const Value &vtype = message["type"];
+    if (!vtype.IsString()) {
+        lwsl_notice("NOTICE: Received JSON is missing mandatory \"type\" string\n");
+        return;
+    }
+    const char *type = vtype.GetString();
+
+    if (!strcmp(type, "list_connected_devices")) {
+        self->jsonListConectedDevices(message);
+    } else {
+        message.AddMember("error", "Unknown message type", message.GetAllocator());
+    }
+
+    self->mNetServer.jsonReply(wsi, message);
+}
+
+void FCServer::jsonListConectedDevices(rapidjson::Document &message)
+{
+    message.AddMember("devices", rapidjson::kArrayType, message.GetAllocator());
+    Value &list = message["devices"];
+
+    for (unsigned i = 0; i != mUSBDevices.size(); i++) {
+        USBDevice *usbDev = mUSBDevices[i];
+        list.PushBack(rapidjson::kObjectType, message.GetAllocator());
+        mUSBDevices[i]->describe(list[i], message.GetAllocator());
     }
 }

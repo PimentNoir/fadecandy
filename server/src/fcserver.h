@@ -60,7 +60,9 @@ private:
     std::vector<USBDevice*> mUSBDevices;
     struct libusb_context *mUSB;
 
-    static void cbMessage(OPC::Message &msg, void *context);
+    static void cbOpcMessage(OPC::Message &msg, void *context);
+    static void cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, void *context);
+
     static LIBUSB_CALL int cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
     bool startUSB(libusb_context *usb);
@@ -70,4 +72,7 @@ private:
     bool usbHotplugPoll();
 
     static void usbHotplugThreadFunc(void *arg);
+
+    // JSON message handlers
+    void jsonListConectedDevices(rapidjson::Document &message);
 };

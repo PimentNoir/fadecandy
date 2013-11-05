@@ -169,6 +169,12 @@ std::string EnttecDMXDevice::getName()
     return s.str();
 }
 
+void EnttecDMXDevice::describe(rapidjson::Value &object, Allocator &alloc)
+{
+    object.AddMember("type", "Enttec DMX USB Pro", alloc);
+    object.AddMember("serial", mSerial, alloc);
+}
+
 void EnttecDMXDevice::setChannel(unsigned n, uint8_t value)
 {
     if (n >= 1 && n <= 512) {

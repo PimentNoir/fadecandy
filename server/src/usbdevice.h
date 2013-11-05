@@ -33,6 +33,7 @@ class USBDevice
 {
 public:
     typedef rapidjson::Value Value;
+    typedef rapidjson::MemoryPoolAllocator<> Allocator;
 
     USBDevice(libusb_device *device, bool verbose);
     virtual ~USBDevice();
@@ -57,6 +58,9 @@ public:
 
     virtual std::string getName() = 0;
     libusb_device *getDevice() { return mDevice; };
+
+    // Describe this device by adding keys to a JSON object
+    virtual void describe(rapidjson::Value &object, Allocator &alloc) = 0;
 
 protected:
     libusb_device *mDevice;

@@ -28,12 +28,16 @@
 #include "netserver.h"
 #include "version.h"
 #include "libwebsockets.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include <iostream>
 #include <algorithm>
 
 
-NetServer::NetServer(OPC::callback_t messageCallback, void *context, bool verbose)
-    : mMessageCallback(messageCallback), mUserContext(context), mThread(0), mVerbose(verbose)
+NetServer::NetServer(OPC::callback_t opcCallback, jsonCallback_t jsonCallback,
+    void *context, bool verbose)
+    : mOpcCallback(opcCallback), mJsonCallback(jsonCallback),
+      mUserContext(context), mThread(0), mVerbose(verbose)
 {}
 
 bool NetServer::start(const char *host, int port)
@@ -245,7 +249,7 @@ int NetServer::opcRead(libwebsocket_context *context, libwebsocket *wsi,
         }
 
         // Complete packet.
-        mMessageCallback(*msg, mUserContext);
+        mOpcCallback(*msg, mUserContext);
 
         buffer += msgLength;
         bufferLength -= msgLength;
@@ -347,8 +351,7 @@ int NetServer::httpWrite(libwebsocket_context *context, libwebsocket *wsi, Clien
 
 int NetServer::wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len)
 {
-    // WebSockets data! Binary frames are in OPC format, text frames are JSON.
-
+    // If this frame is binary, it's an OPC message. Does it parse?
     if (lws_frame_is_binary(wsi)) {
         OPC::Message *msg = (OPC::Message*) in;
 
@@ -367,13 +370,46 @@ int NetServer::wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &
         }
 
         msg->setLength(len - OPC::HEADER_BYTES);
-        mMessageCallback(*msg, mUserContext);
+        mOpcCallback(*msg, mUserContext);
 
         return 0;
     }
 
-    // XXX: Implement JSON messages
-    lwsl_notice("NOTICE: Received text frame over WebSockets. Not yet implemented!\n");
+    // Text frames are JSON encoded. Does that parse?
+    rapidjson::Document message;
+    message.ParseInsitu<0>((char*) in);
 
+    if (message.HasParseError()) {
+        lwsl_notice("NOTICE: Parse error in received JSON, character %d: %s\n",
+            int(message.GetErrorOffset()), message.GetParseError());
+        return 0;
+    }
+
+    if (!message.IsObject()) {
+        lwsl_notice("NOTICE: Received JSON is not an object {}\n");
+        return 0;
+    }
+
+    mJsonCallback(wsi, message, mUserContext);
     return 0;
+}
+
+int NetServer::jsonReply(libwebsocket *wsi, rapidjson::Document &message)
+{
+    rapidjson::GenericStringBuffer<rapidjson::UTF8<>> buffer;
+
+    // Pre-packet padding
+    rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_PRE_PADDING);
+
+    // Write serialized message
+    rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
+    message.Accept(writer);
+
+    // Post-packet padding
+    rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_POST_PADDING);
+
+    const char *string = buffer.GetString() + LWS_SEND_BUFFER_PRE_PADDING;
+    size_t len = buffer.Size() - LWS_SEND_BUFFER_PRE_PADDING - LWS_SEND_BUFFER_POST_PADDING;
+
+    return libwebsocket_write(wsi, (unsigned char *) string, len, LWS_WRITE_TEXT);
 }
