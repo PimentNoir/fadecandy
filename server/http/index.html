@@ -5,5 +5,38 @@
   </head>
   <body>
     <h1>Hello World!</h1>
+
+<script language="javascript" type="text/javascript">
+// Dumb example!
+
+var websocket = new WebSocket(window.location.origin.replace("http://", "ws://"));
+var headerSize = 4;
+var numPixels = 16;
+var packet = new Uint8Array(headerSize + numPixels * 3);
+
+frameCallback = function() {
+  var t = new Date().getTime();
+
+  for (var i = 0; i < numPixels; i++) {
+    var l = 0x80 + 0x70 * Math.sin(i * 0.2 + t * 0.001);
+
+    packet[headerSize + i*3 + 0] = l * 0.8;
+    packet[headerSize + i*3 + 1] = l * 0.9;
+    packet[headerSize + i*3 + 2] = l * 1.0;
+  }
+
+  websocket.send(packet.buffer);
+
+  //websocket.send(JSON.stringify(["Hello World"]));
+
+  setTimeout(frameCallback, 100);
+}
+
+websocket.onopen = function(evt) {
+  frameCallback();
+}
+
+</script>
+
   </body>
 </html>
