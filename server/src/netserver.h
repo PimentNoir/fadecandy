@@ -50,15 +50,21 @@ private:
         const char *contentType;
     };
 
+    // Buffer used for protocol-detection and Open Pixel Control. Big enough for two OPC packets.
+    // This buffer is jettisonned 
+    struct OPCBuffer {
+        unsigned bufferLength;
+        uint8_t buffer[2 * sizeof(OPC::Message)];
+    };
+
     struct Client {
         ClientState state;
 
         // HTTP response state
         const char *httpBody;
 
-        // Low-level OPC and protocol detection receive buffer
-        unsigned bufferLength;
-        uint8_t buffer[2 * sizeof(OPC::Message)];
+        // OPC and protocol-detection receive buffer.
+        OPCBuffer *opcBuffer;
     };
 
     OPC::callback_t mMessageCallback;
@@ -68,15 +74,19 @@ private:
 
     static HTTPDocument httpDocumentList[];
 
+    // libwebsockets server
     static void threadFunc(void *arg);
+    static int lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
+        enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len);
 
     // HTTP Server
-    static int httpCallback(libwebsocket_context *context, libwebsocket *wsi,
-        enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len);
     int httpBegin(libwebsocket_context *context, libwebsocket *wsi, Client &client, const char *path);
     int httpWrite(libwebsocket_context *context, libwebsocket *wsi, Client &client);
     static bool httpPathEqual(const char *a, const char *b);
 
     // Open Pixel Control server
     int opcRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len);
+
+    // WebSockets server
+    int wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len);
 };

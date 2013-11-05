@@ -42,13 +42,12 @@ bool NetServer::start(const char *host, int port)
     const int llVerbose = llNormal | LLL_NOTICE;
 
     static struct libwebsocket_protocols protocols[] = {
-        // first protocol must always be HTTP handler
-
+        // Only one protocol for now. Handles HTTP as well as our default WebSockets protocol.
         {
-            "http-only",        // Name
-            httpCallback,       // Callback
-            sizeof(Client),     // Protocol-specific data size
-            0,                  // Max frame size / rx buffer
+            "fcserver",             // Name
+            lwsCallback,            // Callback
+            sizeof(Client),         // Protocol-specific data size
+            sizeof(OPC::Message),   // Max frame size / rx buffer
         },
 
         { NULL, NULL, 0, 0 }    // terminator
@@ -93,11 +92,14 @@ void NetServer::threadFunc(void *arg)
     libwebsocket_context_destroy(context);
 }
 
-int NetServer::httpCallback(libwebsocket_context *context, libwebsocket *wsi,
+int NetServer::lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
     enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
     /*
-     * Handle HTTP and non-websocket traffic.
+     * Protocol callback for libwebsockets.
+     *
+     * Until we have a reason to support a non-default WebSockets protocol, this handles
+     * everything: plain HTTP, Open Pixel Control, and WebSockets.
      *
      * For HTTP, this serves simple static HTML documents which are included at compile-time
      * from the 'http' directory. Our web UI interacts with the server via the public WebSockets API.
@@ -107,6 +109,14 @@ int NetServer::httpCallback(libwebsocket_context *context, libwebsocket *wsi,
     Client *client = (Client*) user;
 
     switch (reason) {
+        case LWS_CALLBACK_CLOSED:
+        case LWS_CALLBACK_CLOSED_HTTP:
+            if (client && client->opcBuffer) {
+                free(client->opcBuffer);
+                client->opcBuffer = NULL;
+            }
+            break;
+
         case LWS_CALLBACK_HTTP:
             return self->httpBegin(context, wsi, *client, (const char*) in);
 
@@ -123,6 +133,10 @@ int NetServer::httpCallback(libwebsocket_context *context, libwebsocket *wsi,
                 return self->opcRead(context, wsi, *client, (uint8_t*)in, len);
             }
             break;
+
+        case LWS_CALLBACK_RECEIVE:
+            // WebSockets data received
+            return self->wsRead(context, wsi, *client, (uint8_t*)in, len);
 
         default:
             break;
@@ -144,17 +158,31 @@ int NetServer::opcRead(libwebsocket_context *context, libwebsocket *wsi,
      * If we have no buffered data yet, we can do this without copying.
      */
 
+    OPCBuffer *opcb;
     uint8_t *buffer;
     unsigned bufferLength;    
 
-    if (len + client.bufferLength > sizeof client.buffer) {
+    // Allocate the buffer we use for OPC reassembly and protocol-detect.
+    if (client.opcBuffer == NULL) {
+        opcb = (OPCBuffer*) malloc(sizeof *client.opcBuffer);
+        if (opcb == NULL) {
+            lwsl_err("ERROR: Out of memory allocating OPC reassembly buffer.\n");
+            return -1;
+        }
+        opcb->bufferLength = 0;
+        client.opcBuffer = opcb;
+    } else {
+        opcb = client.opcBuffer;
+    }
+
+    if (len + opcb->bufferLength > sizeof opcb->buffer) {
         return -1;
     }
 
-    if (client.bufferLength) {
-        memcpy(client.bufferLength + client.buffer, in, len);
-        buffer = client.buffer;
-        bufferLength = client.bufferLength + len;
+    if (opcb->bufferLength) {
+        memcpy(opcb->bufferLength + opcb->buffer, in, len);
+        buffer = opcb->buffer;
+        bufferLength = opcb->bufferLength + len;
     } else {
         buffer = in;
         bufferLength = len;
@@ -172,9 +200,9 @@ int NetServer::opcRead(libwebsocket_context *context, libwebsocket *wsi,
         if (bufferLength < 4) {
             // Not enough data for protocol detect yet. Save this data for later.
 
-            if (buffer != client.buffer) {
-                memcpy(client.buffer, buffer, bufferLength);
-                client.bufferLength = bufferLength;
+            if (buffer != opcb->buffer) {
+                memcpy(opcb->buffer, buffer, bufferLength);
+                opcb->bufferLength = bufferLength;
             }
 
             // Do not pass this data on to libwebsocket yet
@@ -183,9 +211,12 @@ int NetServer::opcRead(libwebsocket_context *context, libwebsocket *wsi,
 
         if (buffer[0] == 'G' && buffer[1] == 'E' && buffer[2] == 'T' && buffer[3] == ' ') {
             // Detected HTTP. Convert this to an HTTP client, and let libwebsockets handle
-            // all data received so far.
+            // all data received so far. We can jettison the OPC buffer at this point.
 
+            free(client.opcBuffer);
+            client.opcBuffer = 0;
             client.state = CLIENT_STATE_HTTP;
+
             if (libwebsocket_read(context, wsi, buffer, bufferLength) < 0) {
                 return -1;
             }
@@ -221,10 +252,10 @@ int NetServer::opcRead(libwebsocket_context *context, libwebsocket *wsi,
     }
 
     // If we have any residual data, save it for later.
-    if (bufferLength && buffer != client.buffer) {
-        memmove(client.buffer, buffer, bufferLength);
+    if (bufferLength && buffer != opcb->buffer) {
+        memmove(opcb->buffer, buffer, bufferLength);
     }
-    client.bufferLength = bufferLength;
+    opcb->bufferLength = bufferLength;
 
     // Don't pass data on to libwebsockets
     return 1;
@@ -265,7 +296,8 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
         lwsl_notice("HTTP document not found, \"%s\"\n", path);
     }
 
-    int size = snprintf((char*) client.buffer, sizeof client.buffer,
+    char buffer[1024];
+    int size = snprintf(buffer, sizeof buffer,
         "HTTP/1.1 %d %s\r\n"
         "Server: %s\r\n"
         "Content-Type: %s\r\n"
@@ -279,7 +311,7 @@ int NetServer::httpBegin(libwebsocket_context *context, libwebsocket *wsi,
         (int) strlen(doc->body)
     );
 
-    if (libwebsocket_write(wsi, client.buffer, size, LWS_WRITE_HTTP) < 0) {
+    if (libwebsocket_write(wsi, (unsigned char*) buffer, size, LWS_WRITE_HTTP) < 0) {
         return -1;
     }
 
@@ -310,5 +342,38 @@ int NetServer::httpWrite(libwebsocket_context *context, libwebsocket *wsi, Clien
     } while (!lws_send_pipe_choked(wsi));
 
     libwebsocket_callback_on_writable(context, wsi);
+    return 0;
+}
+
+int NetServer::wsRead(libwebsocket_context *context, libwebsocket *wsi, Client &client, uint8_t *in, size_t len)
+{
+    // WebSockets data! Binary frames are in OPC format, text frames are JSON.
+
+    if (lws_frame_is_binary(wsi)) {
+        OPC::Message *msg = (OPC::Message*) in;
+
+        if (len < OPC::HEADER_BYTES) {
+            lwsl_notice("NOTICE: Received binary WebSockets packet, but it's too small for an OPC header.\n");
+            return 0;
+        }
+
+        if (msg->lenLow != 0 || msg->lenHigh != 0) {
+            lwsl_notice("NOTICE: Received OPC packet over WebSockets with nonzero reserved (length) fields.\n");
+        }
+
+        if (len > sizeof *msg) {
+            lwsl_notice("NOTICE: Received oversized OPC packet over WebSockets. Truncating.\n");
+            len = sizeof *msg;
+        }
+
+        msg->setLength(len - OPC::HEADER_BYTES);
+        mMessageCallback(*msg, mUserContext);
+
+        return 0;
+    }
+
+    // XXX: Implement JSON messages
+    lwsl_notice("NOTICE: Received text frame over WebSockets. Not yet implemented!\n");
+
     return 0;
 }

@@ -48,6 +48,11 @@ namespace OPC {
         unsigned length() const {
             return lenLow | (unsigned(lenHigh) << 8);
         }
+
+        void setLength(unsigned l) {
+            lenLow = (uint8_t) l;
+            lenHigh = (uint8_t) (l >> 8);
+        }
     };
 
     static const unsigned HEADER_BYTES = 4;
