@@ -186,6 +186,7 @@ void FCServer::usbDeviceArrived(libusb_device *device)
         if (dev->matchConfiguration(mDevices[i])) {
             // Found a matching configuration for this device. We're keeping it!
 
+            dev->loadConfiguration(mDevices[i]);
             dev->writeColorCorrection(mColor);
             mUSBDevices.push_back(dev);
 
