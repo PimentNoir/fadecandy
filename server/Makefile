@@ -152,7 +152,7 @@ $(TARGET): libusbx/libusb/libusb.h $(OBJS)
 
 -include $(OBJS:.o=.d)
 
-src/httpdocs.cpp: http/*
+src/httpdocs.cpp: http/* http/js/* http/css/*
 	(cd http; python manifest.py) > $@
 
 clean:

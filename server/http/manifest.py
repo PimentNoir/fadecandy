@@ -3,7 +3,18 @@
 
 manifest = [
     ('/', 'index.html', 'text/html'),
-    ('/fc-96x96.png', None, 'image/png'),
+
+    # Images
+    ('/media/favicon.png', None, 'image/png'),
+    ('/favicon.ico', 'media/favicon.ico', 'image/x-icon'),
+
+    # Javascript and CSS
+    ('/js/home.js', None, 'application/javascript'),
+    ('/css/narrow.css', None, 'text/css'),
+
+    # Redistributed libraries
+    ('/dist/css/bootstrap.min.css', None, 'text/css'),
+    ('/dist/js/jquery-1.10.2.min.js', None, 'application/javascript'),
 
     # 404 error document must be last.
     (None, '404.html', 'text/html'),

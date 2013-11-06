@@ -1,42 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="/media/favicon.png">
+
     <title>Fadecandy Server</title>
+
+    <link href="/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/narrow.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
   </head>
+
   <body>
-    <h1>Hello World!</h1>
+    <div class="container">
 
-<script language="javascript" type="text/javascript">
-// Dumb example!
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="https://groups.google.com/forum/#!forum/fadecandy">Discussion</a></li>
+          <li><a href="https://github.com/scanlime/fadecandy">Code</a></li>
+        </ul>
+        <h3 class="text-muted">Fadecandy Server</h3>
+      </div>
 
-var websocket = new WebSocket(window.location.origin.replace("http://", "ws://"));
-var headerSize = 4;
-var numPixels = 16;
-var packet = new Uint8Array(headerSize + numPixels * 3);
+      <div id="connection-in-progress" class="alert alert-warning hide">
+        Connecting...
+      </div>
 
-frameCallback = function() {
-  var t = new Date().getTime();
+      <div id="connection-error" class="alert alert-danger hide">
+        Connection error!
+      </div>
 
-  for (var i = 0; i < numPixels; i++) {
-    var l = 0x80 + 0x70 * Math.sin(i * 0.2 + t * 0.001);
+      <div id="connection-closed" class="jumbotron hide">
+        <h3>Connection closed.</h3>
+        <p><button class="btn btn-lg btn-primary connect-button">Reconnect</button></p>
+      </div>
 
-    packet[headerSize + i*3 + 0] = l * 0.8;
-    packet[headerSize + i*3 + 1] = l * 0.9;
-    packet[headerSize + i*3 + 2] = l * 1.0;
-  }
+      <div id="connection-complete" class="hide">
 
-  websocket.send(packet.buffer);
+        <div class="panel panel-primary">
+          <div class="panel-heading">Connected Devices</div>
+          <div id="no-devices-connected" class="panel-body">
+            <p><strong>No devices are connected!</strong></p>
+            <p>If you plug in a Fadecandy board, it will appear here.</p>
+          </div>
+          <table id="devices-table" class="table hide">
+            <tr><th>Device Type</th><th>Serial</th><th>Firmware Version</th><th>Actions</th></tr>
+          </table>
+        </div>
 
-  //websocket.send(JSON.stringify(["Hello World"]));
+        <div class="panel panel-info">
+          <div class="panel-heading">Server Info</div>
+          <div class="panel-body">
+            <img src="/media/favicon.png" class="hidden-xs pull-right" alt="Fc Icon">
+            <p>Connected to <code id="server-url"></code></p>
+            <p>Server software version <code id="server-version"></code></p>
+            <p>Current configuration:</p>
+            <pre id="server-config"></pre>
+          </div>
+        </div>
 
-  setTimeout(frameCallback, 100);
-}
+      </div>
 
-websocket.onopen = function(evt) {
-  frameCallback();
-}
+      <div id="browser-not-supported" class="jumbotron">
+        <h1>Browser not supported</h1>
+        <p class="lead">
+          This browser is missing some important features. This page uses HTML5 and
+          JavaScript, and we require WebSockets.
+        </p>
+        <p><a class="btn btn-lg btn-primary" href="https://google.com/chrome" role="button">Maybe try Chrome?</a></p>
+      </div>
 
-</script>
+      <div class="footer">
+        <p>&copy; scanlime 2013</p>
+      </div>
 
+    </div>
+    <script src="/dist/js/jquery-1.10.2.min.js"></script>
+    <script src="/js/home.js"></script>
   </body>
 </html>
