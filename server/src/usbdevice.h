@@ -33,9 +33,10 @@ class USBDevice
 {
 public:
     typedef rapidjson::Value Value;
+    typedef rapidjson::Document Document;
     typedef rapidjson::MemoryPoolAllocator<> Allocator;
 
-    USBDevice(libusb_device *device, bool verbose);
+    USBDevice(libusb_device *device, const char *type, bool verbose);
     virtual ~USBDevice();
 
     // Must be opened before any other methods are called.
@@ -44,11 +45,17 @@ public:
     // Some drivers can't determine whether this is a supported device prior to open()
     virtual bool probeAfterOpening();
 
-    // Check a configuration. If it describes this device, load it and return true. If not, return false.
-    virtual bool matchConfiguration(const Value &config) = 0;
+    // Check a configuration. Does it describe this device?
+    virtual bool matchConfiguration(const Value &config);
+
+    // Load a matching configuration
+    virtual void loadConfiguration(const Value &config) = 0;
 
     // Handle an incoming OPC message
     virtual void writeMessage(const OPC::Message &msg) = 0;
+
+    // Handle a device-specific JSON message
+    virtual void writeMessage(Document &msg);
 
     // Write color LUT from parsed JSON
     virtual void writeColorCorrection(const Value &color);
@@ -56,19 +63,23 @@ public:
     // Deal with any I/O that results from completed transfers, outside the context of a completion callback
     virtual void flush() = 0;
 
-    virtual std::string getName() = 0;
-    libusb_device *getDevice() { return mDevice; };
-
     // Describe this device by adding keys to a JSON object
-    virtual void describe(rapidjson::Value &object, Allocator &alloc);
+    virtual void describe(Value &object, Allocator &alloc);
+
+    virtual std::string getName() = 0;
+
+    libusb_device *getDevice() { return mDevice; };
+    const char *getSerial() { return mSerialString; }
+    const char *getTypeString() { return mTypeString; }
 
 protected:
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
     struct timeval mTimestamp;
+    const char *mTypeString;
+    const char *mSerialString;
     bool mVerbose;
 
     // Utilities
-    bool matchConfigurationWithTypeAndSerial(const Value &config, const char *type, const char *serial);
     const Value *findConfigMap(const Value &config);
 };

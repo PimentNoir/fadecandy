@@ -26,9 +26,11 @@
 #include <iostream>
 
 
-USBDevice::USBDevice(libusb_device *device, bool verbose)
+USBDevice::USBDevice(libusb_device *device, const char *type, bool verbose)
     : mDevice(libusb_ref_device(device)),
       mHandle(0),
+      mTypeString(type),
+      mSerialString(0),
       mVerbose(verbose)
 {
     gettimeofday(&mTimestamp, NULL);
@@ -55,7 +57,7 @@ void USBDevice::writeColorCorrection(const Value &color)
     // Optional. By default, ignore color correction messages.
 }
 
-bool USBDevice::matchConfigurationWithTypeAndSerial(const Value &config, const char *type, const char *serial)
+bool USBDevice::matchConfiguration(const Value &config)
 {
     if (!config.IsObject()) {
         return false;
@@ -64,29 +66,17 @@ bool USBDevice::matchConfigurationWithTypeAndSerial(const Value &config, const c
     const Value &vtype = config["type"];
     const Value &vserial = config["serial"];
 
-    if (!vtype.IsString() || strcmp(vtype.GetString(), type)) {
-        // Wrong type
+    if (!vtype.IsNull() && (!vtype.IsString() || strcmp(vtype.GetString(), mTypeString))) {
         return false;
     }
 
-    if (!vserial.IsNull()) {
-        // Not a wildcard serial number?
-        // If a serial was not specified, it matches any device.
-
-        if (!vserial.IsString()) {
-            // Non-string serial number. Bad form.
-            return false;
-        }
-
-        if (strcmp(vserial.GetString(), serial)) {
-            // Not a match
-            return false;
-        }
+    if (mSerialString && !vserial.IsNull() &&
+        (!vserial.IsString() || strcmp(vserial.GetString(), mSerialString))) {
+        return false;
     }
 
     return true;
 }
-
 
 const USBDevice::Value *USBDevice::findConfigMap(const Value &config)
 {
@@ -104,9 +94,26 @@ const USBDevice::Value *USBDevice::findConfigMap(const Value &config)
     return 0;
 }
 
+void USBDevice::writeMessage(Document &msg)
+{
+    const char *type = msg["type"].GetString();
+
+    if (!strcmp(type, "device_color_correction")) {
+        // Single-device color correction
+        writeColorCorrection(msg["color"]);
+        return;
+    }
+
+    msg.AddMember("error", "Unknown device-specific message type", msg.GetAllocator());
+}
 
 void USBDevice::describe(rapidjson::Value &object, Allocator &alloc)
 {
+    object.AddMember("type", mTypeString, alloc);
+    if (mSerialString) {
+        object.AddMember("serial", mSerialString, alloc);
+    }
+
     /*
      * The connection timestamp lets a particular connection instance be identified
      * reliably, even if the same device connects and disconnects.

@@ -337,12 +337,48 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
         self->jsonListConnectedDevices(message);
     } else if (!strcmp(type, "server_info")) {
         self->jsonServerInfo(message);
+    } else if (message.HasMember("device")) {
+        self->jsonDeviceMessage(message);
     } else {
         message.AddMember("error", "Unknown message type", message.GetAllocator());
     }
 
     self->mEventMutex.unlock();
+
+    // Remove heavyweight members we should never reply with
+    message.RemoveMember("pixels");
+
+    // All messages get a reply, and we leave any extra parameters on the message
+    // so that clients can keep track of asynchronous completions.
     self->mNetServer.jsonReply(wsi, message);
+}
+
+void FCServer::jsonDeviceMessage(rapidjson::Document &message)
+{
+    /*
+     * If this message has a "device" member and doesn't match any server-global
+     * message types, give each matching device a chance to handle it.
+     */
+
+    const Value &device = message["device"];
+    bool matched = false;
+
+    if (device.IsObject()) {
+        for (unsigned i = 0; i != mUSBDevices.size(); i++) {
+            USBDevice *usbDev = mUSBDevices[i];
+
+            if (usbDev->matchConfiguration(device)) {
+                matched = true;
+                usbDev->writeMessage(message);
+                if (message.HasMember("error"))
+                    break;
+            }
+        }
+    }
+
+    if (!matched) {
+        message.AddMember("error", "No matching device found", message.GetAllocator());
+    }
 }
 
 void FCServer::jsonListConnectedDevices(rapidjson::Document &message)

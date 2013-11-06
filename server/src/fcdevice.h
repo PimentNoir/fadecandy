@@ -36,16 +36,15 @@ public:
     static bool probe(libusb_device *device);
 
     virtual int open();
-    virtual bool matchConfiguration(const Value &config);
+    virtual void loadConfiguration(const Value &config);
     virtual void writeMessage(const OPC::Message &msg);
+    virtual void writeMessage(Document &msg);
     virtual void writeColorCorrection(const Value &color);
     virtual std::string getName();
     virtual void flush();
     virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
     static const unsigned NUM_PIXELS = 512;
-
-    const char *getSerial() { return mSerial; }
 
     // Send current buffer contents
     void writeFramebuffer();
@@ -97,7 +96,7 @@ private:
     int mNumFramesPending;
     bool mFrameWaitingForSubmit;
 
-    char mSerial[256];
+    char mSerialBuffer[256];
     char mVersionString[10];
 
     libusb_device_descriptor mDD;
@@ -106,8 +105,9 @@ private:
     Packet mFirmwareConfig;
 
     bool submitTransfer(Transfer *fct);
-    void configureDevice(const Value &config);
     void writeFirmwareConfiguration();
+    void writeFirmwareConfiguration(const Value &json);
+    void writeDevicePixels(Document &msg);
     static LIBUSB_CALL void completeTransfer(libusb_transfer *transfer);
 
     void opcSetPixelColors(const OPC::Message &msg);

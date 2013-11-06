@@ -26,6 +26,7 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <stdio.h>
 
 
@@ -43,10 +44,11 @@ FCDevice::Transfer::~Transfer()
 }
 
 FCDevice::FCDevice(libusb_device *device, bool verbose)
-    : USBDevice(device, verbose),
+    : USBDevice(device, "fadecandy", verbose),
       mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
-    mSerial[0] = '\0';
+    mSerialBuffer[0] = '\0';
+    mSerialString = mSerialBuffer;
 
     memset(&mFirmwareConfig, 0, sizeof mFirmwareConfig);
     mFirmwareConfig.control = TYPE_CONFIG;
@@ -113,36 +115,43 @@ int FCDevice::open()
     unsigned minor = mDD.bcdDevice & 0xFF;
     snprintf(mVersionString, sizeof mVersionString, "%x.%02x", major, minor);
 
-    return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
+    return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber, 
+        (uint8_t*)mSerialBuffer, sizeof mSerialBuffer);
 }
 
-bool FCDevice::matchConfiguration(const Value &config)
+void FCDevice::loadConfiguration(const Value &config)
 {
-    if (matchConfigurationWithTypeAndSerial(config, "fadecandy", mSerial)) {
-        mConfigMap = findConfigMap(config);
-        configureDevice(config);
-        return true;
-    }
+    mConfigMap = findConfigMap(config);
 
-    return false;
+    // Initial firmware configuration from our device options
+    writeFirmwareConfiguration(config);
 }
 
-void FCDevice::configureDevice(const Value &config)
+void FCDevice::writeFirmwareConfiguration(const Value &config)
 {
     /*
-     * Send a device configuration settings packet, using the default values in our
-     * JSON config file. This can be overridden over OPC later on.
+     * Send a device configuration settings packet, using values based on a JSON
+     * configuration.
      */
 
+    if (!config.IsObject()) {
+        std::clog << "Firmware configuration is not a JSON object\n";
+        return;
+    }        
+
     const Value &led = config["led"];
+    const Value &dither = config["dither"];
+    const Value &interpolate = config["interpolate"];
 
     if (!(led.IsTrue() || led.IsFalse() || led.IsNull())) {
         std::clog << "LED configuration must be true (always on), false (always off), or null (default).\n";
     }
 
     mFirmwareConfig.data[0] =
-        (led.IsNull() ? 0 : CFLAG_NO_ACTIVITY_LED) |
-        (led.IsTrue() ? CFLAG_LED_CONTROL : 0)     ;
+        (led.IsNull() ? 0 : CFLAG_NO_ACTIVITY_LED)             |
+        (led.IsTrue() ? CFLAG_LED_CONTROL : 0)                 |
+        (dither.IsFalse() ? CFLAG_NO_DITHERING : 0)            |
+        (interpolate.IsFalse() ? CFLAG_NO_INTERPOLATION : 0)   ;
 
     writeFirmwareConfiguration();
 }
@@ -360,6 +369,75 @@ void FCDevice::writeFramebuffer()
     }
 }
 
+void FCDevice::writeMessage(Document &msg)
+{
+    /*
+     * Dispatch a device-specific JSON command.
+     *
+     * This can be used to send frames or settings directly to one device,
+     * bypassing the mapping we use for Open Pixel Control clients. This isn't
+     * intended to be the fast path for regular applications, but it can be used
+     * by configuration tools that need to operate regardless of the mapping setup.
+     */
+
+    const char *type = msg["type"].GetString();
+
+    if (!strcmp(type, "device_options")) {
+        /*
+         * TODO: Eventually this should turn into the same thing as 
+         *       loadConfiguration() and it shouldn't be device-specific,
+         *       but for now most of fcserver assumes the configuration is static.
+         */
+        writeFirmwareConfiguration(msg["options"]);
+        return;
+    }
+
+    if (!strcmp(type, "device_pixels")) {
+        // Write raw pixels, without any mapping
+        writeDevicePixels(msg);
+        return;
+    }
+
+    // Chain to default handler
+    USBDevice::writeMessage(msg);
+}
+
+void FCDevice::writeDevicePixels(Document &msg)
+{
+    /*
+     * Write pixels without mapping, from a JSON integer
+     * array in msg["pixels"]. The pixel array is removed from
+     * the reply to save network bandwidth.
+     *
+     * Pixel values are clamped to [0, 255], for convenience.
+     */
+
+    const Value &pixels = msg["pixels"];
+    if (!pixels.IsArray()) {
+        msg.AddMember("error", "Pixel array is missing", msg.GetAllocator());
+    } else {
+
+        // Truncate to the framebuffer size, and only deal in whole pixels.
+        int numPixels = pixels.Size() / 3;
+        if (numPixels > NUM_PIXELS)
+            numPixels = NUM_PIXELS;
+
+        for (int i = 0; i < numPixels; i++) {
+            uint8_t *out = fbPixel(i);
+
+            const Value &r = pixels[i*3 + 0];
+            const Value &g = pixels[i*3 + 1];
+            const Value &b = pixels[i*3 + 2];
+
+            out[0] = std::max(0, std::min(255, r.IsInt() ? r.GetInt() : 0));
+            out[1] = std::max(0, std::min(255, g.IsInt() ? g.GetInt() : 0));
+            out[2] = std::max(0, std::min(255, b.IsInt() ? b.GetInt() : 0));
+        }
+
+        writeFramebuffer();
+    }
+}
+
 void FCDevice::writeMessage(const OPC::Message &msg)
 {
     /*
@@ -535,8 +613,8 @@ std::string FCDevice::getName()
 {
     std::ostringstream s;
     s << "Fadecandy";
-    if (mSerial[0]) {
-        s << " (Serial# " << mSerial << ", Version " << mVersionString << ")";
+    if (mSerialString[0]) {
+        s << " (Serial# " << mSerialString << ", Version " << mVersionString << ")";
     }
     return s.str();
 }
@@ -544,8 +622,6 @@ std::string FCDevice::getName()
 void FCDevice::describe(rapidjson::Value &object, Allocator &alloc)
 {
     USBDevice::describe(object, alloc);
-    object.AddMember("type", "fadecandy", alloc);
-    object.AddMember("serial", mSerial, alloc);
     object.AddMember("version", mVersionString, alloc);
     object.AddMember("bcd_version", mDD.bcdDevice, alloc);
 }

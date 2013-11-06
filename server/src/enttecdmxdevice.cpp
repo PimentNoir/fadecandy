@@ -39,11 +39,12 @@ EnttecDMXDevice::Transfer::~Transfer()
 }
 
 EnttecDMXDevice::EnttecDMXDevice(libusb_device *device, bool verbose)
-    : USBDevice(device, verbose),
+    : USBDevice(device, "enttec", verbose),
       mFoundEnttecStrings(false),
       mConfigMap(0)
 {
-    mSerial[0] = '\0';
+    mSerialBuffer[0] = '\0';
+    mSerialString = mSerialBuffer;
 
     // Initialize a minimal valid DMX packet
     memset(&mChannelBuffer, 0, sizeof mChannelBuffer);
@@ -134,7 +135,8 @@ int EnttecDMXDevice::open()
             return r;
         }
 
-        r = libusb_get_string_descriptor_ascii(mHandle, dd.iSerialNumber, (uint8_t*)mSerial, sizeof mSerial);
+        r = libusb_get_string_descriptor_ascii(mHandle, dd.iSerialNumber,
+            (uint8_t*)mSerialBuffer, sizeof mSerialBuffer);
         if (r < 0) {
             return r;
         }
@@ -149,31 +151,19 @@ bool EnttecDMXDevice::probeAfterOpening()
     return mFoundEnttecStrings;
 }
 
-bool EnttecDMXDevice::matchConfiguration(const Value &config)
+void EnttecDMXDevice::loadConfiguration(const Value &config)
 {
-    if (matchConfigurationWithTypeAndSerial(config, "enttec", mSerial)) {
-        mConfigMap = findConfigMap(config);
-        return true;
-    }
-
-    return false;
+    mConfigMap = findConfigMap(config);
 }
 
 std::string EnttecDMXDevice::getName()
 {
     std::ostringstream s;
     s << "Enttec DMX USB Pro";
-    if (mSerial[0]) {
-        s << " (Serial# " << mSerial << ")";
+    if (mSerialString[0]) {
+        s << " (Serial# " << mSerialString << ")";
     }
     return s.str();
-}
-
-void EnttecDMXDevice::describe(rapidjson::Value &object, Allocator &alloc)
-{
-    USBDevice::describe(object, alloc);
-    object.AddMember("type", "enttec", alloc);
-    object.AddMember("serial", mSerial, alloc);
 }
 
 void EnttecDMXDevice::setChannel(unsigned n, uint8_t value)

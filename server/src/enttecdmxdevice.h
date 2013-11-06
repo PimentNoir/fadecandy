@@ -37,11 +37,10 @@ public:
 
     virtual int open();
     virtual bool probeAfterOpening();
-    virtual bool matchConfiguration(const Value &config);
+    virtual void loadConfiguration(const Value &config);
     virtual void writeMessage(const OPC::Message &msg);
     virtual std::string getName();
     virtual void flush();
-    virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
     void writeDMXPacket();
     void setChannel(unsigned n, uint8_t value);
@@ -67,7 +66,7 @@ private:
         bool finished;
     };
 
-    char mSerial[256];
+    char mSerialBuffer[256];
     bool mFoundEnttecStrings;
     const Value *mConfigMap;
     Packet mChannelBuffer;

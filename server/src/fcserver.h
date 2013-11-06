@@ -81,4 +81,5 @@ private:
     // JSON message handlers
     void jsonListConnectedDevices(rapidjson::Document &message);
     void jsonServerInfo(rapidjson::Document &message);
+    void jsonDeviceMessage(rapidjson::Document &message);
 };
