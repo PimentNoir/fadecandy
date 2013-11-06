@@ -1,6 +1,8 @@
 # Manifest of files to include in the simple HTTP server.
 # Run this script to generate the httpdocs.cpp source file.
 
+# For Python 2.7. Not yet compatible with Python 3.
+
 manifest = [
     ('/', 'index.html', 'text/html'),
 
