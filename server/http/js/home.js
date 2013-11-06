@@ -64,13 +64,16 @@ jQuery(function ($) {
 
     var Device = function(json) {
         this.json = json;
+        this.onRemove = $.Callbacks();
+        this.maxPixels = 512;
+        this.alive = true;
 
         // Empty device view, just an item and heading
-        this.view = $.parseHTML('\
+        this.view = $($.parseHTML('\
             <li class="list-group-item"> \
                 <h4 class="list-group-item-heading"></h4> \
             </li> \
-        ');
+        '));
 
         // Other initialization is device-type-specific
         if (json.type == "fadecandy") {
@@ -81,14 +84,23 @@ jQuery(function ($) {
 
         // Append and slide into view
         $("#devices-list").append(this.view);
-        $(this.view).hide();
-        $(this.view).slideDown(400);
+        this.view.hide();
+        this.view.slideDown(400);
     }
     Device.prototype = {
 
         remove: function() {
+            // Anyone with a dangling reference to this device should know it's dead
+            this.alive = false;
+
+            // Delete anyone else who's depending on this device
+            this.onRemove.fire();
+
+            // Destroy tooltips
+            this.view.find("button").tooltip("destroy");
+
             // Slide out and delete from DOM
-            $(this.view).slideUp(400, function() { this.remove() });
+            this.view.slideUp(400, function() { $(this).remove() });
         },
 
         isEqual: function(json) {
@@ -108,13 +120,116 @@ jQuery(function ($) {
             ConnectionManager.sendJson(message);
         },
 
+        setStatusLed: function(state) {
+            /*
+             * Set the device's status LED state. True/false turns it on or off,
+             * null sets it to the default behavior of blinking when a frame arrives.
+             */
+            this.sendJson({ 'type': 'device_options', 'options': { 'led': state }});
+        },
+
+        writePixels: function(pixels) {
+            /*
+             * Send pixel data directly to one device, bypassing the OPC mapping.
+             * Pixels are an array of integers, three per pixel in RGB order.
+             */
+            this.sendJson({ 'type': 'device_pixels', 'pixels': pixels });
+        },
+
+        singleColorFrame: function(r, g, b) {
+            /*
+             * Create a full frame by repeating a single color
+             */
+            var a = new Array(this.maxPixels * 3);
+            for (var i = 0; i < this.maxPixels; i++) {
+                a[i*3] = r;
+                a[i*3 + 1] = g;
+                a[i*3 + 2] = b;
+            }
+            return a;
+        },
+
+        fadeInSingleFrame: function(pixels) {
+            /*
+             * The Fadecandy device interpolates between frames by default. If we
+             * send it a single frame, it could take arbitrarily long to fade to that
+             * frame, since the device may have an arbitrarily low expected frame
+             * rate due to the time elapsed since the last frame it received.
+             *
+             * To make sure the frame happens in a well-defined amount of time, one
+             * easy and good-looking solution is to send a black frame some time
+             * before the intended frame so we can control the interpolation time.
+             * If we send two black frames, we'll be sure that the lights go dark
+             * immediately and we can control how long it takes for them to fade back up.
+             */
+
+            var device = this;
+            var blackness = this.singleColorFrame(0,0,0);
+
+            this.writePixels(blackness);
+            this.writePixels(blackness);
+
+            window.setTimeout(function() {
+                if (device.alive) {
+                    device.writePixels(pixels);
+                }
+            }, 300);
+        },
+
+        modalAction: function(title, body) {
+            /*
+             * Orchestrate a modal action that begins because of user interaction,
+             * and ends when explicitly cancelled or when the device is removed.
+             *
+             * Returns the modal jQuery object.
+             */
+
+            var m = $($.parseHTML(' \
+                <div class="modal"> \
+                  <div class="modal-dialog"> \
+                    <div class="modal-content"> \
+                      <div class="modal-header"> \
+                        <h4 class="modal-title">' + title + '</h4> \
+                      </div> \
+                      <div class="modal-body">' + body + '</div> \
+                      <div class="modal-footer"> \
+                        <button type="button" class="btn btn-primary">Enough</button> \
+                      </div> \
+                    </div> \
+                  </div> \
+                </div> \
+            '));
+
+            // Use onRemove callbacks to destroy if the device is removed
+            var device = this;
+            var removeCallback = function(){$(".modal").modal("hide"); }
+            device.onRemove.add(removeCallback);
+
+            m.on("hidden.bs.modal", function(){
+                // Destructor
+                device.onRemove.remove(removeCallback);
+                $(".modal, .modal-backdrop").remove();
+            });
+
+            m.appendTo("body");
+            m.modal("show");
+            m.on("click", "button", null, function(){ $(".modal").modal("hide") });
+
+            // Common text fields
+            m.find(".device-serial").text(device.json.serial);
+
+            return m;
+        },
+
         initTypeFadecandy: function() {
             /*
              * For Fadecandy devices, we can show some meaningful properties, and we can
              * show a dropdown with actions to perform on those devices.
              */
 
-            $(this.view).find(".list-group-item-heading")
+            var device = this;
+
+            this.view.find(".list-group-item-heading")
                 .text("Fadecandy LED Controller")
                 .after('\
                     <p> \
@@ -130,26 +245,69 @@ jQuery(function ($) {
                                 Test Patterns <span class="caret"></span> \
                             </button> \
                             <ul class="dropdown-menu" role="menu"> \
-                                <li><a href="#">Action</a></li> \
-                                <li><a href="#">Another action</a></li> \
-                                <li><a href="#">Something else here</a></li> \
-                                <li class="divider"></li> \
-                                <li><a href="#">Separated link</a></li> \
+                                <li><a class="action-off" href="#">All pixels off</a></li> \
+                                <li><a class="action-full" href="#">Full brightness</a></li> \
+                                <li><a class="action-half" href="#">50% brightness</a></li> \
                             </ul> \
                         </div> \
                     </div> \
                 ');
 
-            $(this.view).find(".device-serial").text(this.json.serial);
-            $(this.view).find(".device-version").text(this.json.version);
+            this.view.find(".device-serial").text(this.json.serial);
+            this.view.find(".device-version").text(this.json.version);
 
-            $(this.view).find(".action-identify")
+            this.view.find(".action-identify")
                 .tooltip({
                     placement: "bottom",
                     title: "Identify this device by flashing its built-in status LED",
                     container: "body",
                 })
-                .click(
+                .click(function (evt) {
+                    var m = device.modalAction(
+                        "Identifying Fadecandy Device", ' \
+                        <p> \
+                            The device with serial <code class="device-serial"></code> is \
+                            flashing its built-in status LED. \
+                        </p> \
+                        <h1 class="text-center"> \
+                            <span class="blinker">☀</span> \
+                        </h1> \
+                    ');
+
+                    // Animate until the dialog is closed, then go back to the default LED options
+                    var running = true;                          
+                    m.on("hide.bs.modal", function(){
+                        running = false;
+                        device.setStatusLed(null);
+                    });
+
+                    var blinker = m.find(".blinker");
+                    var blinkOff = function() {
+                        if (running) {
+                            device.setStatusLed(false);
+                            blinker.delay(200).fadeTo(50, 1, function () { blinkOn() });
+                        }
+                    };
+                    var blinkOn = function() {
+                        if (running) {
+                            device.setStatusLed(true);
+                            blinker.delay(200).fadeTo(50, 0, function () { blinkOff() });
+                        }
+                    };
+                    blinkOff();
+                });
+
+            this.view.find(".action-off").click(function (evt) {
+                device.fadeInSingleFrame( device.singleColorFrame(0, 0, 0) );
+            });
+
+            this.view.find(".action-half").click(function (evt) {
+                device.fadeInSingleFrame( device.singleColorFrame(128, 128, 128) );
+            });
+
+            this.view.find(".action-full").click(function (evt) {
+                device.fadeInSingleFrame( device.singleColorFrame(255, 255, 255) );
+            });
         },
 
         initTypeOther: function() {
@@ -163,11 +321,11 @@ jQuery(function ($) {
              * by modifying the constructor to use this initializer for other device types.
              */
 
-            $(this.view).find(".list-group-item-heading")
+            this.view.find(".list-group-item-heading")
                 .text("Other Device")
                 .after('<p>Properties:</p>', '<pre></pre>');
 
-            $(this.view).find("pre").html(Utils.sensibleJsonToHtml(this.json));
+            this.view.find("pre").html(Utils.sensibleJsonToHtml(this.json));
         }
     };
 
@@ -231,6 +389,12 @@ jQuery(function ($) {
         onClose: function() {
             $("#connection-closed").removeClass("hide");
             $("#connection-complete,#connection-in-progress").addClass("hide");
+
+            // Delete all devices, this resets their state
+            for (var i = 0; i < ConnectionManager.devices.length; i++) {
+                ConnectionManager.devices[i].remove();
+            }
+            ConnectionManager.devices = [];
         },
 
         onOpen: function() {
