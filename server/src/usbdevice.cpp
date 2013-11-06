@@ -22,6 +22,7 @@
  */
 
 #include "usbdevice.h"
+#include "libwebsockets.h"   // Lazy portable way to get gettimeofday()
 #include <iostream>
 
 
@@ -29,7 +30,9 @@ USBDevice::USBDevice(libusb_device *device, bool verbose)
     : mDevice(libusb_ref_device(device)),
       mHandle(0),
       mVerbose(verbose)
-{}
+{
+    gettimeofday(&mTimestamp, NULL);
+}
 
 USBDevice::~USBDevice()
 {
@@ -99,4 +102,19 @@ const USBDevice::Value *USBDevice::findConfigMap(const Value &config)
     }
 
     return 0;
+}
+
+
+void USBDevice::describe(rapidjson::Value &object, Allocator &alloc)
+{
+    /*
+     * The connection timestamp lets a particular connection instance be identified
+     * reliably, even if the same device connects and disconnects.
+     *
+     * We encode the timestamp as 64-bit millisecond count, so we don't have to worry about
+     * the portability of string/float conversions. This also matches a common JS format.
+     */
+
+    uint64_t timestamp = (uint64_t)mTimestamp.tv_sec*1000 + mTimestamp.tv_usec/1000;
+    object.AddMember("timestamp", timestamp, alloc);
 }

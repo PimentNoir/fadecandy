@@ -60,11 +60,12 @@ public:
     libusb_device *getDevice() { return mDevice; };
 
     // Describe this device by adding keys to a JSON object
-    virtual void describe(rapidjson::Value &object, Allocator &alloc) = 0;
+    virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
 protected:
     libusb_device *mDevice;
     libusb_device_handle *mHandle;
+    struct timeval mTimestamp;
     bool mVerbose;
 
     // Utilities
