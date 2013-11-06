@@ -4,3 +4,6 @@
 [submodule "server/libwebsockets"]
 	path = server/libwebsockets
 	url = https://github.com/scanlime/libwebsockets.git
+[submodule "server/rapidjson"]
+	path = server/rapidjson
+	url = https://github.com/scanlime/rapidjson.git
