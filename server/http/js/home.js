@@ -46,7 +46,7 @@ $(document).ready(function(){
 
             if (msg.type == "server_info") {
                 $("#server-version").text(msg.version);
-                $("#server-config").text(msg.config);
+                $("#server-config").text(JSON.stringify(msg.config, undefined, 2));
             }
         };
     };

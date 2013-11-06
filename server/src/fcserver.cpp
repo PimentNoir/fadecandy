@@ -362,11 +362,9 @@ void FCServer::jsonServerInfo(rapidjson::Document &message)
     // Server version
     message.AddMember("version", kFCServerVersion, message.GetAllocator());
 
-#if 0
-    rapidjson::Document configCopy;
-    mConfig.Accept(configCopy);
-    message.AddMember("config", configCopy, message.GetAllocator());
-#endif
+    // Server configuration
+    message.AddMember("config", rapidjson::kObjectType, message.GetAllocator());
+    message.DeepCopy(message["config"], mConfig);
 }
 
 void FCServer::jsonConnectedDevicesChanged()
