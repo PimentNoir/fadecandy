@@ -14,6 +14,7 @@ manifest = [
 
     # Redistributed libraries
     ('/dist/css/bootstrap.min.css', None, 'text/css'),
+    ('/dist/js/bootstrap.min.js', None, 'application/javascript'),
     ('/dist/js/jquery-1.10.2.min.js', None, 'application/javascript'),
 
     # 404 error document must be last.
