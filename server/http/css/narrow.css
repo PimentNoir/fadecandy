@@ -52,6 +52,12 @@ body {
   padding: 14px 24px;
 }
 
+/* JSON syntax hilighting */
+.json-punctuation { font-weight: bolder; color: #000000; }
+.json-key { color: #16734b; }
+.json-string { color: #1a496c; }
+.json-number { color: #a84720; }
+
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {
   /* Remove the padding we set earlier */
