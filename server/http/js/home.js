@@ -69,7 +69,9 @@ jQuery(function ($) {
             $("#browser-not-supported").addClass("hide");
 
             // Make the initial connection attempt. We can reconnect manually if the connection is lost
-            $(".connect-button").on("click", this.connect);
+            $(".connect-button").on("click", function(evt) {
+                ConnectionManager.connect()
+            });
             this.connect();
         },
 
