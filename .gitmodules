@@ -1,9 +1,6 @@
 [submodule "server/libusbx"]
 	path = server/libusbx
 	url = https://github.com/libusbx/libusbx.git
-[submodule "server/rapidjson"]
-	path = server/rapidjson
-	url = https://github.com/Kanma/rapidjson.git
 [submodule "server/libwebsockets"]
 	path = server/libwebsockets
 	url = https://github.com/scanlime/libwebsockets.git
