@@ -543,7 +543,7 @@ std::string FCDevice::getName()
 
 void FCDevice::describe(rapidjson::Value &object, Allocator &alloc)
 {
-    object.AddMember("type", "Fadecandy", alloc);
+    object.AddMember("type", "fadecandy", alloc);
     object.AddMember("serial", mSerial, alloc);
     object.AddMember("version", mVersionString, alloc);
     object.AddMember("bcd_version", mDD.bcdDevice, alloc);

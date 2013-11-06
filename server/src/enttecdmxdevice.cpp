@@ -171,7 +171,7 @@ std::string EnttecDMXDevice::getName()
 
 void EnttecDMXDevice::describe(rapidjson::Value &object, Allocator &alloc)
 {
-    object.AddMember("type", "Enttec DMX USB Pro", alloc);
+    object.AddMember("type", "enttec", alloc);
     object.AddMember("serial", mSerial, alloc);
 }
 
