@@ -77,7 +77,7 @@ public class OPC
   // (x,y) is the center of the grid.
   void ledGrid8x8(int index, float x, float y, float spacing, float angle)
   {
-    ledGrid(index, 8, 8, x, y, spacing, spacing, angle, false);
+    ledGrid(index, 8, 8, x, y, spacing, spacing, angle, true);
   }
 
   // Should the pixel sampling locations be visible? This helps with debugging.
