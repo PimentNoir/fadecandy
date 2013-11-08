@@ -3,15 +3,15 @@ Fadecandy HTML5 Examples
 
 This directory contains examples for Fadecandy written in JavaScript with HTML5.
 
-* `dots`
+* `8x8_dots`
   * A springy trail of glowing dots that follows the mouse
   * Uses [Paper.js](http://paperjs.org/)
   * Set up for an 8x8 grid in left-right top-down order
   * Browser support
     * **Firefox**: Works great
     * **Chrome**: Okay, but not as smooth as Firefox
-    * **Safari**: Stops running after a couple seconds
- 
+    * **Safari**: Stops running after a couple seconds 
+
 See Also
 --------
  
