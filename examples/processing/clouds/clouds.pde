@@ -4,7 +4,6 @@ float dx, dy;
 void setup()
 {
   size(240, 80);
-  frameRate(15);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
@@ -44,7 +43,7 @@ float fractalNoise(float x, float y, float z) {
 
 void draw() {
   long now = millis();
-  float speed = 0.01;
+  float speed = 0.002;
   float angle = sin(now * 0.001);
   float z = now * 0.00008;
   float hue = now * 0.01;
