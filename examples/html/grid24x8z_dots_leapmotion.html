@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script type="text/javascript" src="http://paperjs.org/assets/js/paper.js"></script>
+<script type="text/javascript" src="http://js.leapmotion.com/0.2.0-beta1/leap.min.js"></script>
+
+<!-- Define inlined PaperScript, and associate it with myCanvas -->
+<script type="text/paperscript" canvas="myCanvas">
+
+    /*
+     * This is a self-contained for controlling Fadecandy from JavaScript.
+     * We use the popular Paper.js library for drawing and vector math,
+     * and we communicate with the LEDs via a WebSocket connection to fcserver.
+     *
+     * The fcserver must be running before loading the page.
+     * Assumes an 8x8 LED matrix in top-down left-right order is connected
+     * to the first channel of an attached Fadecandy board.
+     *
+     * This example is released into the public domain.
+     * Feel free to use it as a starting point for your own projects.
+     *
+     * BROWSER SUPPORT:
+     *   - Firefox: Works really well
+     *   - Safari: Unusable. Runs for a few seconds, then stops.
+     *   - Chrome: Pretty good, but not as fast as Firefox.
+     * 
+     * 2013 Micah Elizabeth Scott
+     */
+
+    // Paint the background black
+    var background = new Path.Rectangle(view.bounds);
+    background.fillColor = 'black';
+
+    // Connect to a Fadecandy server running on the same computer, on the default port
+    var socket = new WebSocket('ws://localhost:7890');
+
+    // Put some connection status text in the corner of the screen
+    var connectionStatus = new PointText(view.bounds.topLeft + new Point(8, 25));
+    connectionStatus.content = 'Connecting to fcserver...';
+    connectionStatus.style = {
+        fontSize: 20,
+        justification: 'left',
+        fillColor: 'white'
+    };
+    socket.onclose = function(event) {
+        connectionStatus.content = "Not connected to fcserver";
+        connectionStatus.style.fillColor = '#f44';
+    }
+    socket.onopen = function(event) {
+        connectionStatus.content = "Connected";
+        connectionStatus.style.fillColor = '#4f4';
+    }
+
+    // Define a glowing dot, a circle with a gradient fill
+    var Dot = function(position, radius, color) {
+
+        var circle = new Path.Circle({
+            center: position,
+            radius: radius,
+        });
+
+        circle.fillColor = {
+            gradient: {
+                stops: [['white', 0], [color, 0.6], ['black', 1]],
+                radial: true
+            },
+            origin: circle.position,
+            destination: circle.bounds.rightCenter
+        };
+
+        // Store a rasterized version of this path, for speed
+        this.path = circle.rasterize();
+        circle.remove();
+
+        // Treat dots as lamps that make the scene brighter wherever they are
+        this.path.blendMode = 'add';
+        this.path.opacity = 0.9;
+    }
+
+    // Dots move toward a destination with acceleration
+    Dot.prototype.iterate = function() {
+        this.velocity += (this.target - this.path.position) * this.acceleration;
+        this.velocity *= 1.0 - this.damping;
+        this.path.position += this.velocity;
+    }
+
+    // Create several dots
+    var dots = []
+    var colors = [ '#ff8', '#f8f', '#8ff', '#fff' ]
+
+    for (var i = 0; i < 4; i++) {
+        // Random positions
+        var position = Point.random() * view.size;
+        // Each dot has a declining size
+        var radius = view.bounds.height * 0.34 * (4 / (i+4));
+        dots.push(new Dot(position, radius, colors[i]));
+    }
+
+    // Figure out which areas of the screen are going to map to our LEDs.
+    // This example is hardcoded for an 8x8 grid of pixels, organized in a
+    // left-to-right top-down fashion. Each LED is represented by a small
+    // marker showing its location in the scene.
+
+    var leds = []
+    var spacing = view.bounds.width / 26;
+
+    var grid8x8 = function(center) {
+        for (var y = 0; y < 8; y++) {
+            for (var x = 0; x < 8; x++) {
+                // TODO: Zigzag
+                var zx = x;
+                if ((y & 1) == 1)
+                    zx = 7 - x;
+
+                var point = center + new Point(spacing * (zx - 3.5), spacing * (y - 3.5));
+                var marker = new Path.Circle({
+                    center: point,
+                    radius: spacing * 0.25,
+                    strokeColor: '#888',
+                    strokeWidth: 1
+                });
+                leds.push(marker);
+            }
+        }
+    };
+    grid8x8(view.center);
+    grid8x8(view.center + new Point(-spacing * 8, 0));
+    grid8x8(view.center + new Point(+spacing * 8, 0));
+
+    // Put the LEDs into a group, which we'll use later when we want to know the
+    // bounding box around all of the sampling locations.
+
+    var ledGroup = new Group(leds);
+
+    // Use a Raster object to access the pixels we've drawn. This actually acts as
+    // a proxy for the canvas, and it doesn't copy any data yet. We won't insert it
+    // into the scene, otherwise we'd be redundantly drawing what we already drew
+    // during every frame!
+
+    var raster = new Raster({
+        canvas: myCanvas,
+        insert: false,
+        position: view.center
+    });
+
+    Leap.loop(function(frame) {
+        // Follow fingers
+        for (var i = 0; i < dots.length; i++) {
+
+            if (i < frame.pointables.length) {
+                var pos = frame.pointables[i].tipPosition
+                dots[i].path.position = new Point(view.center.x + pos[0] * 3.5,
+                        view.bounds.height * 2.3 - pos[1] * 1.5);
+                dots[i].opacity = pos[2];
+            } else {
+                // Off the edge
+                dots[i].opacity = 0;
+            }
+        }
+    });
+
+    function onFrame() {
+        writeFrameToServer();
+    }
+
+    function writeFrameToServer() {
+        // Create an Open Pixel Control message to control our LEDs.
+        // The fcserver socket treats text as JSON messages (Not used in
+        // this example) and binary objects as Open Pixel Control packets.
+        // The format of these messages are identical to the normal OPC
+        // packets defined by openpixelcontrol.org, except that the "length"
+        // bytes are reserved and should be sent as zero.
+        //
+        // OPC messages have a four byte header, indicating the channel, command,
+        // and length. We want the "Set Pixel Colors" (0) command on channel 0,
+        // so we can safely leave the 4-byte header initialized to zeroes,
+        // and simply fill in the pixel data right after that in the buffer.
+        //
+        // Pixel data starts at offset 4 in the buffer, and we have a Red, Green,
+        // and Blue byte for each LED.
+
+        var packet = new Uint8ClampedArray(4 + leds.length * 3);
+
+        if (socket.readyState != 1 /* OPEN */) {
+            // The server connection isn't open. Nothing to do.
+            return;
+        }
+
+        if (socket.bufferedAmount > packet.length) {
+            // The network is lagging, and we still haven't sent the previous frame.
+            // Don't flood the network, it will just make us laggy.
+            // If fcserver is running on the same computer, it should always be able
+            // to keep up with the frames we send, so we shouldn't reach this point.
+            return;
+        }
+
+        // Capture an image of just the rectangle around all of our LEDs.
+        var imageData = raster.getImageData(ledGroup.bounds);
+
+        // Dest position in our packet. Start right after the header.
+        var dest = 4;
+
+        // Sample the center pixel of each LED
+        for (var led = 0; led < leds.length; led++) {
+
+            // Calculate the source position in imageData.
+            // First, we find a vector relative to the LED bounding box corner.
+            // Then we need to calculate the offset into the imageData array.
+            // We need to do this with integer math (|0 coerces to integer quickly).
+            // Also, note that imageData uses 4 bytes per pixel instead of 3.
+
+            var srcVector = leds[led].position - ledGroup.bounds.topLeft;
+            var src = 4 * ((srcVector.x|0) + (srcVector.y|0) * imageData.width);
+
+            // Copy three bytes to our OPC packet, for Red, Green, and Blue
+            packet[dest++] = imageData.data[src++];
+            packet[dest++] = imageData.data[src++];
+            packet[dest++] = imageData.data[src++];
+        }
+
+        socket.send(packet.buffer);
+    }
+
+</script>
+</head>
+<body style="margin: 0">
+    <canvas id="myCanvas" resize></canvas>
+</body>
+</html>

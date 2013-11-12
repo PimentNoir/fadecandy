@@ -1,21 +1,28 @@
+// Experimental Leap Motion version of the "rings" example
+
+import de.voidplus.leapmotion.*;
+
 OPC opc;
+LeapMotion leap;
 float dx, dy, dz;
 
 void setup()
 {
-  int zoom = 6;
+  int zoom = 8;
   size(24*zoom, 8*zoom);
+
+  leap = new LeapMotion(this);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
 
   // Map an 8x8 grid of LEDs to the center of the window, scaled to take up most of the space
   float spacing = height / 10.0;
-  opc.ledGrid8x8(0, width/2, height/2, spacing, 0);
+  opc.ledGrid8x8(0, width/2, height/2, spacing, 0, true);
 
   // Put two more 8x8 grids to the left and to the right of that one.
-  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0);
-  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0);
+  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true);
+  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true);
 
   // Make the LED grid visible on-screen. By default, the LED sampling locations
   // are hidden and don't affect Processing's output.
@@ -45,13 +52,12 @@ float fractalNoise(float x, float y, float z) {
 void draw() {
   long now = millis();
   float speed = 0.002;
-  float zspeed = 1.8;
+  float zspeed = 0.3;
   float angle = sin(now * 0.001);
   float z = now * 0.00008;
-  float hue = now * 0.01;
   float scale = 0.005;
 
-  float saturation = 100 * constrain(pow(1.15 * noise(now * 0.000122), 2.5), 0, 1);
+  float saturation = 100 * constrain(pow(1.17 * noise(now * 0.000122), 2.5), 0, 1);
   float spacing = noise(now * 0.000124) * 0.1;
 
   dx += cos(angle) * speed;
@@ -61,20 +67,32 @@ void draw() {
   float centerx = noise(now *  0.000125) * 1.25 * width;
   float centery = noise(now * -0.000125) * 1.25 * height;
 
+  float hx = 0, hy = 0, hz = 0;
+  for (Hand hand : leap.getHands()) {
+     PVector position = hand.getStabilizedPosition();
+     hx += position.x;
+     hy += position.y;
+     hz += position.z;
+  }
+
+  // Simple hue/brightness theremin
+  dx = hx * -0.01;
+  float bright = pow(hy * 0.02, 5.0);
+
   loadPixels();
   for (int x=0; x < width; x++) {
     for (int y=0; y < height; y++) {
      
       float dist = sqrt(pow(x - centerx, 2) + pow(y - centery, 2));
-      float pulse = (sin(dz + dist * spacing) - 0.8) * 3;
+      float pulse = (sin(dz + dist * spacing) - 0.3) * 0.3;
       
-      float n = fractalNoise(dx + x*scale, dy + y*scale, z) - 0.69;
+      float n = fractalNoise(dx + x*scale + pulse, dy + y*scale, z) - 0.45;
       float m = fractalNoise(dx + x*scale, dy + y*scale, z + 10.0) - 0.75;
 
       color c = color(
-         (hue + 40.0 * m) % 100.0,
+         (hx + 40.0 * m + hz * 0.1) % 100.0,
          saturation,
-         100 * constrain(pulse * pow(3.0 * n, 1.5), 0, 0.9)
+         100 * constrain(bright * pow(3.0 * n, 1.5), 0, 0.9)
          );
       
       pixels[x + width*y] = c;

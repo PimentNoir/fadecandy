@@ -77,7 +77,7 @@ install: $(TARGET).dfu
 	$(DFU_UTIL) -d 1d50 -D $<
 
 benchmark: install
-	../tools/benchmark.py
+	python benchmark.py
 
 # compiler generated dependency info
 -include $(OBJS:.o=.d)

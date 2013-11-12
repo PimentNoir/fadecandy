@@ -12,6 +12,19 @@ This directory contains sample projects and configuration files for Fadecandy.
 * `config`
   * Sample JSON configuration files for `fcserver`
 
+LED Layouts
+-----------
+
+Some examples are written for a specific LED layout or art project, some examples are general-purpose. For examples that use a specific LED layout, we indicate this with a naming convention. For example, if a project "potato" were written for a 48x24 grid, it would be named "grid48x24_potato".
+
+Layout names we use so far:
+
+* grid8x8 - A simple left-to-right top-to-bottom 8x8 pixel grid
+  * For example, the [AdaFruit NeoMatrix](http://www.adafruit.com/products/1487)
+* grid24x8z - Three 8x8 zig-zag grids side by side
+  * Channel 0 is the center, and may be used alone.
+  * For example, three of the 8x8 grids from [RGB-123](http://www.kickstarter.com/projects/311408456/rgb-123-led-matrices)
+
 More Examples
 -------------
 
