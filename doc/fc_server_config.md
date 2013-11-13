@@ -94,12 +94,13 @@ Supported mapping objects for Fadecandy devices:
     * Map a contiguous range of pixels from the specified OPC channel to the current device
     * For Fadecandy devices, output pixels are numbered from 0 through 511. Strand 1 begins at index 0, strand 2 begins at index 64, etc.
 
-Other configuration keys for Fadecandy devices:
+Other settings for Fadecandy devices:
 
-* "led"
-  * null: Default behavior, LED blinks to indicate frames received
-  * false: LED always off
-  * true: LED always on 
+Name         | Values               | Default | Description
+------------ | -------------------- | ------- | --------------------------------------------
+led          | true / false / null  | null    | Is the LED on, off, or under automatic control?
+dither       | true / false         | true    | Is dithering enabled?
+interpolate  | true / false         | true    | Is inter-frame interpolation enabled?
 
 The following example config file supports two Fadecandy devices with distinct serial numbers. They both receive data from OPC channel #0. The first 512 pixels map to the first Fadecandy device. The next 64 pixels map to the entire first strand of the second Fadecandy device, and the next 32 pixels map to the beginning of the third strand.
 
