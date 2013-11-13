@@ -1,9 +1,78 @@
-Fadecandy
-=========
+![Fadecandy Title](https://raw.github.com/scanlime/fadecandy/master/doc/images/fc-title.png)
 
-Fadecandy is a project that makes LED art easier, tastier, and more creative! There isn't much documentation online yet, but you can read the [introductory blog post about Fadecandy](http://scanlime.org/2013/11/fadecandy-easier-tastier-and-more-creative-led-art/) for more information, or peruse the READMEs included in this repository.
+Fadecandy is a project that makes LED art easier, tastier, and more creative. We're all about creating tools that remove the technical drudgery from making LED art, freeing you to do more interesting, nuanced, and creative things. We think LEDs are more than just trendy display devices, we think of them as programmable light for interactive art.
 
-Fadecandy drives addressable LED strips with the WS2811 and WS2812 controllers. These LED strips are common and inexpensive, available from [many suppliers](http://www.aliexpress.com/item/5M-WS2811-LED-digital-strip-60leds-m-with-60pcs-WS2811-built-in-tthe-5050-smd-rgb/635563383.html?tracelog=back_to_detail_a) for around $0.25 per pixel.
+Simple Example
+--------------
+
+Here's a simple project, a single LED strip controlled by a Processing sketch running on your laptop:
+
+![Fadecandy system diagram 1](https://raw.github.com/scanlime/fadecandy/master/doc/images/system-diagram-1.png)
+
+```
+// Simple Processing sketch for controlling a 64-LED strip.
+// A glowing color-blob appears on the strip under mouse control.
+
+OPC opc;
+PImage dot;
+
+void setup()
+{
+  size(800, 200);
+
+  // Load a sample image
+  dot = loadImage("color-dot.png");
+
+  // Connect to the local instance of fcserver
+  opc = new OPC(this, "127.0.0.1", 7890);
+
+  // Map one 64-LED strip to the center of the window
+  opc.ledStrip(0, 64, width/2, height/2, width / 70.0, 0, false);
+}
+
+void draw()
+{
+  background(0);
+
+  // Draw the image, centered at the mouse location
+  float dotSize = width * 0.2;
+  image(dot, mouseX - dotSize/2, mouseY - dotSize/2, dotSize, dotSize);
+}
+```
+
+A More Complex Example
+----------------------
+
+Fadecandy is also useful for larger projects with many thousands of LEDs, and it's useful for art that runs on embedded computers like the Raspberry Pi:
+
+![Fadecandy system diagram 2](https://raw.github.com/scanlime/fadecandy/master/doc/images/system-diagram-2.png)
+
+Project Scope
+-------------
+
+This project is a collection of reusable pieces you can take or leave. The overall goal of making LED art easier, tastier, and more creative is a broad one. To keep this project manageable to start with, there are some rough limitations on what's supported:
+
+* LED strips, grids, and other modules based on the WS2811 or WS2812 chip.
+  * Common and inexpensive, available from [many suppliers](http://www.aliexpress.com/item/5M-WS2811-LED-digital-strip-60leds-m-with-60pcs-WS2811-built-in-tthe-5050-smd-rgb/635563383.html?tracelog=back_to_detail_a) for around $0.25 per pixel.
+* Something with a USB host port that can run your art.
+  * Laptops and Mac Minis work great
+  * The Raspberry Pi is also a great platform for this, but it requires more technical skill
+* Distances of no more than 60ft or so between your computer and your farthest LEDs
+  * USB cables < 50ft
+  * WS2811 data cables < 10ft
+* No more than about 10000 LED pixels total
+  * There's no hard limit, but it gets more difficult after this point.
+
+These are fuzzy limitations based on current software capabilities and rough electrical limits, so you may be able to stretch them. But this gives you an idea about the kind of art we try to support. Projects are generally larger than wearables, but smaller than entire buildings.
+
+For example, the first project to use Fadecandy was the [Ardent Mobile Cloud Platform](http://scanlime.org/2013/09/the-ardent-mobile-cloud-platform/) at Burning Man 2013. This project used one Raspberry Pi, five Fadecandy controller boards, and 2500 LEDs.
+
+Fadecandy makes no assumptions about how you generate control patterns for the LEDs. You can generate a 2D video and sample pixels from the video, you can make a 3D model of your sculpture and sample a 3D *shader* for your pixel values, or you can create a unique system specifically for your art.
+
+Fadecandy Controller
+--------------------
+
+The centerpiece of the Fadecandy project is a controller board which can drive up to 512 LEDs (as 8 strings of 64) over USB. Many Fadecandy boards can be attached to the same computer using a USB hub or a chain of hubs.
 
 Fadecandy makes it easy to drive these LEDs from anything with USB, and it includes unique algorithms which eliminate many of the common visual glitches you see when using these LEDs.
 
@@ -70,106 +139,24 @@ Why use Open Pixel Control?
 * OPC includes an OpenGL-based simulator, allowing you to develop effects before the hardware is done.
 * The OPC server manages USB hotplug and multi-device synchronization, so you don't have to.
 * The OPC server loads color-correction data into each Fadecandy board.
+master/server/README.md).
 
-For more information, see the [Server README](https://github.com/scanlime/fadecandy/blob/master/server/README.md).
+WebSockets Server
+-----------------
 
-Tools
------
+In addition to Open Pixel Control, `fcserver` also supports WebSockets, so you can write LED art algorithms and utilities in Javascript using the plethora of libraries and tools available on that platform. LED art can be easily integrated with any input device or library that will run in the browser or Node.
 
-* To recompile the firmware (only needed if you want to modify it), please use the [recommended ARM toolchain](https://code.launchpad.net/gcc-arm-embedded).
-* To install new firmware, you'll need a USB DFU loader such as [dfu-util](http://dfu-util.gnumonks.org/).
+Where to?
+---------
 
-USB Protocol
-------------
+* More documentation is included in `doc`
+* Sample projects are in `examples`
+* Pre-compiled binaries are in `bin`
 
-To achieve the best CPU efficiency, Fadecandy uses a custom packet-oriented USB protocol rather than emulating a USB serial device. This simple USB protocol is easy to speak using cross-platform libraries like [libusb](http://www.libusb.org) and [PyUSB](http://pyusb.sourceforge.net/). Examples are included. If you use the included [Open Pixel Control](http://openpixelcontrol.org/) bridge, you need not worry about the USB protocol at all.
-
-Attribute       | Value
---------------- | -----
-Vendor ID       | 0x1d50
-Product ID      | 0x607a
-Manufacturer    | "scanlime"
-Product         | "Fadecandy"
-Serial          | Unique ID string
-Device Class    | Vendor-specific
-Configurations  | 1
-Endpoints       | 1
-Endpoint 1      | Bulk OUT (Host to Device), 64-byte packets
-
-The device has a single Bulk OUT endpoint which expects packets of up to 64 bytes. Multiple packets may be transmitted in one LibUSB "write" operation, as long as the buffer you provide is a multiple of 64 bytes in length.
-
-Each packet begins with an 8-bit control byte, which is divided into three bit-fields:
-
-Bits 7..6  | Bit 5       | Bits 4..0
----------- | ----------- | ------------
-Type code  | 'Final' bit | Packet index
-
-* The 'type' code indicates what kind of packet this is.
-* The 'final' bit, if set, causes the most recent group of packets to take effect
-* The packet index is used to sequence packets within a particular type code
-
-The following packet types are recognized:
-
-Type code | Meaning of 'final' bit          | Index range | Packet contents
---------- | ------------------------------- | ----------- | -------------------------------------
-0         | Interpolate to new video frame  | 0 … 24      | Up to 21 pixels, 24-bit RGB
-1         | Instantly apply new color LUT   | 0 … 24      | Up to 31 16-bit lookup table entries
-2         | (reserved)                      | 0           | Set configuration data
-3         |                                 |             | (reserved)
-
-In a type 0 packet, the USB packet contains up to 21 pixels of 24-bit RGB color data. The last packet (index 24) only needs to contain 8 valid pixels. Pixels 9-20 in these packets are ignored.
-
-Byte Offset   | Description
-------------- | ------------
-0             | Control byte
-1             | Pixel 0, Red
-2             | Pixel 0, Green
-3             | Pixel 0, Blue
-4             | Pixel 1, Red
-5             | Pixel 1, Green
-6             | Pixel 1, Blue
-…             | …
-61            | Pixel 20, Red
-62            | Pixel 20, Green
-63            | Pixel 20, Blue
-
-In a type 1 packet, the USB packet contains up to 31 lookup-table entries. The lookup table is structured as three arrays of 257 entries, starting with the entire red-channel LUT, then the green-channel LUT, then the blue-channel LUT. Each packet is structured as follows:
-
-Byte Offset   | Description
-------------- | ------------
-0             | Control byte
-1             | Reserved (0)
-2             | LUT entry #0, low byte
-3             | LUT entry #0, high byte
-4             | LUT entry #1, low byte
-5             | LUT entry #1, high byte
-…             | …
-62            | LUT entry #30, low byte
-63            | LUT entry #30, high byte
-
-A type 2 packet sets optional device-wide configuration settings:
-
-Byte Offset | Bits   | Description
------------ | ------ | ------------
-0           | 7 … 0  | Control byte
-1           | 7 … 2  | (reserved)
-1           | 3      | Manual LED control bit
-1           | 2      | 0 = LED shows USB activity, 1 = LED under manual control
-1           | 1      | Disable keyframe interpolation
-1           | 0      | Disable dithering
-2 … 63      | 7 … 0  | (reserved)
-
-In addition to the OUT endpoint, the device also supports vendor-specific control requests:
-
-bmRequestType | bRequest | wValue | wIndex | wLength | Description
-------------- | -------- | ------ | ------ | ------- | ---------------------------------------------
-0xC0          | 0x01     | 0      | 0      | 4       | Read rendered frame counter (32-bit, little endian)
-0xC0          | 0x01     | 0      | 1      | 4       | Read received keyframe counter (32-bit, little endian)
-0xC0          | 0x7E     | x      | 4      | x       | Read Microsoft WCID descriptor
-0xC0          | 0x7E     | x      | 5      | x       | Read Microsoft Extended Properties descriptor
 
 Contact
 -------
 
-Micah Elizabeth Scott <<micah@scanlime.org>>
+* [Discussion group](https://groups.google.com/forum/#!forum/fadecandy)
+* Micah Elizabeth Scott <<micah@scanlime.org>>
 
