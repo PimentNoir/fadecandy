@@ -149,9 +149,14 @@ In addition to Open Pixel Control, `fcserver` also supports WebSockets, so you c
 Where to?
 ---------
 
-* More documentation is included in `doc`
-* Sample projects are in `examples`
-* Pre-compiled binaries are in `bin`
+* Sample projects are in [examples](https://github.com/scanlime/fadecandy/tree/master/examples)
+* Pre-compiled binaries are in [bin](https://github.com/scanlime/fadecandy/tree/master/bin)
+* More documentation is included in [doc](https://github.com/scanlime/fadecandy/tree/master/doc)
+  * [Open Pixel Control Protocol](https://github.com/scanlime/fadecandy/blob/master/doc/fc_protocol_opc.md)
+  * [WebSocket Protocol](https://github.com/scanlime/fadecandy/blob/master/doc/fc_protocol_websocket.md)
+  * [USB Protocol](https://github.com/scanlime/fadecandy/blob/master/doc/fc_protocol_usb.md)
+  * [Processing OPC Client](https://github.com/scanlime/fadecandy/blob/master/doc/processing_opc_client.md)
+  * [Server Configuration](https://github.com/scanlime/fadecandy/blob/master/doc/fc_server_config.md)
 
 
 Contact
