@@ -88,20 +88,20 @@ The LED drive engine is based on Stoffregen's excellent [OctoWS2811](http://www.
 
 These features add up to give *very smooth* fades and high dynamic range. Ever notice that annoying stair-stepping effect when fading LEDs from off to dim? Fadecandy avoids that using a form of [delta-sigma modulation](http://en.wikipedia.org/wiki/Delta-sigma_modulation). It rapidly wiggles each pixel's value up or down by one 8-bit step, in order to achieve 16-bit resolution for fades.
 
+Vitals
+------
+
+* 512 pixels supported per Teensy board (8 strings, 64 pixels per string)
+* Very high hardware frame rate (~400 FPS) to support temporal dithering
+* Full-speed (12 Mbps) USB
+* 257x3-entry 16-bit color lookup table, for gamma correction and color balance
+
 Platform
 --------
 
 Fadecandy uses the Freescale MK20DX128 microcontroller, the same one used by the [Teensy 3.0](http://www.pjrc.com/store/teensy3.html) board. Fadecandy includes its own PCB design featuring a robust power supply and level shifters. It also includes an open source bootloader compatible with the USB Device Firmware Update spec.
 
 You can use Fadecandy either as a full hardware platform or as firmware for the Teensy 3.0 board.
-
-Vitals
-------
-
-* 512 pixels supported per Teensy board (8 strings, 64 pixels per string)
-* Very high hardware frame rate (395 FPS) to support temporal dithering
-* Full-speed (12 Mbps) USB
-* 257x3-entry 16-bit color lookup table, for gamma correction and color balance
 
 Color Processing
 ----------------
@@ -145,6 +145,13 @@ WebSockets Server
 -----------------
 
 In addition to Open Pixel Control, `fcserver` also supports WebSockets, so you can write LED art algorithms and utilities in Javascript using the plethora of libraries and tools available on that platform. LED art can be easily integrated with any input device or library that will run in the browser or Node.
+
+Browser UI
+----------
+
+When you run `fcserver`, it also gives you a simple browser-based UI for identifying the attached Fadecandy Controllers and quickly testing your lights. By default, this UI runs on [http://localhost:7890](http://localhost:7890).
+
+![Browser UI Screenshot](https://raw.github.com/scanlime/fadecandy/master/doc/images/web-ui-screenshot.png)
 
 Where to?
 ---------
