@@ -75,7 +75,6 @@ void setup()
   opc.ledGrid8x8(0, ledX, ledY, ledSpacing, 0, true);
   opc.ledGrid8x8(64, ledX - ledSpacing * 8, ledY, ledSpacing, 0, true);
   opc.ledGrid8x8(128, ledX + ledSpacing * 8, ledY, ledSpacing, 0, true);
-  opc.showLocations(true);
   
   // Init timekeeping, start the pattern from the beginning
   startPattern();

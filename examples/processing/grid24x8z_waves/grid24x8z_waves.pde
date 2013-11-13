@@ -21,7 +21,6 @@ void setup() {
   opc.ledGrid8x8(0, width/2, height/2, spacing, 0, true);
   opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true);
   opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true);
-  opc.showLocations(true);
   
   // Initial color correction settings
   mouseMoved();

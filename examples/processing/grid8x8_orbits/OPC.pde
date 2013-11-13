@@ -26,6 +26,7 @@ public class OPC
   {
     this.host = host;
     this.port = port;
+    this.enableShowLocations = true;
     parent.registerDraw(this);
   }
 
@@ -81,6 +82,9 @@ public class OPC
   }
 
   // Should the pixel sampling locations be visible? This helps with debugging.
+  // Showing locations is enabled by default. You might need to disable it if our drawing
+  // is interfering with your processing sketch, or if you'd simply like the screen to be
+  // less cluttered.
   void showLocations(boolean enabled)
   {
     enableShowLocations = enabled;
@@ -201,7 +205,11 @@ public class OPC
     }
   }
 
-  // Automatically called at the end of each draw()
+  // Automatically called at the end of each draw().
+  // This handles the automatic Pixel to LED mapping.
+  // If you aren't using that mapping, this function has no effect.
+  // In that case, you can call setPixelCount(), setPixel(), and writePixels()
+  // separately.
   void draw()
   {
     if (pixelLocations == null) {
@@ -218,20 +226,11 @@ public class OPC
     }
 
     int numPixels = pixelLocations.length;
-    int numBytes = 3 * numPixels;
-    int packetLen = 4 + numBytes;
-    if (packetData == null || packetData.length != packetLen) {
-      // Set up our packet buffer
-      packetData = new byte[packetLen];
-      packetData[0] = 0;  // Channel
-      packetData[1] = 0;  // Command (Set pixel colors)
-      packetData[2] = (byte)(numBytes >> 8);
-      packetData[3] = (byte)(numBytes & 0xFF);
-    }
-
-    loadPixels();
- 
     int ledAddress = 4;
+
+    setPixelCount(numPixels);
+    loadPixels();
+
     for (int i = 0; i < numPixels; i++) {
       int pixelLocation = pixelLocations[i];
       int pixel = pixels[pixelLocation];
@@ -246,14 +245,65 @@ public class OPC
       }
     }
 
+    writePixels();
+
+    if (enableShowLocations) {
+      updatePixels();
+    }
+  }
+  
+  // Change the number of pixels in our output packet.
+  // This is normally not needed; the output packet is automatically sized
+  // by draw() and by setPixel().
+  void setPixelCount(int numPixels)
+  {
+    int numBytes = 3 * numPixels;
+    int packetLen = 4 + numBytes;
+    if (packetData == null || packetData.length != packetLen) {
+      // Set up our packet buffer
+      packetData = new byte[packetLen];
+      packetData[0] = 0;  // Channel
+      packetData[1] = 0;  // Command (Set pixel colors)
+      packetData[2] = (byte)(numBytes >> 8);
+      packetData[3] = (byte)(numBytes & 0xFF);
+    }
+  }
+  
+  // Directly manipulate a pixel in the output buffer. This isn't needed
+  // for pixels that are mapped to the screen.
+  void setPixel(int number, color c)
+  {
+    int offset = 4 + number * 3;
+    if (packetData == null || packetData.length < offset + 3) {
+      setPixelCount(number + 1);
+    }
+
+    packetData[offset] = (byte) (c >> 16);
+    packetData[offset + 1] = (byte) (c >> 8);
+    packetData[offset + 2] = (byte) c;
+  }
+  
+  // Transmit our current buffer of pixel values to the OPC server. This is handled
+  // automatically in draw() if any pixels are mapped to the screen, but if you haven't
+  // mapped any pixels to the screen you'll want to call this directly.
+  void writePixels()
+  {
+    if (packetData == null || packetData.length == 0) {
+      // No pixel buffer
+      return;
+    }
+    if (output == null) {
+      // Try to (re)connect
+      connect();
+    }
+    if (output == null) {
+      return;
+    }
+
     try {
       output.write(packetData);
     } catch (Exception e) {
       dispose();
-    }
-
-    if (enableShowLocations) {
-      updatePixels();
     }
   }
 

@@ -23,10 +23,6 @@ void setup()
   // Put two more 8x8 grids to the left and to the right of that one.
   opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true);
   opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true);
-
-  // Make the LED grid visible on-screen. By default, the LED sampling locations
-  // are hidden and don't affect Processing's output.
-  opc.showLocations(true);
   
   // Make the status LED quiet
   opc.setStatusLed(false);

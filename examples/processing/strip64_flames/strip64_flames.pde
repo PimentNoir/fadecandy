@@ -13,10 +13,6 @@ void setup()
 
   // Map one 64-LED strip to the center of the window
   opc.ledStrip(0, 64, width/2, height/2, width / 70.0, 0, false);
-
-  // Make the LED grid visible on-screen. By default, the LED sampling locations
-  // are hidden and don't affect Processing's output.
-  opc.showLocations(true);
 }
 
 void draw()

@@ -13,10 +13,6 @@ void setup()
 
   // Map an 8x8 grid of LEDs to the center of the window
   opc.ledGrid8x8(0, width/2, height/2, height / 12.0, 0, false);
-
-  // Make the LED grid visible on-screen. By default, the LED sampling locations
-  // are hidden and don't affect Processing's output.
-  opc.showLocations(true);
 }
 
 void draw()
