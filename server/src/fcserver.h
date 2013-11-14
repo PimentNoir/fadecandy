@@ -54,6 +54,7 @@ private:
     const Value& mColor;
     const Value& mDevices;
     bool mVerbose;
+    bool mPollForDevicesOnce;
 
     NetServer mNetServer;
     tthread::recursive_mutex mEventMutex;

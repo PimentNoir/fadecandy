@@ -36,6 +36,7 @@ FCServer::FCServer(rapidjson::Document &config)
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
+      mPollForDevicesOnce(false),
       mNetServer(cbOpcMessage, cbJsonMessage, this, mVerbose),
       mUSBHotplugThread(0),
       mUSB(0)
@@ -81,7 +82,7 @@ bool FCServer::start(libusb_context *usb)
 }
 
 bool FCServer::startUSB(libusb_context *usb)
-{   
+{
     mUSB = usb;
 
     // Enumerate all attached devices, and get notified of hotplug events
@@ -159,13 +160,17 @@ void FCServer::usbDeviceArrived(libusb_device *device)
         if (mVerbose) {
             switch (r) {
 
-                // Errors that may occur transiently while WinUSB is installing...
-                #ifdef _WIN32
+                // Errors that may occur transiently while a device is connecting...
                 case LIBUSB_ERROR_NOT_FOUND:
                 case LIBUSB_ERROR_NOT_SUPPORTED:
-                    std::clog << "Waiting for Windows to install " << dev->getName() << " driver. This may take a moment...\n";
+                    #ifdef OS_WINDOWS
+                        std::clog << "Waiting for Windows to install " << dev->getName() << " driver. This may take a moment...\n";
+                    #endif
+                    #ifdef OS_LINUX
+                        // Try again in ~100ms or so.
+                        mPollForDevicesOnce = true;
+                    #endif
                     break;
-                #endif
 
                 default:
                     std::clog << "Error opening " << dev->getName() << ": " << libusb_strerror(libusb_error(r)) << "\n";
@@ -233,10 +238,20 @@ void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
 void FCServer::mainLoop()
 {
     for (;;) {
-        int err = libusb_handle_events_completed(mUSB, 0);
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
+
+        int err = libusb_handle_events_timeout_completed(mUSB, &timeout, 0);
         if (err) {
             std::clog << "Error handling USB events: " << libusb_strerror(libusb_error(err)) << "\n";
             // Sometimes this happens on Windows during normal operation if we're queueing a lot of output URBs. Meh.
+        }
+
+        // We may have been asked for a one-shot poll, to retry connecting devices that failed.
+        if (mPollForDevicesOnce) {
+            mPollForDevicesOnce = false;
+            usbHotplugPoll();
         }
 
         // Flush completed transfers
@@ -255,6 +270,11 @@ bool FCServer::usbHotplugPoll()
      * For platforms without libusbx hotplug support,
      * see if we can fake it by polling for new devices. This can
      * happen on a different thread, and it probably should.
+     *
+     * We also use this for recovering from transient errors when opening
+     * devices. E.g. a device is reported as added by the hotplug system
+     * but it isn't actually ready to use in userspace yet.
+     *
      * Returns true on success.
      */
 
