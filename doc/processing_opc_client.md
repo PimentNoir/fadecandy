@@ -144,6 +144,14 @@ This section lists all public methods available on the OPC object:
 
 ----
 
+* *color* = **opc.getPixel**(*index*)
+  * Retrieves the color stored for a single LED pixel.
+  * For LEDs mapped to on-screen pixels, this returns the color we sampled on the previous frame.
+  * **index**: The index number for this LED, starting with zero
+  * **color**: A Processing color object (24-bit)
+
+----
+
 * **opc.writePixels**()
   * Send all buffered pixels to the OPC server
   * If any pixels have been mapped on-screen, this happens automatically after every draw()

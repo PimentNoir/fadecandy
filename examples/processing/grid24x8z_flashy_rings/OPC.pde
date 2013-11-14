@@ -283,6 +283,17 @@ public class OPC
     packetData[offset + 2] = (byte) c;
   }
   
+  // Read a pixel from the output buffer. If the pixel was mapped to the display,
+  // this returns the value we captured on the previous frame.
+  color getPixel(int number)
+  {
+    int offset = 4 + number * 3;
+    if (packetData == null || packetData.length < offset + 3) {
+      return 0;
+    }
+    return (packetData[offset] << 16) | (packetData[offset + 1] << 8) | packetData[offset + 2];
+  }
+
   // Transmit our current buffer of pixel values to the OPC server. This is handled
   // automatically in draw() if any pixels are mapped to the screen, but if you haven't
   // mapped any pixels to the screen you'll want to call this directly.
