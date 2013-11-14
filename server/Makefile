@@ -114,6 +114,21 @@ ifeq ($(UNAME), Darwin)
 		-DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY
 endif
 
+ifeq ($(UNAME), Linux)
+	# Linux
+
+	C_FILES += \
+		libusbx/libusb/os/linux_usbfs.c \
+		libusbx/libusb/os/linux_netlink.c \
+		libusbx/libusb/os/poll_posix.c \
+		libusbx/libusb/os/threads_posix.c
+
+	LIBS += -lpthread -lrt
+	CPPFLAGS += -DOS_LINUX -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t \
+		-DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY -DHAVE_POLL_H \
+		-DHAVE_ASM_TYPES_H -DHAVE_SYS_SOCKET_H -DHAVE_LINUX_NETLINK_H -DHAVE_LINUX_FILTER_H
+endif
+
 ifneq ("$(MINGW)", "")
 	# Windows
 
