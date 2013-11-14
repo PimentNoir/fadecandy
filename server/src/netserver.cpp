@@ -363,8 +363,10 @@ int NetServer::httpWrite(libwebsocket_context *context, libwebsocket *wsi, Clien
             // End of document
             return -1;
         }
-        int m = libwebsocket_write(wsi, (unsigned char *) client.httpBody, client.httpLength, LWS_WRITE_HTTP);
+        int blockSize = std::min<int>(client.httpLength, 4096);
+        int m = libwebsocket_write(wsi, (unsigned char *) client.httpBody, blockSize, LWS_WRITE_HTTP);
         if (m < 0) {
+            // Write error, close connection
             return -1;
         }
         client.httpBody += m;
