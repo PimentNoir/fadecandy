@@ -7,6 +7,8 @@ This directory contains sample projects and configuration files for Fadecandy.
   * Examples for [Processing 2](http://processing.org/), a popular tool for creative coding
 * `html`
   * Browser-based examples, written in JavaScript with HTML5
+* `node`
+  * JavaScript examples for Node.js
 * `python`
   * Some examples written in [Python](http://python.org/)
 * `config`
