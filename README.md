@@ -139,7 +139,6 @@ Why use Open Pixel Control?
 * OPC includes an OpenGL-based simulator, allowing you to develop effects before the hardware is done.
 * The OPC server manages USB hotplug and multi-device synchronization, so you don't have to.
 * The OPC server loads color-correction data into each Fadecandy board.
-master/server/README.md).
 
 WebSockets Server
 -----------------
