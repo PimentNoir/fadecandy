@@ -2,8 +2,10 @@ import processing.video.*;
 
 //String filename = "/Users/micah/Dropbox/video/Sixteen Dots - An interactive music video for Amon Tobins Lost and Found-720p.mp4";
 //String filename = "/Users/micah/Dropbox/video/Nobody Beats the Drum - Grindin-720p.mp4";
-String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
+//String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
+//String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
+String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
 
 //float zoom = 1.75;
 float zoom = 2;
