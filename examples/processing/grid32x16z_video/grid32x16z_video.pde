@@ -2,10 +2,10 @@ import processing.video.*;
 
 //String filename = "/Users/micah/Dropbox/video/Sixteen Dots - An interactive music video for Amon Tobins Lost and Found-720p.mp4";
 //String filename = "/Users/micah/Dropbox/video/Nobody Beats the Drum - Grindin-720p.mp4";
-//String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
+String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
-String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
+//String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
 
 //float zoom = 1.75;
 float zoom = 2;
@@ -50,8 +50,22 @@ void draw()
   int mWidth = int(pyramid[0].width * zoom);
   int mHeight = mWidth * movie.height / movie.width;
 
+  // Center location
+  float x, y;
+
+  if (mousePressed) {
+    // Pan horizontally and vertically with the mouse
+    x = -mouseX * (mWidth - pyramid[0].width) / width;
+    y = -mouseY * (mHeight - pyramid[0].height) / height;
+  } else {
+    // Centered
+    x = -(mWidth - pyramid[0].width) / 2;
+    y = -(mHeight - pyramid[0].height) / 2;
+  }
+
   pyramid[0].beginDraw();
-  pyramid[0].image(movie, (pyramid[0].width - mWidth)/2, (pyramid[0].height - mHeight)/2, mWidth, mHeight);
+  pyramid[0].background(0);
+  pyramid[0].image(movie, x, y, mWidth, mHeight);
   pyramid[0].endDraw();
 
   for (int i = 1; i < pyramid.length; i++) {
