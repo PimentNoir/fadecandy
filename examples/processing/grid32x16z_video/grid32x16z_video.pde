@@ -2,12 +2,11 @@ import processing.video.*;
 
 //String filename = "/Users/micah/Dropbox/video/Sixteen Dots - An interactive music video for Amon Tobins Lost and Found-720p.mp4";
 //String filename = "/Users/micah/Dropbox/video/Nobody Beats the Drum - Grindin-720p.mp4";
-String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
+//String filename = "/Users/micah/Dropbox/video/amon_tobin_sordid.mp4";
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
-//String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
+String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
 
-//float zoom = 1.75;
 float zoom = 2;
 
 OPC opc;
@@ -38,6 +37,18 @@ void setup()
     pyramid[i] = createGraphics(width / (1 << i), height / (1 << i), P3D);
   }
 }
+
+void keyPressed() {
+  if (key == 'd') opc.setDithering(false);
+  if (key == ' ') movie.pause();
+  if (key == ']') zoom *= 1.1;
+  if (key == '[') zoom *= 0.9;
+}
+
+void keyReleased() {
+  if (key == 'd') opc.setDithering(true);
+  if (key == ' ') movie.play();
+}  
 
 void movieEvent(Movie m)
 {
