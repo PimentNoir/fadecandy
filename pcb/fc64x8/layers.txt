@@ -1,0 +1,9 @@
+fc64x8.GBL  Bottom Copper
+fc64x8.GBS  Bottom Soldermask
+fc64x8.GBO  Bottom Silkscreen
+fc64x8.GTL  Top Copper
+fc64x8.GTS  Top Soldermask
+fc64x8.GTO  Top Silkscreen
+fc64x8.TXT  NC Drill
+fc64x8.GTP  Solder stencil
+centroid.csv    Pick and place
