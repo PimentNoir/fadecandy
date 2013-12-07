@@ -9,7 +9,7 @@ void setup()
 
   blur = loadShader("blur.glsl");
   blur.set("blurSize", height / 8);
-  blur.set("sigma", 20.0f);  
+  blur.set("sigma", 10.0f);  
   
   src = createGraphics(width, height, P3D); 
   
@@ -42,20 +42,21 @@ void draw()
   
   src.beginDraw();
   src.noStroke();
-  src.background(0);
-  src.fill(255);
+  src.background(255, 0, 0);
+  src.fill(255, 80);
 
   src.directionalLight(255, 255, 255, -1, 0, 0.4);
   src.directionalLight(255, 255, 255, -1, 0, 0.2);
   src.directionalLight(255, 255, 255, -1, 0, 0);
+  src.directionalLight(255, 0, 0, 1, 0, 0);
 
   // Lots of rotating cubes
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 100; i++) {
     src.pushMatrix();
     src.translate(random(0, width), random(0, height), 0);
-    src.rotateY(t * 0.5 + randomGaussian());
-    src.rotateX(randomGaussian());
-    src.box(height * abs(0.3 + 0.1 * randomGaussian()));
+    src.rotateY(t * 0.3 + randomGaussian());
+    src.rotateX(t * 0.122222 + randomGaussian());
+    src.box(height * abs(0.2 + 0.2 * randomGaussian()));
     src.popMatrix();
   }
 
@@ -74,13 +75,6 @@ void draw()
   pass2.image(pass1, 0, 0);
   pass2.endDraw();    
         
-  blendMode(NORMAL);
   image(pass2, 0, 0);
-
-  // Bright red wash
-  blendMode(ADD);
-  fill(255, 20, 20, 190);
-  noStroke();
-  rect(0, 0, width, height);
 }
 
