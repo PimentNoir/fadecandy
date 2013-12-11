@@ -30,6 +30,15 @@ void setup()
   opc.ledGrid8x8(5 * 64, width * 3/8, height * 3/4, height/16, 0, true);
   opc.ledGrid8x8(6 * 64, width * 5/8, height * 3/4, height/16, 0, true);
   opc.ledGrid8x8(7 * 64, width * 7/8, height * 3/4, height/16, 0, true);
+  
+  float stripSpacing = 2;
+  float stripX = width * 0.35;
+  float stripY = height * 0.5;
+  opc.ledStrip(8 * 64, 64, stripX, stripY, stripSpacing, 0, false);
+  stripX += stripSpacing * 64;
+  opc.ledStrip(9 * 64, 64, stripX, stripY, stripSpacing, 0, false);
+  stripX += stripSpacing * 64;
+  opc.ledStrip(10 * 64, 64, stripX, stripY, stripSpacing, 0, false);
 
   // Make the status LED quiet
   opc.setStatusLed(false);
@@ -43,22 +52,38 @@ void draw()
   src.beginDraw();
   src.noStroke();
   src.background(255, 0, 0);
-  src.fill(255, 80);
+  src.fill(255, 150);
+  src.blendMode(NORMAL);
 
   src.directionalLight(255, 255, 255, -1, 0, 0.4);
-  src.directionalLight(255, 255, 255, -1, 0, 0.2);
-  src.directionalLight(255, 255, 255, -1, 0, 0);
+  src.directionalLight(50, 50, 50, -1, 0, 0.2);
+  src.directionalLight(50, 50, 50, -1, 0, 0);
   src.directionalLight(255, 0, 0, 1, 0, 0);
 
   // Lots of rotating cubes
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 80; i++) {
     src.pushMatrix();
-    src.translate(random(0, width), random(0, height), 0);
-    src.rotateY(t * 0.3 + randomGaussian());
+
+    // This part is the chaos demon.
+    src.translate(map(noise(random(1000), t * 0.07), 0, 1, -width, width*2),
+      map(noise(random(1000), t * 0.07), 0, 1, -height, height*2), 0);
+
+    // Progression of time
+    src.rotateY(t * 0.4 + randomGaussian());
     src.rotateX(t * 0.122222 + randomGaussian());
+
+    // But of course.
     src.box(height * abs(0.2 + 0.2 * randomGaussian()));
     src.popMatrix();
   }
+
+  // Brighten if we care
+  /*
+  src.noLights();
+  src.blendMode(ADD);
+  src.fill(40, 0, 0);
+  src.rect(0, 0, width, height);
+  */
 
   // Separable blur filter
   src.endDraw();
