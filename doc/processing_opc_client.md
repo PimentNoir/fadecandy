@@ -96,14 +96,14 @@ This section lists all public methods available on the OPC object:
 
 ----
 
-* **opc.ledStrip**(*index*, *count*, *x*, *y*, *spacing*, *angle*, *reserved*)
+* **opc.ledStrip**(*index*, *count*, *x*, *y*, *spacing*, *angle*, *reversed*)
   * Place a rigid strip of LEDs on the screen
   * *index*: Number for the first LED in the strip, starting with zero
   * *count*: How many LEDs are in the strip?
   * *x*, *y*: Center location, in pixels
   * *spacing*: Spacing between LEDs, in pixels
   * *angle*: Angle, in radians. Positive is clockwise, 0 is to the right.
-  * *reserved*: true = Right to left, false = Left to right
+  * *reversed*: true = Right to left, false = Left to right
 
 ----
 
