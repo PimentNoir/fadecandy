@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<style type="text/css">
+
+    body {
+        background: #222;
+        color: #ddd;
+        font: 15px verdana;
+    }
+
+    #connectionStatus {
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    label {
+        display: block;
+        width: 100px;
+        margin: 10px 0 0 0;
+    }
+
+    input {
+        width: 400px;
+        height: 25px;
+        margin: 10px 20px;
+    }
+
+    span.value {
+        font: 20px monospace;
+    }
+
+</style>
+<script type="text/javascript">
+
+    /*
+     * Janky experiment with the Ganzfeld effect.
+     * This just flashes the entire array uniformly.
+     * Also this makes a good stress-test for the USB driver :)
+     */
+
+    $(function() {
+
+        function hexToRgb(hex) {
+            // http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                return r + r + g + g + b + b;
+            });
+
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // Scrape values from our form
+        var color, frequency, contrast;
+        var updateSettings = function() {
+            color = hexToRgb($('#color').val());
+            $('#colorValue').text(color.r + ', ' + color.g + ', ' + color.b);
+
+            frequency = $('#frequency').val();
+            $('#frequencyValue').text(frequency + " Hz");
+
+            contrast = $('#contrast').val();
+            $('#contrastValue').text(contrast);
+        }
+        $('input').on('change', updateSettings);
+        updateSettings();
+
+        // Set all pixels to a given color
+        function writeFrame(red, green, blue) {
+            var leds = 512;
+            var packet = new Uint8ClampedArray(4 + leds * 3);
+
+            if (socket.readyState != 1 /* OPEN */) {
+                // The server connection isn't open. Nothing to do.
+                return;
+            }
+
+            if (socket.bufferedAmount > packet.length) {
+                // The network is lagging, and we still haven't sent the previous frame.
+                // Don't flood the network, it will just make us laggy.
+                // If fcserver is running on the same computer, it should always be able
+                // to keep up with the frames we send, so we shouldn't reach this point.
+                return;
+            }
+
+            // Dest position in our packet. Start right after the header.
+            var dest = 4;
+
+            // Sample the center pixel of each LED
+            for (var led = 0; led < leds; led++) {
+                packet[dest++] = red;
+                packet[dest++] = green;
+                packet[dest++] = blue;
+            }
+            socket.send(packet.buffer);
+        }
+
+        // Animation parameters
+        var lastTime = 0;
+        var phase = 0;
+
+        // Animation loop
+        var animate = function() {
+
+            // Get time delta
+            var thisTime = (new Date()).getTime();
+            var dt = (thisTime - lastTime) * 0.001;
+            lastTime = thisTime;
+
+            // Update animation
+            phase += frequency * 2 * Math.PI * dt;
+            var f = Math.sin(phase);
+
+            writeFrame(
+                color.r * (1 + contrast * f),
+                color.g * (1 + contrast * f),
+                color.b * (1 + contrast * f));
+
+            setTimeout(animate, 1);
+        }
+
+        // Connect to a Fadecandy server running on the same computer, on the default port
+        var socket = new WebSocket('ws://localhost:7890');
+
+        // Put some connection status text in the corner of the screen
+        $('#connectionStatus').text('Connecting to fcserver...');
+        socket.onclose = function(event) {
+            $('#connectionStatus').text('Not connected to fcserver');
+        }
+        socket.onopen = function(event) {
+            $('#connectionStatus').text('Connected');
+            animate();
+        }
+
+    })
+
+
+</script>
+</head>
+<body>
+<form>
+
+    <div id="connectionStatus"></div>
+
+    <label for="color">Light color</label>
+    <input type="color" id="color" name="color" value="#ffffff">
+    <span class="value" id="colorValue"></span>
+    <br/>
+
+    <label for="frequency">Frequency</label>
+    <input type="range" id="frequency" name="frequency" min="0.5" max="100" value="12" step="0.01">
+    <span class="value" id="frequencyValue"></span>
+    <br/>
+
+    <label for="contrast">Contrast</label>
+    <input type="range" id="contrast" name="contrast" min="0" max="1" value="0.1" step="0.01">
+    <span class="value" id="contrastValue"></span>
+    <br/>
+
+</form>
+</body>
+</html>
