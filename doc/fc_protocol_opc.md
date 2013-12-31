@@ -27,7 +27,7 @@ Video data arrives in a **Set Pixel Colors** command:
 Byte   | **Set Pixel Colors** command
 ------ | --------------------------------
 0      | Channel Number
-1      | Command (0x01)
+1      | Command (0x00)
 2 - 3  | Data length
 4      | Pixel #0, Red
 5      | Pixel #0, Green
