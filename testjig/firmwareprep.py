@@ -8,8 +8,8 @@
 ########################### Configuration ###########################
 
 # Firmware image to deploy
-HEX_FILE = "../bin/fc-firmware-v106.hex"
-ELF_FILE = "../bin/fc-firmware-v106.elf"
+HEX_FILE = "../bin/fc-firmware-v107.hex"
+ELF_FILE = "../bin/fc-firmware-v107.elf"
 
 # Which GDB to use for the firmware image
 GDB_COMMAND = "arm-none-eabi-gdb"
