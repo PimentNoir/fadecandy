@@ -34,13 +34,24 @@ FCDevice::Transfer::Transfer(FCDevice *device, void *buffer, int length, PacketT
     : transfer(libusb_alloc_transfer(0)),
       type(type), finished(false)
 {
+    #if NEED_COPY_USB_TRANSFER_BUFFER
+        bufferCopy = malloc(length);
+        memcpy(bufferCopy, buffer, length);
+        uint8_t *data = (uint8_t*) bufferCopy;
+    #else
+        uint8_t *data = (uint8_t*) buffer;
+    #endif
+
     libusb_fill_bulk_transfer(transfer, device->mHandle,
-        OUT_ENDPOINT, (uint8_t*) buffer, length, FCDevice::completeTransfer, this, 2000);
+        OUT_ENDPOINT, data, length, FCDevice::completeTransfer, this, 2000);
 }
 
 FCDevice::Transfer::~Transfer()
 {
     libusb_free_transfer(transfer);
+    #if NEED_COPY_USB_TRANSFER_BUFFER
+        free(bufferCopy);
+    #endif
 }
 
 FCDevice::FCDevice(libusb_device *device, bool verbose)
@@ -350,7 +361,6 @@ void FCDevice::writeFramebuffer()
 {
     /*
      * Asynchronously write the current framebuffer.
-     * Note that the OS will copy our framebuffer at submit-time.
      *
      * TODO: Currently if this gets ahead of what the USB device is capable of,
      *       we always drop frames. Alternatively, it would be nice to have end-to-end

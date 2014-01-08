@@ -29,6 +29,29 @@
 #include <libusb.h>
 
 
+/*
+ * We find it important to know whether the libusbx backend ends up copying or mapping
+ * our transaction data when it's submitted. On Linux, the kernel must already do a copy
+ * to get our userspace data into kernel space. On Windows and Mac OS, the user buffer
+ * is mapped. This matters because any changes to the buffer while a transfer is queued
+ * will cause the transfer to change. This causes tearing for us.
+ *
+ * We can avoid this by copying the buffer ourselves, but we'd prefer to avoid the CPU
+ * overhead of copying the buffer twice, so we only do this on platforms where the kernel
+ * isn't already copying it.
+ */
+
+#ifdef OS_LINUX
+ // No need to copy the buffer
+#elif OS_WINDOWS
+  #define NEED_COPY_USB_TRANSFER_BUFFER 1
+#elif OS_DARWIN
+  #define NEED_COPY_USB_TRANSFER_BUFFER 1
+#else
+  #error Don't know whether we need to copy the USB transfer buffer
+#endif
+
+
 class USBDevice
 {
 public:

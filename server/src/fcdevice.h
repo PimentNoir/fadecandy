@@ -87,6 +87,9 @@ private:
         Transfer(FCDevice *device, void *buffer, int length, PacketType type = OTHER);
         ~Transfer();
         libusb_transfer *transfer;
+        #if NEED_COPY_USB_TRANSFER_BUFFER
+          void *bufferCopy;
+        #endif
         PacketType type;
         bool finished;
     };
