@@ -48,7 +48,7 @@
 #elif OS_DARWIN
   #define NEED_COPY_USB_TRANSFER_BUFFER 1
 #else
-  #error Don't know whether we need to copy the USB transfer buffer
+  #error Dont know whether we need to copy the USB transfer buffer
 #endif
 
 
