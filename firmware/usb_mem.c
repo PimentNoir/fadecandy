@@ -1,4 +1,8 @@
-/* Teensyduino Core Library
+/*
+ * Fadecandy firmware
+ * Copyright (c) 2013 Micah Elizabeth Scott
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -29,7 +33,6 @@
  */
 
 #include "mk20dx128.h"
-//#include "HardwareSerial.h"
 #include "usb_dev.h"
 #include "usb_mem.h"
 
@@ -68,8 +71,10 @@ usb_packet_t * usb_malloc(void)
 
     n = __builtin_clz(avail) + (idx << 5);
     if (n >= NUM_USB_BUFFERS) {
-        __enable_irq();
-        return NULL;
+        // Oops, no more memory. This is a fatal error- our firmware should be designed
+        // to never allocate more buffers than we have. Wedge ourselves in an infinite
+        // loop and the watchdog will reset.
+        while (1);
     }
 
     usb_buffer_available[idx] = avail & ~(0x80000000 >> (n & 31));
@@ -77,14 +82,8 @@ usb_packet_t * usb_malloc(void)
 
     p = usb_buffer_memory + (n * sizeof(usb_packet_t));
 
-    *(uint32_t *)p = 0;
-    *(uint32_t *)(p + 4) = 0;
     return (usb_packet_t *)p;
 }
-
-// for the receive endpoints to request memory
-extern uint8_t usb_rx_memory_needed;
-extern void usb_rx_memory(usb_packet_t *packet);
 
 void usb_free(usb_packet_t *p)
 {
@@ -92,13 +91,6 @@ void usb_free(usb_packet_t *p)
 
     n = ((uint8_t *)p - usb_buffer_memory) / sizeof(usb_packet_t);
     if (n >= NUM_USB_BUFFERS) return;
-
-    // if any endpoints are starving for memory to receive
-    // packets, give this memory to them immediately!
-    if (usb_rx_memory_needed && usb_configuration) {
-        usb_rx_memory(p);
-        return;
-    }
 
     idx = n >> 5;
     mask = 0x80000000 >> (n & 31);

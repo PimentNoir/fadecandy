@@ -1,4 +1,8 @@
-/* Teensyduino Core Library
+/*
+ * Fadecandy firmware
+ * Copyright (c) 2013 Micah Elizabeth Scott
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -36,7 +40,6 @@
 typedef struct usb_packet_struct {
     uint16_t len;
     uint16_t reserved;
-    struct usb_packet_struct *next;
     uint8_t buf[64];
 } usb_packet_t;
 

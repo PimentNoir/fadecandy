@@ -1,4 +1,8 @@
-/* Teensyduino Core Library
+/*
+ * Fadecandy firmware
+ * Copyright (c) 2013 Micah Elizabeth Scott
+ *
+ * Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2013 PJRC.COM, LLC.
  *
@@ -46,11 +50,14 @@ extern "C" {
 void usb_init(void);
 void usb_init_serialnumber(void);
 void usb_isr(void);
-usb_packet_t *usb_rx(uint32_t endpoint);
-uint32_t usb_tx_byte_count(uint32_t endpoint);
-uint32_t usb_tx_packet_count(uint32_t endpoint);
-void usb_tx(uint32_t endpoint, usb_packet_t *packet);
-void usb_tx_isr(uint32_t endpoint, usb_packet_t *packet);
+
+// External handler for received USB packets. Called in ISR context or main loop context.
+// Returns true if the packet can be handled immediately, or false if it must be deferred.
+int usb_rx_handler(usb_packet_t *packet);
+
+// Called to retry packets that have been deferred.
+void usb_rx_resume();
+
 
 extern volatile uint8_t usb_configuration;
 extern volatile uint8_t usb_dfu_state;
@@ -63,14 +70,6 @@ extern volatile uint8_t usb_dfu_state;
 extern volatile uint32_t perf_frameCounter;
 extern volatile uint32_t perf_receivedKeyframeCounter;
 
-extern uint16_t usb_rx_byte_count_data[NUM_ENDPOINTS];
-static inline uint32_t usb_rx_byte_count(uint32_t endpoint) __attribute__((always_inline));
-static inline uint32_t usb_rx_byte_count(uint32_t endpoint)
-{
-        endpoint--;
-        if (endpoint >= NUM_ENDPOINTS) return 0;
-        return usb_rx_byte_count_data[endpoint];
-}
 
 #ifdef __cplusplus
 }

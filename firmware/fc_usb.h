@@ -137,9 +137,18 @@ struct fcBuffers
         fbNew = &fb[2];
     }
 
-    void handleUSB();
+    // Interrupt context
+    bool handleUSB(usb_packet_t *packet);
+
+    // Main loop context
+    void finalizeFrame();
 
 private:
     void finalizeFramebuffer();
     void finalizeLUT();
+
+    // Status communicated between handleUSB() and finalizeFrame()
+    bool handledAnyPacketsThisFrame;
+    bool pendingFinalizeFrame;
+    bool pendingFinalizeLUT;
 };

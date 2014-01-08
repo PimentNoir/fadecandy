@@ -47,24 +47,14 @@ typedef struct {
 __attribute__ ((section(".usbdescriptortable"), used))
 static bdt_t table[(NUM_ENDPOINTS+1)*4];
 
-static usb_packet_t *rx_first[NUM_ENDPOINTS];
-static usb_packet_t *rx_last[NUM_ENDPOINTS];
-static usb_packet_t *tx_first[NUM_ENDPOINTS];
-static usb_packet_t *tx_last[NUM_ENDPOINTS];
+// Which bdt_t entries have been deferred for retry later
+static uint8_t bdt_deferred_map;
 
 static uint8_t reply_buffer[8];
 
 // Performance counters
 volatile uint32_t perf_frameCounter;
 volatile uint32_t perf_receivedKeyframeCounter;
-
-static uint8_t tx_state[NUM_ENDPOINTS];
-#define TX_STATE_BOTH_FREE_EVEN_FIRST   0
-#define TX_STATE_BOTH_FREE_ODD_FIRST    1
-#define TX_STATE_EVEN_FREE      2
-#define TX_STATE_ODD_FREE       3
-#define TX_STATE_NONE_FREE_EVEN_FIRST   4
-#define TX_STATE_NONE_FREE_ODD_FIRST    5
 
 #define BDT_OWN     0x80
 #define BDT_DATA1   0x40
@@ -84,7 +74,7 @@ static uint8_t tx_state[NUM_ENDPOINTS];
 #define DATA0 0
 #define DATA1 1
 #define index(endpoint, tx, odd) (((endpoint) << 2) | ((tx) << 1) | (odd))
-#define stat2bufferdescriptor(stat) (table + ((stat) >> 2))
+#define stat2tableindex(stat)       ((stat) >> 2)
 
 
 static union {
@@ -131,7 +121,6 @@ static const uint8_t *ep0_tx_ptr = NULL;
 static uint16_t ep0_tx_len;
 static uint8_t ep0_tx_bdt_bank = 0;
 static uint8_t ep0_tx_data_toggle = 0;
-uint8_t usb_rx_memory_needed = 0;
 
 volatile uint8_t usb_configuration = 0;
 volatile uint8_t usb_dfu_state = DFU_appIDLE;
@@ -186,61 +175,21 @@ static void usb_setup(void)
                 usb_free((usb_packet_t *)((uint8_t *)(table[i].addr) - 8));
             }
         }
-        // free all queued packets
-        for (i=0; i < NUM_ENDPOINTS; i++) {
-            usb_packet_t *p, *n;
-            p = rx_first[i];
-            while (p) {
-                n = p->next;
-                usb_free(p);
-                p = n;
-            }
-            rx_first[i] = NULL;
-            rx_last[i] = NULL;
-            p = tx_first[i];
-            while (p) {
-                n = p->next;
-                usb_free(p);
-                p = n;
-            }
-            tx_first[i] = NULL;
-            tx_last[i] = NULL;
-            switch (tx_state[i]) {
-              case TX_STATE_EVEN_FREE:
-              case TX_STATE_NONE_FREE_EVEN_FIRST:
-                tx_state[i] = TX_STATE_BOTH_FREE_EVEN_FIRST;
-                break;
-              case TX_STATE_ODD_FREE:
-              case TX_STATE_NONE_FREE_ODD_FIRST:
-                tx_state[i] = TX_STATE_BOTH_FREE_ODD_FIRST;
-                break;
-              default:
-                break;
-            }
-        }
-        usb_rx_memory_needed = 0;
+
         for (i=1; i <= NUM_ENDPOINTS; i++) {
             epconf = *cfg++;
             *reg = epconf;
             reg += 4;
             if (epconf & USB_ENDPT_EPRXEN) {
                 usb_packet_t *p;
+
                 p = usb_malloc();
-                if (p) {
-                    table[index(i, RX, EVEN)].addr = p->buf;
-                    table[index(i, RX, EVEN)].desc = BDT_DESC(64, 0);
-                } else {
-                    table[index(i, RX, EVEN)].desc = 0;
-                    usb_rx_memory_needed++;
-                }
+                table[index(i, RX, EVEN)].addr = p->buf;
+                table[index(i, RX, EVEN)].desc = BDT_DESC(64, 0);
+
                 p = usb_malloc();
-                if (p) {
-                    table[index(i, RX, ODD)].addr = p->buf;
-                    table[index(i, RX, ODD)].desc = BDT_DESC(64, 1);
-                } else {
-                    table[index(i, RX, ODD)].desc = 0;
-                    usb_rx_memory_needed++;
-                }
+                table[index(i, RX, ODD)].addr = p->buf;
+                table[index(i, RX, ODD)].desc = BDT_DESC(64, 1);
             }
             table[index(i, TX, EVEN)].desc = 0;
             table[index(i, TX, ODD)].desc = 0;
@@ -410,9 +359,6 @@ send:
 //data toggle being reinitialized to DATA0.
 
 
-
-// #define stat2bufferdescriptor(stat) (table + ((stat) >> 2))
-
 static void usb_control(uint32_t stat)
 {
     bdt_t *b;
@@ -420,7 +366,7 @@ static void usb_control(uint32_t stat)
     uint8_t *buf;
     const uint8_t *data;
 
-    b = stat2bufferdescriptor(stat);
+    b = &table[stat2tableindex(stat)];
     pid = BDT_PID(b->desc);
     buf = b->addr;
 
@@ -473,136 +419,60 @@ static void usb_control(uint32_t stat)
 }
 
 
-usb_packet_t *usb_rx(uint32_t endpoint)
+static void usb_try_rx(unsigned index)
 {
-    usb_packet_t *ret;
-    endpoint--;
-    if (endpoint >= NUM_ENDPOINTS) return NULL;
-    __disable_irq();
-    ret = rx_first[endpoint];
-    if (ret) rx_first[endpoint] = ret->next;
-    __enable_irq();
-    return ret;
-}
+    // We have a packet waiting in a receive buffer. Try to deliver it
+    // with usb_rx_handler. If it can't take the packet yet, defer processing
+    // and leave it in the serial engine's buffer. (This will stall, providing
+    // back-pressure to the host controller.)
 
-static uint32_t usb_queue_byte_count(const usb_packet_t *p)
-{
-    uint32_t count=0;
+    bdt_t *b = &table[index];
+    usb_packet_t *packet = (usb_packet_t *)((uint8_t *)(b->addr) - 4);
+    unsigned len = b->desc >> 16;
 
-    __disable_irq();
-    for ( ; p; p = p->next) {
-        count += p->len;
-    }
-    __enable_irq();
-    return count;
-}
+    if (len > 0) {
 
-uint32_t usb_tx_byte_count(uint32_t endpoint)
-{
-    endpoint--;
-    if (endpoint >= NUM_ENDPOINTS) return 0;
-    return usb_queue_byte_count(tx_first[endpoint]);
-}
+        packet->len = len;
+        if (!usb_rx_handler(packet)) {
+            // Deferred! We'll try again in usb_rx_resume()
 
-uint32_t usb_tx_packet_count(uint32_t endpoint)
-{
-    const usb_packet_t *p;
-    uint32_t count=0;
+            __disable_irq();
+            bdt_deferred_map |= 1 << index;
+            __enable_irq();
 
-    endpoint--;
-    if (endpoint >= NUM_ENDPOINTS) return 0;
-    p = tx_first[endpoint];
-    __disable_irq();
-    for ( ; p; p = p->next) count++;
-    __enable_irq();
-    return count;
-}
-
-
-// Called from usb_free, but only when usb_rx_memory_needed > 0, indicating
-// receive endpoints are starving for memory.  The intention is to give
-// endpoints needing receive memory priority over the user's code, which is
-// likely calling usb_malloc to obtain memory for transmitting.  When the
-// user is creating data very quickly, their consumption could starve reception
-// without this prioritization.  The packet buffer (input) is assigned to the
-// first endpoint needing memory.
-//
-void usb_rx_memory(usb_packet_t *packet)
-{
-    unsigned int i;
-    const uint8_t *cfg;
-
-    cfg = usb_endpoint_config_table;
-    __disable_irq();
-    for (i=1; i <= NUM_ENDPOINTS; i++) {
-        if (*cfg++ & USB_ENDPT_EPRXEN) {
-            if (table[index(i, RX, EVEN)].desc == 0) {
-                table[index(i, RX, EVEN)].addr = packet->buf;
-                table[index(i, RX, EVEN)].desc = BDT_DESC(64, 0);
-                usb_rx_memory_needed--;
-                __enable_irq();
-                return;
-            }
-            if (table[index(i, RX, ODD)].desc == 0) {
-                table[index(i, RX, ODD)].addr = packet->buf;
-                table[index(i, RX, ODD)].desc = BDT_DESC(64, 1);
-                usb_rx_memory_needed--;
-                __enable_irq();
-                return;
-            }
+            return;
         }
-    }
-    __enable_irq();
 
-    // we should never reach this point.  If we get here, it means
-    // usb_rx_memory_needed was set greater than zero, but no memory
-    // was actually needed.  
-    usb_rx_memory_needed = 0;
-    usb_free(packet);
-    return;
+        // Allocate a new packet
+        packet = usb_malloc();
+        b->addr = packet->buf;
+    }
+
+    // Unblock the serial engine to receive another packet into this buffer
+    b->desc = BDT_DESC(64, ((uint32_t)b & 8) ? DATA1 : DATA0);
 }
 
-//#define index(endpoint, tx, odd) (((endpoint) << 2) | ((tx) << 1) | (odd))
-//#define stat2bufferdescriptor(stat) (table + ((stat) >> 2))
 
-void usb_tx(uint32_t endpoint, usb_packet_t *packet)
+void usb_rx_resume()
 {
-    bdt_t *b = &table[index(endpoint, TX, EVEN)];
-    uint8_t next;
+    // If we have any deferred packets, try them again.
 
-    endpoint--;
-    if (endpoint >= NUM_ENDPOINTS) return;
+    int idx = 0;
+
     __disable_irq();
-
-    switch (tx_state[endpoint]) {
-      case TX_STATE_BOTH_FREE_EVEN_FIRST:
-        next = TX_STATE_ODD_FREE;
-        break;
-      case TX_STATE_BOTH_FREE_ODD_FIRST:
-        b++;
-        next = TX_STATE_EVEN_FREE;
-        break;
-      case TX_STATE_EVEN_FREE:
-        next = TX_STATE_NONE_FREE_ODD_FIRST;
-        break;
-      case TX_STATE_ODD_FREE:
-        b++;
-        next = TX_STATE_NONE_FREE_EVEN_FIRST;
-        break;
-      default:
-        if (tx_first[endpoint] == NULL) {
-            tx_first[endpoint] = packet;
-        } else {
-            tx_last[endpoint]->next = packet;
-        }
-        tx_last[endpoint] = packet;
-        __enable_irq();
-        return;
-    }
-    tx_state[endpoint] = next;
-    b->addr = packet->buf;
-    b->desc = BDT_DESC(packet->len, ((uint32_t)b & 8) ? DATA1 : DATA0);
+    unsigned deferred = bdt_deferred_map;
+    bdt_deferred_map = 0;
     __enable_irq();
+
+    while (deferred) {
+
+        if (deferred & 1) {
+            usb_try_rx(idx);
+        }
+
+        idx++;
+        deferred >>= 1;
+    }
 }
 
 
@@ -621,79 +491,15 @@ restart:
         uint8_t endpoint;
         stat = USB0_STAT;
         endpoint = stat >> 4;
+
         if (endpoint == 0) {
             usb_control(stat);
+        } else if (stat & 0x08) {
+            // We have no transmit endpoints; stub.
         } else {
-            bdt_t *b = stat2bufferdescriptor(stat);
-            usb_packet_t *packet = (usb_packet_t *)((uint8_t *)(b->addr) - 8);
-            endpoint--; // endpoint is index to zero-based arrays
-
-            if (stat & 0x08) { // transmit
-                usb_free(packet);
-                packet = tx_first[endpoint];
-                if (packet) {
-                    tx_first[endpoint] = packet->next;
-                    b->addr = packet->buf;
-                    switch (tx_state[endpoint]) {
-                      case TX_STATE_BOTH_FREE_EVEN_FIRST:
-                        tx_state[endpoint] = TX_STATE_ODD_FREE;
-                        break;
-                      case TX_STATE_BOTH_FREE_ODD_FIRST:
-                        tx_state[endpoint] = TX_STATE_EVEN_FREE;
-                        break;
-                      case TX_STATE_EVEN_FREE:
-                        tx_state[endpoint] = TX_STATE_NONE_FREE_ODD_FIRST;
-                        break;
-                      case TX_STATE_ODD_FREE:
-                        tx_state[endpoint] = TX_STATE_NONE_FREE_EVEN_FIRST;
-                        break;
-                      default:
-                        break;
-                    }
-                    b->desc = BDT_DESC(packet->len, ((uint32_t)b & 8) ? DATA1 : DATA0);
-                } else {
-                    switch (tx_state[endpoint]) {
-                      case TX_STATE_BOTH_FREE_EVEN_FIRST:
-                      case TX_STATE_BOTH_FREE_ODD_FIRST:
-                        break;
-                      case TX_STATE_EVEN_FREE:
-                        tx_state[endpoint] = TX_STATE_BOTH_FREE_EVEN_FIRST;
-                        break;
-                      case TX_STATE_ODD_FREE:
-                        tx_state[endpoint] = TX_STATE_BOTH_FREE_ODD_FIRST;
-                        break;
-                      default:
-                        tx_state[endpoint] = ((uint32_t)b & 8) ?
-                          TX_STATE_ODD_FREE : TX_STATE_EVEN_FREE;
-                        break;
-                    }
-                }
-            } else { // receive
-                packet->len = b->desc >> 16;
-                if (packet->len > 0) {
-                    packet->next = NULL;
-                    if (rx_first[endpoint] == NULL) {
-                        rx_first[endpoint] = packet;
-                    } else {
-                        rx_last[endpoint]->next = packet;
-                    }
-                    rx_last[endpoint] = packet;
-                    // TODO: implement a per-endpoint maximum # of allocated packets
-                    // so a flood of incoming data on 1 endpoint doesn't starve
-                    // the others if the user isn't reading it regularly
-                    packet = usb_malloc();
-                    if (packet) {
-                        b->addr = packet->buf;
-                        b->desc = BDT_DESC(64, ((uint32_t)b & 8) ? DATA1 : DATA0);
-                    } else {
-                        b->desc = 0;
-                        usb_rx_memory_needed++;
-                    }
-                } else {
-                    b->desc = BDT_DESC(64, ((uint32_t)b & 8) ? DATA1 : DATA0);
-                }
-            }
+            usb_try_rx(stat2tableindex(stat));
         }
+
         USB0_ISTAT = USB_ISTAT_TOKDNE;
         goto restart;
     }

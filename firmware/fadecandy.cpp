@@ -136,6 +136,12 @@ static void dfu_reboot()
     while (1);
 }
 
+extern "C" int usb_rx_handler(usb_packet_t *packet)
+{
+    // USB packet interrupt handler. Invoked by the ISR dispatch code in usb_dev.c
+    return buffers.handleUSB(packet);
+}
+
 extern "C" int main()
 {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -148,8 +154,6 @@ extern "C" int main()
     // Application main loop
     while (usb_dfu_state == DFU_appIDLE) {
         watchdog_refresh();
-
-        buffers.handleUSB();
 
         // Select a different drawing loop based on our firmware config flags
         switch (buffers.flags & (CFLAG_NO_INTERPOLATION | CFLAG_NO_DITHERING)) {
@@ -170,6 +174,9 @@ extern "C" int main()
 
         // Start sending the next frame over DMA
         leds.show();
+
+        // We can switch to the next frame's buffer now.
+        buffers.finalizeFrame();
 
         // Performance counter, for monitoring frame rate externally
         perf_frameCounter++;
