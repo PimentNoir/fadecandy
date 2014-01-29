@@ -159,11 +159,11 @@ OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(submodules_targets) $(OBJS)
+# FIXME: A race condition between objects regeneration and their source mtime in make ? 
+$(TARGET): $(SUBMODULES_TARGETS) $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(STRIP_CMD)
 	$(PACK_CMD)
-	# FIXME: A race condition between objects regeneration and their source mtime in make ? 
 	rm -f src/version.o
 
 -include $(OBJS:.o=.d)
@@ -174,10 +174,10 @@ src/httpdocs.cpp: http/* http/js/* http/css/*
 clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
 
-# Git submodules handling 
-submodules_targets:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path |  cut -d ' ' -f 2)
-$(submodules_targets):
+# Git submodules handling. TODO: Add submodules cleaning to clean target 
+SUBMODULES_TARGETS:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path |  cut -d ' ' -f 2)
+$(SUBMODULES_TARGETS):
 	cd .. && git submodule update --init -- $@ && cd $@ && git checkout -f HEAD && git clean -dfx
-submodules: $(submodules_targets)
+submodules: $(SUBMODULES_TARGETS)
 
-.PHONY: submodules $(submodules_targets) clean all
+.PHONY: submodules $(SUBMODULES_TARGETS) clean all
