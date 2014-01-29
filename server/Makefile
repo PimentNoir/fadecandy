@@ -159,7 +159,7 @@ OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(submodules_target) $(OBJS)
+$(TARGET): $(submodules_targets) $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(STRIP_CMD)
 	$(PACK_CMD)
