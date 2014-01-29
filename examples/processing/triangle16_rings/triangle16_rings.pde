@@ -7,6 +7,11 @@ void setup()
   int zoom = 4;
   size(20*zoom, 20*zoom);
 
+  // Slower more regular frame rate; Since we animate slowly, this can make the colors a little
+  // smoother since the Fadecandy board interpolates frames with 16-bit precision whereas our
+  // processing sketch only has 8-bit percision per channel.
+  frameRate(12);
+
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
 
