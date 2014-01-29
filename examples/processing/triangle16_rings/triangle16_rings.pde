@@ -42,8 +42,8 @@ float fractalNoise(float x, float y, float z) {
 
 void draw() {
   long now = millis();
-  float speed = 0.002;
-  float zspeed = 0.1;
+  float speed = 0.0005;
+  float zspeed = 0.01;
   float angle = sin(now * 0.001);
   float z = now * 0.00008;
   float hue = now * 0.01;
@@ -56,8 +56,8 @@ void draw() {
   dy += sin(angle) * speed;
   dz += (noise(now * 0.000014) - 0.5) * zspeed;
 
-  float centerx = noise(now *  0.000125) * 1.25 * width;
-  float centery = noise(now * -0.000125) * 1.25 * height;
+  float centerx = noise(now *  0.00001) * 1.25 * width;
+  float centery = noise(now * -0.00001) * 1.25 * height;
 
   loadPixels();
   for (int x=0; x < width; x++) {
