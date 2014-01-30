@@ -159,7 +159,8 @@ OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
-$(TARGET): libusbx/libusb/libusb.h $(OBJS)
+# FIXME: A race condition between objects regeneration and their source mtime in make ? 
+$(TARGET): $(SUBMODULES_TARGETS) $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(STRIP_CMD)
 	$(PACK_CMD)
@@ -173,8 +174,10 @@ src/httpdocs.cpp: http/* http/js/* http/css/*
 clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
 
-# Git submodule setup
-libusbx/libusb/libusb.h:
-	(cd ..; git submodule update --init)
+# Git submodules handling. TODO: Add submodules cleaning to clean target 
+SUBMODULES_TARGETS:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path |  cut -d ' ' -f 2)
+$(SUBMODULES_TARGETS):
+	cd .. && git submodule update --init -- $@ && cd $@ && git checkout -f HEAD && git clean -dfx
+submodules: $(SUBMODULES_TARGETS)
 
-.PHONY: clean all
+.PHONY: submodules $(SUBMODULES_TARGETS) clean all
