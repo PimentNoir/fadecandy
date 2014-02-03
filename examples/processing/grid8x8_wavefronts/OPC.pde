@@ -80,6 +80,13 @@ public class OPC
   {
     ledGrid(index, 8, 8, x, y, spacing, spacing, angle, zigzag);
   }
+  
+  // Set the location of 121 LEDs arranged in a uniform 11x11 grid.
+  // (x,y) is the center of the grid.
+  void ledGrid11x11(int index, float x, float y, float spacing, float angle, boolean zigzag)
+  {
+    ledGrid(index, 11, 11, x, y, spacing, spacing, angle, zigzag);
+  }
 
   // Should the pixel sampling locations be visible? This helps with debugging.
   // Showing locations is enabled by default. You might need to disable it if our drawing
