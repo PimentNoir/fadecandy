@@ -35,5 +35,10 @@ class Particle
     d.mult(coefficient / max(1, d.magSq()));
     velocity.add(d);
   }
+
+  float energy()
+  {
+    return velocity.magSq();
+  }
 }
 
