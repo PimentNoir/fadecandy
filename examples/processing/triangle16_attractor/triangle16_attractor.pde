@@ -4,11 +4,12 @@
 int numParticles = 20;
 float cornerCoefficient = 0.2;
 int integrationSteps = 20;
-float maxOpacity = 30;
-float epochStep = 0.005;
+float maxOpacity = 100;
+float epochStep = 0.002;
 
 OPC opc;
 PImage dot;
+PImage colors;
 TriangleGrid triangle;
 Particle[] particles;
 PVector[] corners;
@@ -19,8 +20,9 @@ void setup()
   size(300, 300, P3D);
   frameRate(30);
 
-  // Load a sample image
   dot = loadImage("dot.png");
+  colors = loadImage("colors.png");
+  colors.loadPixels();
 
   // Connect to the local instance of fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
@@ -31,10 +33,8 @@ void setup()
   triangle.mirror();
   triangle.rotate(radians(60));
   triangle.scale(height * 0.2);
-  triangle.translate(width * 0.5, height * 0.6);
+  triangle.translate(width * 0.5, height * 0.5);
   triangle.leds(opc, 0);
-  
-  colorMode(HSB, 255);
 
   corners = new PVector[3];
   corners[0] = triangle.cells[0].center;
@@ -49,17 +49,19 @@ void beginEpoch()
   epoch = 0;
  
   // Center of bundle
-  float cx = width * random(-0.2, 1.2);
-  float cy = width * random(-0.2, 1.2);
+  float s = 0.3;
+  float cx = width * (0.5 + random(-s, s));
+  float cy = height * (0.5 + random(-s, s));
  
   // Half-width of particle bundle
-  float w = width * 0.1;
+  float w = width * 0.02;
   
   particles = new Particle[numParticles];
   for (int i = 0; i < particles.length; i++) {
+    color rgb = colors.pixels[int(random(0, colors.width * colors.height))];
     particles[i] = new Particle(
       cx + random(-w, w),
-      cy + random(-w, w));
+      cy + random(-w, w), rgb);
   }
 }
 

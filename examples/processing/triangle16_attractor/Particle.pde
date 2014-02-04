@@ -2,16 +2,13 @@ class Particle
 {
   PVector center;
   PVector velocity;
-  float size;
-  float hue;
+  color rgb;
 
-  Particle(float x, float y)
+  Particle(float x, float y, color rgb)
   {
     center = new PVector(x, y);
-    velocity = new PVector(0, 0);
- 
-    size = height * 0.7;
-    hue = random(255);
+    velocity = new PVector(0, 0); 
+    this.rgb = rgb;
   }
   
   void damp(float factor)
@@ -26,7 +23,8 @@ class Particle
 
   void draw(float opacity) 
   {
-    tint(hue, 80, opacity);
+    float size = height * 0.7;
+    tint(rgb, opacity);
     blendMode(ADD);
     image(dot, center.x - size/2, center.y - size/2, size, size);
   }  
