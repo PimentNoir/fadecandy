@@ -1,9 +1,13 @@
 // Parameters!
 int stepsPerSecond = 30;
 float maxEnergy = 20;
-float minEnergy = 8;
+float minEnergy = 4;
+float minSaturation = 10;
+float maxSaturation = 100;
 float energyChangeRate = 0.01;
-float hueShift = (100.0 / 2) + 2.0;
+float hueShift = (100.0 / 2) + 1.2;
+float alpha = 10;
+float energyExp = 3.5;
 
 OPC opc;
 TriangleGrid triangle;
@@ -22,6 +26,7 @@ int stepNumber = 0;
 void setup()
 {
   size(200, 200);
+  background(0);
 
   // Pacing
   frameRate(stepsPerSecond);
@@ -44,6 +49,10 @@ void setup()
   
   currentHue = random(100);
   currentCell = int(random(triangle.cells.length));
+  
+  // Hide LED location dots, so we can alpha blend against the previous frame without
+  // these dots stomping on the pixel data we care about.
+  opc.showLocations(false);
   
   colorMode(HSB, 100);
 }
@@ -107,12 +116,13 @@ int chooseEmpty()
 
 void draw()
 {
-  background(0);
   stepNumber++;
 
   // Cell energies vary in sinusoidal epochs, causing the shape of the snakes
   // to shift accordingly as the space becomes more or less fragmented.
-  int currentEnergy = int(map(cos(stepNumber * energyChangeRate), 1, -1, minEnergy, maxEnergy));
+  float e = map(cos(stepNumber * energyChangeRate), 1, -1, 0, 1);
+  e = pow(e, energyExp);
+  int currentEnergy = int(map(e, 0, 1, minEnergy, maxEnergy));
 
   // Each live cell decays by one step, no cells can live longer than currentEnergy.
   // This creates a cadence to the life of each snake, and periodic waves of extinction.
@@ -144,12 +154,13 @@ void draw()
   
   // Overall saturation shows the current energy level. Extinction periods (low currentEnergy)
   // correspond with flashes of white.
-  float saturation = map(currentEnergy, minEnergy, maxEnergy, 0, 100);
+  float saturation = map(currentEnergy, minEnergy, maxEnergy, minSaturation, maxSaturation);
 
   // Draw the current state of each cell
   for (int i = 0; i < triangle.cells.length; i++) {
     float size = height * 0.1;
-    fill(cellHues[i], saturation, map(cellEnergies[i], 0, currentEnergy, 0, 100));
+    fill(cellHues[i], saturation, map(cellEnergies[i], 0, currentEnergy, 0, 100), alpha);
     ellipse(triangle.cells[i].center.x, triangle.cells[i].center.y, size, size);
   }
 }
+
