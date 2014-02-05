@@ -83,7 +83,7 @@ benchmark: install
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -f *.d *.o $(TARGET).elf $(TARGET).dfu $(APP_HEX)
+	rm -f $(OBJS:.o=.d) $(OBJS) $(TARGET).elf $(TARGET).dfu $(APP_HEX)
 
 disassemble: $(TARGET).elf
 	$(OBJDUMP) -d $< | less
