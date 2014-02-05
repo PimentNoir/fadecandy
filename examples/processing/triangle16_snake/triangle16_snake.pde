@@ -1,9 +1,9 @@
 // Parameters!
-int stepsPerSecond = 20;
-float maxEnergy = 40;
+int stepsPerSecond = 30;
+float maxEnergy = 20;
 float minEnergy = 8;
-float energyChangeRate = 0.002;
-float hueShift = (100.0 / 4) + 0.2;
+float energyChangeRate = 0.01;
+float hueShift = (100.0 / 2) + 2.0;
 
 OPC opc;
 TriangleGrid triangle;
@@ -144,7 +144,7 @@ void draw()
   
   // Overall saturation shows the current energy level. Extinction periods (low currentEnergy)
   // correspond with flashes of white.
-  float saturation = (currentEnergy / maxEnergy) * 100;
+  float saturation = map(currentEnergy, minEnergy, maxEnergy, 0, 100);
 
   // Draw the current state of each cell
   for (int i = 0; i < triangle.cells.length; i++) {
