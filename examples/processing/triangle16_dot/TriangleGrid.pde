@@ -6,9 +6,7 @@
 
 public class TriangleGrid
 {
-  PVector center;
   Cell[] cells;
-  PVector[] points;
   
   class Cell
   {
@@ -29,9 +27,8 @@ public class TriangleGrid
   {
     // Layout for a 16-cell triangular grid.
 
-    // Each triangle side is 1 unit. "h" is the triangle height, "y" is the centroid height.
+    // Each triangle side is 1 unit. "h" is the triangle height
     float h = sin(radians(60));
-    float y = tan(radians(30)) * 0.5;
 
     cells = new Cell[16];
 
