@@ -28,12 +28,14 @@ void setup()
   // Make the status LED quiet
   opc.setStatusLed(false);
   
-  int framerate = 24;
+  int framerate = 1;
   frameRate(framerate);
+  
+  float movie_speed = 1.0;
   
   movie = new Movie(this, filename);
   movie.frameRate(framerate);
-  //movie.speed(1.0);
+  movie.speed(movie_speed);
   movie.loop();
 
   pyramid = new PGraphics[4];
