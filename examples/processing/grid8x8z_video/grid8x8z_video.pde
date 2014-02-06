@@ -6,7 +6,8 @@ import processing.video.*;
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
-String filename = "/home/elecdev/Téléchargements/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
+//String filename = "/home/elecdev/Téléchargements/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
+String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
 int zoom = 2;
 
@@ -16,7 +17,7 @@ PGraphics[] pyramid;
 
 void setup()
 {
-  size(zoom*300, zoom*300, P3D);
+  size(zoom*480, zoom*240, P3D);
   colorMode(HSB,360,100,100); 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
