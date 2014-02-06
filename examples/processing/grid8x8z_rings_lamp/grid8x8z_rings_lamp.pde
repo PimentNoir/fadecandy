@@ -8,7 +8,7 @@ float dx, dy, dz;
 void setup()
 {
   int zoom = 4;
-  size(16*zoom, 16x*zoom);
+  size(16*zoom, 16*zoom);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
