@@ -17,7 +17,7 @@ PGraphics[] pyramid;
 void setup()
 {
   size(zoom*480, zoom*240, P3D);
-  colorMode(HSB,360,100,100);
+  colorMode(HSB,100,100,100);
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
