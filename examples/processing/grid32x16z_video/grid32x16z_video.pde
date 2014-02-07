@@ -10,6 +10,10 @@ String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Late
 
 int zoom = 2;
 
+float movie_speed = 1.0;
+
+int framerate = 1;
+
 OPC opc;
 Movie movie;
 PGraphics[] pyramid;
@@ -33,12 +37,8 @@ void setup()
   
   // Make the status LED quiet
   opc.setStatusLed(false);
-  
-  int framerate = 24;
-  frameRate(framerate);
-  
+   
   movie = new Movie(this, filename);
-  movie.frameRate(framerate);
   movie.loop();
 
   pyramid = new PGraphics[4];
@@ -52,6 +52,23 @@ void keyPressed() {
   if (key == ' ') movie.pause();
   if (key == ']') zoom *= 1.1;
   if (key == '[') zoom *= 0.9;
+  if (key == 'j') movie.jump(random(movie.duration()));
+  if (key == '1') movie_speed = 1.0;
+  if (key == '2') movie_speed = 2.0;
+  if (key == '3') movie_speed = 3.0;
+  if (key == '4') movie_speed = 4.0;
+  if (key == '5') movie_speed = 5.0;
+  if (key == '6') movie_speed = 6.0;
+  if (key == '7') movie_speed = 7.0;
+  if (key == '8') movie_speed = 8.0;
+  if (key == '9') movie_speed = 9.0;
+  if (key == '/' && key == '2') movie_speed = 0.5;
+  if (key == '/' && key == '3') movie_speed = 0.33;
+  if (key == '/' && key == '4') movie_speed = 0.25;
+  if (key == '/' && key == '5') movie_speed = 0.2;
+  if (key == 'r') movie_speed = -1;
+  if (key == '+') framerate += 1;
+  if (key == '-' && framerate > 1) framerate -= 1;
 }
 
 void keyReleased() {
@@ -66,6 +83,8 @@ void movieEvent(Movie m)
 
 void draw()
 {
+  frameRate(framerate);
+  movie.speed(movie_speed);
   // Scale to width, center height
   int mWidth = int(pyramid[0].width * zoom);
   int mHeight = mWidth * movie.height / movie.width;
