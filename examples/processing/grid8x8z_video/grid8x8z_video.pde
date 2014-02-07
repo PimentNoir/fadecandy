@@ -32,11 +32,7 @@ void setup()
   // Make the status LED quiet
   opc.setStatusLed(false);
   
- frameRate(framerate);
-  
   movie = new Movie(this, filename);
-  movie.frameRate(framerate);
-  movie.speed(movie_speed);
   movie.loop();
 
   pyramid = new PGraphics[4];
@@ -61,7 +57,7 @@ void keyPressed() {
   if (key == '9') movie_speed = 9.0;
   if (key == 'r') movie_speed = -1;
   if (key == '+') framerate += 1;
-  if (key == '-') framerate -= 1;
+  if (key == '-' && framerate > 1) framerate -= 1;
 }
 
 void keyReleased() {
@@ -76,6 +72,9 @@ void movieEvent(Movie m)
 
 void draw()
 {
+  frameRate(framerate);
+  //movie.frameRate(framerate*24);
+  movie.speed(movie_speed);
   // Scale to width, center height
   int mWidth = int(pyramid[0].width * zoom);
   int mHeight = mWidth * movie.height / movie.width;
