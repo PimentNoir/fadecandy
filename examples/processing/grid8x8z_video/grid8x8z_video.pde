@@ -55,6 +55,9 @@ void keyPressed() {
   if (key == '7') movie_speed = 7.0;
   if (key == '8') movie_speed = 8.0;
   if (key == '9') movie_speed = 9.0;
+  if (key == '/' && key == '2') movie_speed = 0.5;
+  if (key == '/' && key == '3') movie_speed = 0.33;
+  if (key == '/' && key == '4') movie_speed = 0.25;
   if (key == 'r') movie_speed = -1;
   if (key == '+') framerate += 1;
   if (key == '-' && framerate > 1) framerate -= 1;
