@@ -12,6 +12,8 @@ String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Late
 int zoom = 2;
 
 float movie_speed = 1.0;
+boolean isPlaying;
+boolean isLooping;
 
 int framerate = 1;
 
@@ -34,6 +36,8 @@ void setup()
   
   movie = new Movie(this, filename);
   movie.loop();
+  isPlaying = true;
+  isLooping = true;
 
   pyramid = new PGraphics[4];
   for (int i = 0; i < pyramid.length; i++) {
@@ -46,6 +50,7 @@ void keyPressed() {
   if (key == ' ') movie.pause();
   if (key == ']') zoom *= 1.1;
   if (key == '[') zoom *= 0.9;
+  if (key == 'j') movie.jump(random(movie.duration()));
   if (key == '1') movie_speed = 1.0;
   if (key == '2') movie_speed = 2.0;
   if (key == '3') movie_speed = 3.0;
