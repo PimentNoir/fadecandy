@@ -39,7 +39,7 @@ void setup()
   isPlaying = true;
   isLooping = true;
 
-  pyramid = new PGraphics[4];
+  pyramid = new PGraphics[2];
   for (int i = 0; i < pyramid.length; i++) {
     pyramid[i] = createGraphics(width / (1 << i), height / (1 << i), P3D);
   }
