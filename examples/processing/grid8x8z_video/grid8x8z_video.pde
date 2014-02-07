@@ -11,6 +11,10 @@ String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Late
 
 int zoom = 2;
 
+float movie_speed = 1.0;
+
+int framerate = 1;
+
 OPC opc;
 Movie movie;
 PGraphics[] pyramid;
@@ -18,7 +22,7 @@ PGraphics[] pyramid;
 void setup()
 {
   size(zoom*480, zoom*240, P3D);
-  colorMode(HSB,360,100,100);
+  colorMode(HSB,100,100,100);
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
@@ -28,10 +32,7 @@ void setup()
   // Make the status LED quiet
   opc.setStatusLed(false);
   
-  int framerate = 1;
-  frameRate(framerate);
-  
-  float movie_speed = 1.0;
+ frameRate(framerate);
   
   movie = new Movie(this, filename);
   movie.frameRate(framerate);
@@ -49,6 +50,18 @@ void keyPressed() {
   if (key == ' ') movie.pause();
   if (key == ']') zoom *= 1.1;
   if (key == '[') zoom *= 0.9;
+  if (key == '1') movie_speed = 1.0;
+  if (key == '2') movie_speed = 2.0;
+  if (key == '3') movie_speed = 3.0;
+  if (key == '4') movie_speed = 4.0;
+  if (key == '5') movie_speed = 5.0;
+  if (key == '6') movie_speed = 6.0;
+  if (key == '7') movie_speed = 7.0;
+  if (key == '8') movie_speed = 8.0;
+  if (key == '9') movie_speed = 9.0;
+  if (key == 'r') movie_speed = -1;
+  if (key == '+') framerate += 1;
+  if (key == '-') framerate -= 1;
 }
 
 void keyReleased() {
