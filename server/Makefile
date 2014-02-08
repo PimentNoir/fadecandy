@@ -175,9 +175,9 @@ clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
 
 # Git submodules handling. TODO: Add submodules cleaning to clean target 
-SUBMODULES_TARGETS:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path |  cut -d ' ' -f 2)
+SUBMODULES_TARGETS:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path|cut -d ' ' -f 2|cut -d '/' -f 2)
 $(SUBMODULES_TARGETS):
-	cd .. && git submodule update --init -- $@ && cd $@ && git checkout -f HEAD && git clean -dfx
+	cd .. && git submodule update --init -- server/$@ && cd server/$@ && git checkout -f HEAD && git clean -dfx
 submodules: $(SUBMODULES_TARGETS)
 
 .PHONY: submodules $(SUBMODULES_TARGETS) clean all
