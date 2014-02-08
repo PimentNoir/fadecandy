@@ -27,9 +27,11 @@
 
 #pragma once
 
-#define LEDS_PER_STRIP          64
+#define DMA_BUFFER_NUM		64 
+#define CHANNELS_TOTAL          (DMA_BUFFER_NUM * 3)
+
+#define LEDS_PER_STRIP          128
 #define LEDS_TOTAL              (LEDS_PER_STRIP * 8)
-#define CHANNELS_TOTAL          (LEDS_TOTAL * 3)
 
 #define LUT_CH_SIZE             257
 #define LUT_TOTAL_SIZE          (LUT_CH_SIZE * 3)
