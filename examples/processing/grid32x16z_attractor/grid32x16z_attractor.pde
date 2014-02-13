@@ -5,8 +5,8 @@ int numParticles = 30;
 float cornerCoefficient = 0.2;
 int integrationSteps = 20;
 float maxOpacity = 100;
-float stepFast = 1.0 / 40;
-float stepSlow = 1.0 / 1000;
+float stepFast = 1.0 / 100;
+float stepSlow = 1.0 / 3000;
 float energyThreshold = 10.0;
 float brightnessThreshold = 0.8;
 

@@ -23,7 +23,7 @@ class Particle
 
   void draw(float opacity) 
   {
-    float size = height * 0.5;
+    float size = height * 0.6;
     tint(rgb, opacity);
     blendMode(ADD);
     image(dot, center.x - size/2, center.y - size/2, size, size);
