@@ -20,15 +20,15 @@ String filename = "12-amon_tobin--dropped_from_the_sky-oma.mp3";
 float spin = 0.0001;
 float radiansPerBucket = radians(4);
 float decay = 0.97;
-float opacity = 40;
-float minSize = 0.000115;
-float sizeScale = 2;
+float opacity = 50;
+float minSize = 0.125;
+float sizeScale = 1;
 
 float zoom = 4;
 
 void setup()
 {
-  size((int)zoom*8, (int)zoom*8, P3D);
+  size((int)zoom*100, (int)zoom*100, P3D);
   colorMode(HSB,100);
   //TODO: make framerate depend on beat detection
   int framerate = 60;
@@ -81,15 +81,15 @@ void draw()
   }
   
   for (int i = 0; i < fftFilter.length; i += 1) { 
-    float pulse = (sin(fftFilter[i] - 0.3) * 0.3);  
+    float pulse = (sin(fftFilter[i] - 0.3) * 0.3); 
     color rgb = colors.get(int(map(i, 0, fftFilter.length-1, 0, colors.width-1)), colors.height/2);
-    tint(rgb, fftFilter[i] * opacity * pulse);
+    tint(rgb, fftFilter[i] * opacity);
     blendMode(ADD);
     
-    float size_pulse = fftFilter[i] * pulse; 
+    float size_pulse = abs(fftFilter[i] * pulse); 
     float size = height * (minSize + sizeScale * size_pulse);
     float centerx = width * fftFilter[i] * noise(millis() * fftFilter[i] * pulse * 0.000125) * 1.125; 
-    float centery = height * fftFilter[i] * noise(millis() * fftFilter[i] * pulse * -0.000125) * 1.125;
+    float centery = height * fftFilter[i] * noise(millis() * fftFilter[i] * pulse * 0.000125) * 1.125;
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
     center.rotate(millis() * spin + i * radiansPerBucket);
     center.add(new PVector(width * 1/2, height * 1/2));
