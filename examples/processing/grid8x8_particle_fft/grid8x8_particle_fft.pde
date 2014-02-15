@@ -43,7 +43,7 @@ void setup()
   
   minim = new Minim(this); 
    
-  in =  minim.getLineIn(Minim.STEREO, 2048);  
+  in =  minim.getLineIn(Minim.STEREO, 512);  
   fftin = new FFT(in.bufferSize(), in.sampleRate());
      
   out = minim.getLineOut(Minim.STEREO, 2048);   
@@ -54,6 +54,7 @@ void setup()
   sound[song].play();
   fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
   fftFilter = new float[fft[song].specSize()];
+  //fftFilter = new float[fftin.specSize()];
           
   dot = loadImage("dot.png");
   colors = loadImage("colors.png");
@@ -108,7 +109,7 @@ void draw()
   //FIXME: recenter after zooming
   //scale(width/2 * zoom, height/2 * zoom);
    
-  if (sound[song].position() >= sound[song].length()-4*512 && song < filename.length-1) {
+  if (true && sound[song].position() >= sound[song].length()-4*512 && song < filename.length-1) {
      song++;
      sound[song-1].close();
      sound[song] = minim.loadFile(filename[song], 512);
@@ -119,9 +120,11 @@ void draw()
   }
   
   fft[song].forward(sound[song].mix);
+  //fftin.forward(in.mix);
     
   for (int i = 0; i < fftFilter.length; i++) {
     fftFilter[i] = max(fftFilter[i] * decay, log(1 + fft[song].getBand(i)));
+    //fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftin.getBand(i)));
   }
   
   for (int i = 0; i < fftFilter.length; i++) { 
