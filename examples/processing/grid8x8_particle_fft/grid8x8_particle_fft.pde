@@ -164,7 +164,7 @@ void draw()
     float prev_centerx = centerx;
     float prev_centery = centery;
     float perlin_noise_2d = noise(millis() * noiseScalex * prev_centerx * 1/2, millis() * noiseScaley * prev_centery * 1/2); 
-    centerx = width * fftFilter[i] *  perlin_noise_2d * 1.125; 
+    centerx = width * fftFilter[i] * perlin_noise_2d * 1.125; 
     centery = height * fftFilter[i] * perlin_noise_2d * 1.125;
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
     center.rotate(millis() * spin + i * radiansPerBucket);
