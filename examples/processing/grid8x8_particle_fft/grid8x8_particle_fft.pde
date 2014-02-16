@@ -34,6 +34,8 @@ float zoom = 4;
 int song = 0;
 int oldsong;
 
+float centerx,centery;
+
 void setup()
 {
   size((int)zoom*100, (int)zoom*100, P3D);
@@ -41,6 +43,9 @@ void setup()
   //TODO: make framerate depend on beat detection
   int framerate = 60;
   frameRate(framerate);
+  
+  centerx = width/2 - minSize/2;
+  centery = height/2 - minSize/2;
   
   minim = new Minim(this); 
    
@@ -156,9 +161,11 @@ void draw()
     float size = height * (minSize + sizeScale * size_pulse);
     float noiseScalex=width/(2*zoom) - size/(2*zoom);
     float noiseScaley=height/(2*zoom) - size/(2*zoom);
-    float perlin_noise_2d = noise(millis() * fftFilter[i] * noiseScalex, millis() * fftFilter[i] * noiseScaley); 
-    float centerx = width * fftFilter[i] *  perlin_noise_2d * 1.125; 
-    float centery = height * fftFilter[i] * perlin_noise_2d * 1.125;
+    float prev_centerx = centerx;
+    float prev_centery = centery;
+    float perlin_noise_2d = noise(millis() * noiseScalex * prev_centerx * 1/2, millis() * noiseScaley * prev_centery * 1/2); 
+    centerx = width * fftFilter[i] *  perlin_noise_2d * 1.125; 
+    centery = height * fftFilter[i] * perlin_noise_2d * 1.125;
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
     center.rotate(millis() * spin + i * radiansPerBucket);
     center.add(new PVector(width * 1/2, height * 1/2));
