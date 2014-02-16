@@ -18,10 +18,10 @@ FFT fftout,fftin;
 float[] fftFilter;
 
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", "02 - Plastic People.mp3" }; 
+String[] filename = {"02. No Woman No Cry.mp3", "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", "02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
 FFT[] fft = new FFT[filename.length];
-boolean isPlaying = true;
+boolean isPlaying;
 float spin = 0.0001;
 float radiansPerBucket = radians(4);
 float decay = 0.97;
@@ -32,6 +32,7 @@ float sizeScale = 1;
 float zoom = 4;
 
 int song = 0;
+int oldsong;
 
 void setup()
 {
@@ -52,6 +53,7 @@ void setup()
   // Small buffer size!
   sound[song] = minim.loadFile(filename[song], 512);
   sound[song].play();
+  isPlaying = true;
   fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
   fftFilter = new float[fft[song].specSize()];
   //fftFilter = new float[fftin.specSize()];
@@ -76,11 +78,26 @@ void setup()
 
 void keyPressed() {
   if (key == 'd') opc.setDithering(false);
-  if (key == ' ' && sound[song].isPlaying()) { 
+  if (key == ' ') { 
     sound[song].pause();
     isPlaying = false;
   }
-  //if (key == 'n') song++;
+  if (key == 'p') {
+    sound[song].play();
+    isPlaying = true;
+  }
+  if (key == 'n' && sound[song].position() <= sound[song].length()-4*512 && song < filename.length-1) {
+    oldsong = song;
+    song++;
+    sound[song] = minim.loadFile(filename[song], 512);
+    reinit_sound_fft_noise();
+  }
+  if (key == 'b' && sound[song].position() <= sound[song].length()-4*512 && song > 0) {
+    oldsong = song;
+    song--;
+    sound[song] = minim.loadFile(filename[song], 512);
+    reinit_sound_fft_noise();
+  }
   if (key == 'f') sound[song].skip(100);
   if (key == 'r') sound[song].skip(-100);
   if (key == ']') zoom *= 1.1;
@@ -89,10 +106,6 @@ void keyPressed() {
 
 void keyReleased() {
   if (key == 'd') opc.setDithering(true);
-  if (key == 'p' && !sound[song].isPlaying()) {
-    sound[song].play();
-    isPlaying = true;
-  }
 }
 
 void mousePressed()
@@ -103,20 +116,26 @@ void mousePressed()
   sound[song].cue(position);
 }
 
+void reinit_sound_fft_noise() {
+     sound[oldsong].close();
+     sound[song].play();
+     isPlaying = true;
+     fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
+     fftFilter = new float[fft[song].specSize()];
+     noiseSeed(0);
+}
+
 void draw()
 {
   background(0);
   //FIXME: recenter after zooming
   //scale(width/2 * zoom, height/2 * zoom);
    
-  if (true && sound[song].position() >= sound[song].length()-4*512 && song < filename.length-1) {
+  if (true && sound[song].position() > sound[song].length()-4*512 && song < filename.length-1 && song >= 0) {
+     oldsong = song; 
      song++;
-     sound[song-1].close();
      sound[song] = minim.loadFile(filename[song], 512);
-     sound[song].play();
-     fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
-     fftFilter = new float[fft[song].specSize()];
-     noiseSeed(0);    
+     reinit_sound_fft_noise();    
   }
   
   fft[song].forward(sound[song].mix);
@@ -148,6 +167,6 @@ void draw()
   }
   stroke(255, 255, 255);
   float position = map(sound[song].position(), 0, sound[song].length(), 0, width);
-  line(position, 1, position, height/32);
+  line(position, 0, position, height/32);
 }
 
