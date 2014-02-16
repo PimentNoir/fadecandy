@@ -52,10 +52,7 @@ void setup()
     
   // Small buffer size!
   sound[song] = minim.loadFile(filename[song], 512);
-  sound[song].play();
-  isPlaying = true;
-  fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
-  fftFilter = new float[fft[song].specSize()];
+  init_sound_fft_noise();
   //fftFilter = new float[fftin.specSize()];
           
   dot = loadImage("dot.png");
@@ -71,8 +68,7 @@ void setup()
   
   // Hide or show leds location
   opc.showLocations(true);
-  noiseSeed(0);
-  
+    
   smooth();
 }
 
@@ -116,13 +112,17 @@ void mousePressed()
   sound[song].cue(position);
 }
 
-void reinit_sound_fft_noise() {
-     sound[oldsong].close();
+void init_sound_fft_noise() {
      sound[song].play();
      isPlaying = true;
      fft[song] = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
      fftFilter = new float[fft[song].specSize()];
      noiseSeed(0);
+}
+
+void reinit_sound_fft_noise() {
+     sound[oldsong].close();
+     init_sound_fft_noise();
 }
 
 void draw()
