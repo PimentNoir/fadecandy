@@ -146,8 +146,6 @@ void init_sound_fft_noise() {
      init_fft();
      //TODO: use distance between centerx and centery at each loop, use PVector.
      noiseSeed(1);
-     centerx = width * noise(millis() * (width/2 - (minSize + sizeScale)/2)) * 1.125;
-     centery = height * noise(millis() * (height/2 - (minSize + sizeScale)/2)) * 1.125;
 }
 
 void reinit_sound_fft_noise() {
