@@ -68,7 +68,7 @@ void setup()
     for(int i = 0; i < mixerInfo.length; i++) {
       println(i + ": " +mixerInfo[i].getName());
     } 
-    // 0 in pulseaudio on GNU/Linux
+    // 0 is pulseaudio mixer on GNU/Linux
     Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
     minim.setInputMixer(mixer); 
     in =  minim.getLineIn(Minim.STEREO, AudioBufferSize);  
@@ -137,11 +137,16 @@ void mousePressed()
     
 }
 
+//TODO: pass an FFT type argument to init differently the FFT filter
+void init_fft() {
+     fftsong = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
+     fftFilter = new float[fftsong.specSize()];   
+}  
+
 void init_sound_fft_noise() {
      sound[song].play();
      isPlaying = true;
-     fftsong = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
-     fftFilter = new float[fftsong.specSize()];
+     init_fft();
      noiseSeed(0);
 }
 
