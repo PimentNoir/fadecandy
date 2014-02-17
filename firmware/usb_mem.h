@@ -40,7 +40,7 @@
 typedef struct usb_packet_struct {
     uint16_t len;
     uint16_t reserved;
-    uint8_t buf[256];
+    uint8_t buf[64];
 } usb_packet_t;
 
 #ifdef __cplusplus
