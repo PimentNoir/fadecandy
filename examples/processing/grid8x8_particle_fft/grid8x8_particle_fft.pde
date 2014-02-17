@@ -45,14 +45,11 @@ void setup()
   //TODO: make framerate depend on beat detection
   int framerate = 60;
   frameRate(framerate);
-  
-  centerx = width/2 - minSize/2;
-  centery = height/2 - minSize/2;
-  
+     
   minim = new Minim(this);
   minimin = new Minim(this);
-  minim.debugOn();
-  minimin.debugOn();
+  //minim.debugOn();
+  //minimin.debugOn();
          
   out = minim.getLineOut(Minim.STEREO, AudioBufferSize);   
   fftout = new FFT(out.bufferSize(), out.sampleRate());   
@@ -147,7 +144,10 @@ void init_sound_fft_noise() {
      sound[song].play();
      isPlaying = true;
      init_fft();
-     noiseSeed(0);
+     //TODO: use distance between centerx and centery at each loop, use PVector.
+     noiseSeed(1);
+     centerx = width * noise(millis() * (width/2 - (minSize + sizeScale)/2)) * 1.125;
+     centery = height * noise(millis() * (height/2 - (minSize + sizeScale)/2)) * 1.125;
 }
 
 void reinit_sound_fft_noise() {
@@ -193,7 +193,7 @@ void draw()
     
     float size_pulse = abs(fftFilter[i] * pulse); 
     float size = height * (minSize + sizeScale * size_pulse);
-    //TODO: noiseScale has something to learn from decibels in the audio played
+    //TODO: noiseScale has something to learn from the decibels in the audio file
     float noiseScalex=width/(2*zoom) - size/(2*zoom);
     float noiseScaley=height/(2*zoom) - size/(2*zoom);
     float prev_centerx = centerx;
@@ -216,7 +216,7 @@ void draw()
 
 void stop()
 {
-  // always close Minim audio classes when you are done with them
+  //always close Minim audio classes when you are done with them
   out.close();
   if (isPlayer) {
     sound[song].close();
