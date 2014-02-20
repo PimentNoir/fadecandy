@@ -17,10 +17,10 @@ FFT fftout,fftin,fftsong;
 float[] fftFilter;
 int AudioBufferSize = 512;
 
-String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-//String[] filename = {"11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-//"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-//"02 - Plastic People.mp3" }; 
+//String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
+String[] filename = {"11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+"02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
 boolean isPlaying;
 boolean isPlayer = true;
@@ -28,7 +28,7 @@ float spin = 0.0001;
 float radiansPerBucket = radians(4);
 float decay = 0.97;
 float opacity = 40;
-float minSize = 0.125;
+float minSize = 0.15;
 float sizeScale = 1;
 
 float zoom = 4;
@@ -66,7 +66,7 @@ void setup()
       println(i + ": " +mixerInfo[i].getName());
     } 
     // 0 is pulseaudio mixer on GNU/Linux
-    Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
+    Mixer mixer = AudioSystem.getMixer(mixerInfo[1]); 
     minim.setInputMixer(mixer); 
     in =  minim.getLineIn(Minim.STEREO, AudioBufferSize);  
     fftin = new FFT(in.bufferSize(), in.sampleRate());
@@ -156,7 +156,7 @@ void init_fft() {
 void init_sound_fft_noise() {
      sound[song].play();
      isPlaying = true;
-     noiseSeed(height*width/2);
+     noiseSeed(height/2);
      init_fft();
 }
 
@@ -165,7 +165,7 @@ void reinit_sound_fft_noise() {
      init_sound_fft_noise();
 }
 
-float dist = height*width/2;
+float dist = height/2;
 float fftmax = 0;
 
 void draw()
@@ -199,7 +199,7 @@ void draw()
   }
   
   for (int i = 0; i < fftFilter.length; i++) { 
-    float pulse = (sin(fftFilter[i] - 0.5) * 0.5); 
+    float pulse = (sin(fftFilter[i] - 0.75) * 0.75); 
     color rgb = colors.get(int(map(i, 0, fftFilter.length-1, 0, colors.width-1)), colors.height/2);
     tint(rgb, fftFilter[i] * opacity);
     blendMode(ADD);
@@ -208,12 +208,15 @@ void draw()
     float size = height * (minSize + sizeScale * size_pulse);
     float prev_centerx = centerx;
     float prev_centery = centery;
-    float perlin_noise_2d = noise(millis() * spin * prev_centerx * dist, millis() * spin * prev_centery * dist * size); 
+    float now = millis();
+    float smooth_noisey = now * spin + prev_centery * dist;
+    float smooth_noisey_pulse = now * spin + prev_centery * dist + pulse; 
+    float perlin_noise_2d = noise(now * spin + prev_centerx * dist, smooth_noisey_pulse); 
     centerx = width * fftFilter[i] * perlin_noise_2d * 1.125; 
     centery = height * fftFilter[i] * perlin_noise_2d * 1.125;
     float dist = dist(centerx, centery, prev_centerx, prev_centery);
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
-    center.rotate(millis() * spin + i * radiansPerBucket);
+    center.rotate(now * spin + i * radiansPerBucket);
     center.add(new PVector(width * 1/2, height * 1/2));
         
     image(dot, center.x - size/2, center.y - size/2, size, size);
