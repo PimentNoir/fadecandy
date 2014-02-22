@@ -7,6 +7,7 @@ import ddf.minim.*;
 import javax.sound.sampled.*;
 
 OPC opc;
+SimplexNoise simplexnoise;
 PImage dot;
 PImage colors;
 Minim minim,minimin;
@@ -18,7 +19,7 @@ float[] fftFilter;
 int AudioBufferSize = 512;
 
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
 "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
 "02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
@@ -134,13 +135,38 @@ void mousePressed()
     
 }
 
+float smoothnoise_quintic(float x, float y) {
+    float r = 0;  
+    double rd = simplexnoise.noise(x,y)*simplexnoise.noise(x,y)*simplexnoise.noise(x,y)*(simplexnoise.noise(x,y)*(simplexnoise.noise(x,y)*6-15)+10);
+    return r = (float)rd;  
+}
+
 float fractalNoise(float x, float y) {
   int octave = 4;
   float r = 0;
   float amp = 1.0;
   for (int l=0;l<octave;l++) {
     r += noise(x, y)*amp;
-    amp /= 2;
+    amp /= octave;
+    x /= 2;
+    y /= 2;
+  }
+  return r;
+}
+
+float simplexnoise(float x, float y) {
+  float r = 0;
+  double rd = (simplexnoise.noise(x, y) + 1)/2;
+  return r = (float)rd;
+} 
+
+float fractalNoiseSimplex(float x, float y) {
+  int octave = 4;
+  float r = 0;
+  float amp = 1.0;
+  for (int l=0;l<octave;l++) {
+    r += simplexnoise(x, y)*amp;
+    amp /= octave;
     x /= 2;
     y /= 2;
   }
@@ -156,7 +182,7 @@ void init_fft() {
 void init_sound_fft_noise() {
      sound[song].play();
      isPlaying = true;
-     noiseSeed(height/2);
+     noiseSeed(width*height/2);
      init_fft();
 }
 
@@ -165,14 +191,13 @@ void reinit_sound_fft_noise() {
      init_sound_fft_noise();
 }
 
-float dist = height/2;
-float fftmax = 0;
+float dist = width*height/2;
 
 void draw()
 {
   background(0);
   //FIXME: recenter after zooming
-  //scale(width/2 * zoom, height/2 * zoom);
+  //translate(width/2, height/2);
    
   if (isPlayer && sound[song].position() > sound[song].length()-4*AudioBufferSize && song < filename.length-1 && song >= 0) {
      oldsong = song; 
@@ -187,6 +212,9 @@ void draw()
     fftin.forward(in.mix);
     //fftout.forward(out.mix);
   }
+    
+  float fftFiltermax = 0;
+  float noise_scalex,noise_scaley = 0; 
       
   for (int i = 0; i < fftFilter.length; i++) {
     if (isPlayer) { 
@@ -195,9 +223,9 @@ void draw()
       fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftin.getBand(i)));
       //fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftout.getBand(i)));
     }
-    if ( i > 0 ) fftmax=max(fftFilter[i],fftFilter[i-1]);
+    fftFiltermax = max(fftFilter);
   }
-  
+    
   for (int i = 0; i < fftFilter.length; i++) { 
     float pulse = (sin(fftFilter[i] - 0.75) * 0.75); 
     color rgb = colors.get(int(map(i, 0, fftFilter.length-1, 0, colors.width-1)), colors.height/2);
@@ -209,16 +237,20 @@ void draw()
     float prev_centerx = centerx;
     float prev_centery = centery;
     float now = millis();
-    float smooth_noisey = now * spin + prev_centery * dist;
-    float smooth_noisey_pulse = now * spin + prev_centery * dist + pulse; 
-    float perlin_noise_2d = noise(now * spin + prev_centerx * dist, smooth_noisey_pulse); 
-    centerx = width * fftFilter[i] * perlin_noise_2d * 1.125; 
-    centery = height * fftFilter[i] * perlin_noise_2d * 1.125;
+    noise_scalex = 1.125;
+    noise_scaley = 1.125;
+    float smooth_noisey = now * spin + prev_centery * dist * noise_scaley;
+    float smooth_noisey_pulse = now * spin + prev_centery * dist * noise_scaley + pulse; 
+    float perlin_noise_2d = fractalNoise(now * spin + prev_centerx * dist * noise_scalex, smooth_noisey_pulse); 
+    float simplex_noise_2d = fractalNoiseSimplex(now * spin + prev_centerx * dist * noise_scalex, smooth_noisey_pulse);
+    float noise_type = simplex_noise_2d; 
+    centerx = width * fftFilter[i] * noise_type; 
+    centery = height * fftFilter[i] * -noise_type;
     float dist = dist(centerx, centery, prev_centerx, prev_centery);
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
     center.rotate(now * spin + i * radiansPerBucket);
     center.add(new PVector(width * 1/2, height * 1/2));
-        
+            
     image(dot, center.x - size/2, center.y - size/2, size, size);
   }
   if (isPlayer) {
