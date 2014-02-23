@@ -18,10 +18,10 @@ FFT fftout,fftin,fftsong;
 float[] fftFilter;
 int AudioBufferSize = 512;
 
-//String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-"02 - Plastic People.mp3" }; 
+String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
+//String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+//"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+//"02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
 boolean isPlaying;
 boolean isPlayer = true;
@@ -145,8 +145,9 @@ float fractalNoise(float x, float y) {
   int octave = 4;
   float r = 0;
   float amp = 1.0;
-  for (int l=0;l<octave;l++) {
+  for (int l = 0; l < octave; l++) {
     r += noise(x, y)*amp;
+    //It's a FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = octave
     amp /= octave;
     x /= 2;
     y /= 2;
@@ -154,18 +155,31 @@ float fractalNoise(float x, float y) {
   return r;
 }
 
+//TODO: Merge FBM together
 float simplexnoise(float x, float y) {
+  int octave = 4;
+  float persistence = 0.5;
+  float lacunarity = 2.0;
+  float frequency = 1.0;
+  
   float r = 0;
-  double rd = (simplexnoise.noise(x, y) + 1)/2;
-  return r = (float)rd;
+  float amp = 1.0;
+  for (int l = 0; l < octave; l++) {
+    //Keep the same behaviour as the processing perlin noise() function, return values in [0,1]
+    r += (((float)simplexnoise.noise(frequency * x, frequency * y) + 1)/2)*amp;
+    amp *= persistence;
+    frequency *= lacunarity;
+  }
+  return r * (1 - persistence)/(1 - amp);
 } 
 
 float fractalNoiseSimplex(float x, float y) {
   int octave = 4;
   float r = 0;
   float amp = 1.0;
-  for (int l=0;l<octave;l++) {
+  for (int l = 0; l < octave; l++) {
     r += simplexnoise(x, y)*amp;
+    //It's a FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = octave
     amp /= octave;
     x /= 2;
     y /= 2;
