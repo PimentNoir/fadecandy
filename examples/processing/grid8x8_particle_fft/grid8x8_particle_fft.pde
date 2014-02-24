@@ -37,7 +37,7 @@ float zoom = 4;
 int song = 0;
 int oldsong;
 
-float centerx,centery;
+float centerx,centery = width/2;
 
 void setup()
 {
@@ -135,19 +135,14 @@ void mousePressed()
     
 }
 
-float smoothnoise_quintic(float x, float y) {
-    float r = 0;  
-    double rd = simplexnoise.noise(x,y)*simplexnoise.noise(x,y)*simplexnoise.noise(x,y)*(simplexnoise.noise(x,y)*(simplexnoise.noise(x,y)*6-15)+10);
-    return r = (float)rd;  
-}
-
 float fractalNoise(float x, float y) {
   int octave = 4;
   float r = 0;
   float amp = 1.0;
+  //noiseDetail(1,0.25);
   for (int l = 0; l < octave; l++) {
     r += noise(x, y)*amp;
-    //It's a FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = octave
+    //It's an FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = 4
     amp /= octave;
     x /= 2;
     y /= 2;
@@ -155,37 +150,23 @@ float fractalNoise(float x, float y) {
   return r;
 }
 
-//TODO: Merge FBM together
+//It's an FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = 4
 float simplexnoise(float x, float y) {
   int octave = 4;
-  float persistence = 0.5;
-  float lacunarity = 2.0;
+  float persistence = 0.25;
+  float lacunarity = 0.5;
   float frequency = 1.0;
   
   float r = 0;
   float amp = 1.0;
   for (int l = 0; l < octave; l++) {
     //Keep the same behaviour as the processing perlin noise() function, return values in [0,1]
-    r += (((float)simplexnoise.noise(frequency * x, frequency * y) + 1)/2)*amp;
+    r += (((float)simplexnoise.noise(frequency * x, frequency * y) + 1) / 2.0f) * amp;
     amp *= persistence;
     frequency *= lacunarity;
   }
   return r * (1 - persistence)/(1 - amp);
 } 
-
-float fractalNoiseSimplex(float x, float y) {
-  int octave = 4;
-  float r = 0;
-  float amp = 1.0;
-  for (int l = 0; l < octave; l++) {
-    r += simplexnoise(x, y)*amp;
-    //It's a FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = octave
-    amp /= octave;
-    x /= 2;
-    y /= 2;
-  }
-  return r;
-}
 
 //TODO: pass an FFT type argument to init differently the FFT filter
 void init_fft() {
@@ -204,8 +185,6 @@ void reinit_sound_fft_noise() {
      sound[oldsong].close();
      init_sound_fft_noise();
 }
-
-float dist = width*height/2;
 
 void draw()
 {
@@ -253,14 +232,13 @@ void draw()
     float now = millis();
     noise_scalex = 1.125;
     noise_scaley = 1.125;
-    float smooth_noisey = now * spin + prev_centery * dist * noise_scaley;
-    float smooth_noisey_pulse = now * spin + prev_centery * dist * noise_scaley + pulse; 
-    float perlin_noise_2d = fractalNoise(now * spin + prev_centerx * dist * noise_scalex, smooth_noisey_pulse); 
-    float simplex_noise_2d = fractalNoiseSimplex(now * spin + prev_centerx * dist * noise_scalex, smooth_noisey_pulse);
+    float smooth_noisey = now * spin + prev_centery * noise_scaley * abs(centery - prev_centery);
+    float smooth_noisey_pulse = now * spin + prev_centery * noise_scaley * abs(centery - prev_centery) + pulse; 
+    float perlin_noise_2d = fractalNoise(now * spin + prev_centerx * noise_scalex * abs(centerx - prev_centerx), smooth_noisey_pulse); 
+    float simplex_noise_2d = simplexnoise(now * spin + prev_centerx * noise_scalex * abs(centerx - prev_centerx), smooth_noisey_pulse);
     float noise_type = simplex_noise_2d; 
     centerx = width * fftFilter[i] * noise_type; 
     centery = height * fftFilter[i] * -noise_type;
-    float dist = dist(centerx, centery, prev_centerx, prev_centery);
     PVector center = new PVector(centerx * 1/2, centery * 1/2);
     center.rotate(now * spin + i * radiansPerBucket);
     center.add(new PVector(width * 1/2, height * 1/2));
