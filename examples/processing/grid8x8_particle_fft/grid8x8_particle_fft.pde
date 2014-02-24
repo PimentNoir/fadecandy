@@ -37,7 +37,7 @@ float zoom = 4;
 int song = 0;
 int oldsong;
 
-float centerx,centery = width/2;
+float centerx = width/2, centery = height/2;
 
 void setup()
 {
