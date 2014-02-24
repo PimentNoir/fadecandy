@@ -18,10 +18,10 @@ FFT fftout,fftin,fftsong;
 float[] fftFilter;
 int AudioBufferSize = 512;
 
-String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-//String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-//"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-//"02 - Plastic People.mp3" }; 
+//String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
+String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+"02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
 boolean isPlaying;
 boolean isPlayer = true;
@@ -132,7 +132,6 @@ void mousePressed()
     int position = int(map(mouseX, 0, width, 0, sound[song].length()));
     sound[song].cue(position);
   }
-    
 }
 
 float fractalNoise(float x, float y) {
