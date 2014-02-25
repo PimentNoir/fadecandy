@@ -33,3 +33,14 @@ The PCB design for this revision is tagged as **fc64x8-rev-a** in Git. This boar
 * [PCB Design Files](https://github.com/scanlime/fadecandy/tree/fc64x8-rev-a/pcb/fc64x8)
 
 ![Fc64x8-a Photo](http://farm6.staticflickr.com/5513/10877817543_2f654c8699.jpg)
+
+
+Test Jig
+--------
+
+This board, with the help of a Teensy 3.0 and the testjig firmware, performs automated factory tests and firmware installation on Fadecandy boards.
+
+The design was contributed by Ryan O'Hara of RGB-123
+
+* [Order PCBs via OSH Park](http://oshpark.com/shared_projects/0Hx8kSYR)
+
