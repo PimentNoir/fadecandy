@@ -81,7 +81,7 @@ void setup()
 
   // Connect to the local instance of fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
-    
+  
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
     
   // Make the status LED quiet
@@ -127,25 +127,27 @@ void keyReleased() {
 
 void mousePressed()
 {
-  // choose a position to cue to based on where the user clicked.
-  // the length() method returns the length of recording in milliseconds.
-  if (isPlayer) {
-    int position = int(map(mouseX, 0, width, 0, sound[song].length()));
+  //choose a position to cue to based on where the user clicked.
+  //the length() method returns the length of recording in milliseconds.
+  if (isPlayer && mouseY <=  height*0.03125) {
+    float mousex = mouseX;
+    int position = int(map(mousex, 0, width, 0, sound[song].length()));
     sound[song].cue(position);
   }
 }
 
-//It's an FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = 4
+//It's a standard noise FBM with persistence = 1/octave, lacunarity = 1/2 and # of octaves = 4.
 float simplexnoise(float x, float y) {
   int octave = 4;
   float persistence = 0.25;
   float lacunarity = 0.5;
+  //One might argue that the initial frequency should always be 1.0 for the very first octave.
   float frequency = 1.0;
   
   float r = 0;
   float amp = 1.0;
   for (int l = 0; l < octave; l++) {
-    //Keep the same behaviour as the processing perlin noise() function, return values in [0,1]
+    //Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
     r += (((float)simplexnoise.noise((double)(frequency * x), (double)(frequency * y)) + 1) / 2.0f) * amp;
     amp *= persistence;
     frequency *= lacunarity;
@@ -153,7 +155,7 @@ float simplexnoise(float x, float y) {
   return r * (1 - persistence)/(1 - amp);
 } 
 
-//TODO: pass an FFT type argument to init differently the FFT filter
+//TODO: pass an FFT type argument to init differently the FFT filter.
 void init_fft() {
      fftsong = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
      fftFilter = new float[fftsong.specSize()];   
@@ -191,8 +193,7 @@ void draw()
   }
     
   float fftFiltermax = 0;
-  float noise_scalex = 0, noise_scaley = 0; 
-      
+        
   for (int i = 0; i < fftFilter.length; i++) {
     if (isPlayer) { 
       fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftsong.getBand(i)));
@@ -202,6 +203,8 @@ void draw()
     }
     fftFiltermax = max(fftFilter);
   }
+  
+  float noise_scalex = 0, noise_scaley = 0; 
     
   for (int i = 0; i < fftFilter.length; i++) { 
     float pulse = (sin(fftFilter[i] - 0.75) * 0.75); 
@@ -229,9 +232,10 @@ void draw()
     image(dot, center.x - size/2, center.y - size/2, size, size);
   }
   if (isPlayer) {
-    stroke(255, 255, 255);
+    stroke(212, 212, 212);
     float position = map(sound[song].position(), 0, sound[song].length(), 0, width);
-    line(position, 0, position, height/32);
+    line(position, 0, position, height*0.03125);
+    line(0, height*0.03125, width, height*0.03125);
   }
 }
 
