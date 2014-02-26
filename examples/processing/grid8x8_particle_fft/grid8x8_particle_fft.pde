@@ -59,7 +59,7 @@ void setup()
   // Small buffer size!
   if (isPlayer) {
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
-    init_sound_fft_noise();
+    init_sound_fft();
   } else {
      Mixer.Info[] mixerInfo;
      mixerInfo = AudioSystem.getMixerInfo(); 
@@ -81,9 +81,9 @@ void setup()
 
   // Connect to the local instance of fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
-  
+    
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
-  
+    
   // Make the status LED quiet
   opc.setStatusLed(false);
   
@@ -107,13 +107,13 @@ void keyPressed() {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
-    reinit_sound_fft_noise();
+    reinit_sound_fft();
   }
   if (key == 'b' && isPlayer && sound[song].position() <= sound[song].length()-4*AudioBufferSize && song > 0) {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
-    reinit_sound_fft_noise();
+    reinit_sound_fft();
   }
   if (key == 'f' && isPlayer) sound[song].skip(100);
   if (key == 'r' && isPlayer) sound[song].skip(-100);
@@ -159,15 +159,15 @@ void init_fft() {
      fftFilter = new float[fftsong.specSize()];   
 }  
 
-void init_sound_fft_noise() {
+void init_sound_fft() {
      sound[song].play();
      isPlaying = true;
      init_fft();
 }
 
-void reinit_sound_fft_noise() {
+void reinit_sound_fft() {
      sound[oldsong].close();
-     init_sound_fft_noise();
+     init_sound_fft();
 }
 
 void draw()
@@ -180,7 +180,7 @@ void draw()
      oldsong = song; 
      song++;
      sound[song] = minim.loadFile(filename[song], AudioBufferSize);
-     reinit_sound_fft_noise();    
+     reinit_sound_fft();    
   }
   
   if (isPlayer) {
