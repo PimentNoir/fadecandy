@@ -9,23 +9,25 @@ var client = new OPC('localhost', 7890);
 
 function draw() {
 
-    var t = 0.009 * new Date().getTime();
+    var time = 0.009 * new Date().getTime();
     var numParticles = 200;
     var particles = [];
 
     for (var i = 0; i < numParticles; i++) {
+        var s = i / numParticles;
 
-        var r = 0.2 + 1.5 * i / numParticles;
-        var x = r * Math.cos(t);
-        var y = r * Math.sin(t + 10.0 * Math.sin(t * 0.15));
+        var radius = 0.2 + 1.5 * s;
+        var theta = time + 0.04 * i;
+        var x = radius * Math.cos(theta);
+        var y = radius * Math.sin(theta + 10.0 * Math.sin(theta * 0.15));
+        var hue = time * 0.01 + s * 0.2;
 
         particles[i] = {
             point: [0, x, y],
-            intensity: 40 * i / numParticles,
+            intensity: 0.2 * s,
             falloff: 60,
-            color: [0.9, 0.2, i * 0.01]
+            color: OPC.hsv(hue, 0.5, 0.8)
         };
-        t += 0.04;
     }
 
     client.mapParticles(particles, model);

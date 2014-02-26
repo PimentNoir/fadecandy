@@ -8,18 +8,17 @@
 var net = require('net');
 var fs = require('fs');
 
+
+/********************************************************************************
+ * Core OPC Client
+ */
+
 var OPC = function(host, port)
 {
     this.host = host;
     this.port = port;
     this.pixelBuffer = null;
 };
-
-OPC.loadModel = function(filename)
-{
-    // Synchronously load a JSON model from a file on disk
-    return JSON.parse(fs.readFileSync(filename))
-}
 
 OPC.prototype._reconnect = function()
 {
@@ -105,6 +104,11 @@ OPC.prototype.mapPixels = function(fn, model)
     this.writePixels();
 }
 
+
+/********************************************************************************
+ * Client convenience methods
+ */
+
 OPC.prototype.mapParticles = function(particles, model)
 {
     // Set all pixels, by mapping a particle system to each element of "model".
@@ -139,5 +143,45 @@ OPC.prototype.mapParticles = function(particles, model)
 
     this.mapPixels(shader, model);
 }
+
+
+/********************************************************************************
+ * Global convenience methods
+ */
+
+OPC.loadModel = function(filename)
+{
+    // Synchronously load a JSON model from a file on disk
+    return JSON.parse(fs.readFileSync(filename))
+}
+
+OPC.hsv = function(h, s, v)
+{
+    /*
+     * Converts an HSV color value to RGB.
+     *
+     * Normal hsv range is in [0, 1], RGB range is [0, 255].
+     * Colors may extend outside these bounds. Hue values will wrap.
+     *
+     * Based on tinycolor:
+     * https://github.com/bgrins/TinyColor/blob/master/tinycolor.js
+     * 2013-08-10, Brian Grinstead, MIT License
+     */
+
+    h *= 6;
+
+    var i = h | 0,
+        f = h - i,
+        p = v * (1 - s),
+        q = v * (1 - f * s),
+        t = v * (1 - (1 - f) * s),
+        mod = i % 6,
+        r = [v, q, p, p, t, v][mod],
+        g = [t, v, v, q, p, p][mod],
+        b = [p, p, t, v, v, q][mod];
+
+    return [ r * 255, g * 255, b * 255 ];
+}
+
 
 module.exports = OPC;
