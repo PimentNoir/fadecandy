@@ -15,7 +15,7 @@ var OPC = function(host, port)
     this.pixelBuffer = null;
 };
 
-OPC.prototype.loadModel = function(filename)
+OPC.loadModel = function(filename)
 {
     // Synchronously load a JSON model from a file on disk
     return JSON.parse(fs.readFileSync(filename))
