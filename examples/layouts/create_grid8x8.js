@@ -7,7 +7,7 @@
  */
 
 var model = []
-var scale = 1 / 8.0;
+var scale = -1 / 4.0;
 var centerX = 7 / 2.0;
 var centerY = 7 / 2.0;
 
@@ -18,7 +18,7 @@ function grid8x8(index, x, y) {
             var px = x + u;
             var py = y + v;
             model[index++] = {
-                point: [  0, (px - centerX) * scale, (py - centerY) * -scale ]
+                point: [  (px - centerX) * scale, 0, (py - centerY) * scale ]
             };
         }
     }

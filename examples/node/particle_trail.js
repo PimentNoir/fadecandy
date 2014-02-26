@@ -23,7 +23,7 @@ function draw() {
         var hue = time * 0.01 + s * 0.2;
 
         particles[i] = {
-            point: [0, x, y],
+            point: [x, 0, y],
             intensity: 0.2 * s,
             falloff: 60,
             color: OPC.hsv(hue, 0.5, 0.8)

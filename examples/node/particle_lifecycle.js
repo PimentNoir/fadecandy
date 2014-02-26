@@ -24,8 +24,8 @@ function newBloomTimer() {
 function randomPoint() {
     // A random point somewhere relevant on our model
     return [
-        1 * (Math.random() - 0.5),
         4 * (Math.random() - 0.5),
+        1 * (Math.random() - 0.5),
         4 * (Math.random() - 0.5)
     ];
 }
