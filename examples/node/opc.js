@@ -91,9 +91,11 @@ OPC.prototype.mapPixels = function(fn, model)
 
     this.setPixelCount(model.length);
     var offset = 4;
+    var unused = [0, 0, 0];     // Color for unused channels (null model)
 
     for (var i = 0; i < model.length; i++) {
-        var rgb = fn(model[i]);
+        var led = model[i];
+        var rgb = led ? fn(led) : unused;
 
         this.pixelBuffer.writeUInt8(Math.max(0, Math.min(255, rgb[0] | 0)), offset);
         this.pixelBuffer.writeUInt8(Math.max(0, Math.min(255, rgb[1] | 0)), offset + 1);
@@ -121,7 +123,6 @@ OPC.prototype.mapParticles = function(particles, model)
 
         for (var i = 0; i < particles.length; i++) {
             var particle = particles[i];
-
 
             // Particle to sample distance
             var dx = (p.point[0] - particle.point[0]) || 0;
