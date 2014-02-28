@@ -18,7 +18,7 @@ var client = new OPC('localhost', 7890);
 
 var noiseScale = 0.02;
 var speed = 0.002;
-var wspeed = 0.7;
+var wspeed = 5.0;
 var scale = 0.1;
 var ringScale = 3.0;
 var wanderSpeed = 0.00005;
@@ -48,11 +48,12 @@ function fractalNoise(x, y, z, w)
     return r;
 }
 
-function noise(x)
+function noise(x, spin)
 {
     // 1-dimensional noise. Cut a zig-zag path through
     // the simplex 2D noise space, so we repeat much less often.
-    return simplex.noise2D(x, x * 0.01) * 0.5 + 0.5;
+    spin = spin || 0.01;
+    return simplex.noise2D(x, x * spin) * 0.5 + 0.5;
 }
 
 function draw()
@@ -73,9 +74,9 @@ function draw()
     // Random wander along the W axis
     dw += (noise(now * 0.000002) - 0.5) * wspeed;
 
-    var centerx = (noise(now *  wanderSpeed) - 0.5) * 1.25;
-    var centery = (noise(now * -wanderSpeed) - 0.5) * 1.25;
-    var centerz = (noise(now * -wanderSpeed) - 0.5) * 1.25;
+    var centerx = (noise(now * wanderSpeed, 0.9) - 0.5) * 1.25;
+    var centery = (noise(now * wanderSpeed, 1.4) - 0.5) * 1.25;
+    var centerz = (noise(now * wanderSpeed, 1.7) - 0.5) * 1.25;
 
     function shader(p)
     {
