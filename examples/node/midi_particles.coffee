@@ -128,8 +128,10 @@ draw = () ->
         x = radius * Math.cos theta
         y = radius * Math.sin theta
 
-        # One rainbow per octave
-        hue = (p.note.key - 60 + 0.1) / 12.0
+        # Hop around between almost-opposing colors, eventually going
+        # around the rainbow. These ratios control what kinds of color
+        # schemes we get for different chords.
+        hue = (p.note.key - 60 + 0.1) * (7 / 12.0)
         p.color = OPC.hsv hue, 0.5, 0.8
 
         # Intensity mapped to velocity, nonlinear
