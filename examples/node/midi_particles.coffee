@@ -41,14 +41,21 @@ particleLifetime = 1.0
 brightness = 1.0
 spinRate = 1.0
 
-midiTime = 0
 previousNow = 0
 spinAngle = 0
 
-input.on 'message', (deltaTime, message) ->
+# Time clock in seconds
+clock = () -> 0.001 * new Date().getTime()
 
-    # Keep time
-    midiTime += deltaTime
+# Midi to frequency
+midiToHz = (key) -> 440 * Math.pow 2, (key - 69) / 12
+
+# Midi note to angle, one rev per octave
+midiToAngle = (key) -> (2 * Math.PI / 12) * key
+
+
+input.on 'message', (deltaTime, message) ->
+    console.log message
 
     switch message[0]
         when 0x80  # Voice 0, note off
@@ -61,7 +68,7 @@ input.on 'message', (deltaTime, message) ->
             info =
                 key: key
                 velocity: message[2]
-                timestamp: midiTime
+                timestamp: clock()
 
             # Split keyboard into particles and LFOs
             if key >= 60
@@ -72,7 +79,7 @@ input.on 'message', (deltaTime, message) ->
         when 0xb0  # Voice 0, Control Change
             switch message[1]
                 when 7   # "Data entry" slider, brightness
-                    brightness = message[2] * 3.0 / 127
+                    brightness = message[2] * 2.0 / 127
 
                 when 1   # "Modulation" slider, particle speed
                     particleLifetime = 0.1 + message[2] * 2.0 / 127
@@ -85,7 +92,7 @@ input.on 'message', (deltaTime, message) ->
 draw = () ->
 
     # Time delta calculations
-    now = 0.001 * new Date().getTime()
+    now = clock()
     timeStep = now - previousNow
     previousNow = now
 
@@ -103,47 +110,49 @@ draw = () ->
     for p in particles
 
         # Angle: Global spin, thne positional mapping to key
-        theta = spinAngle + (Math.PI / 5) * p.note.key
-
-        # Positioned in polar coordinates, on unit circle
-        x = Math.cos theta
-        y = Math.sin theta
-
-        # Add influence of LFOs
-        for key, note of lfoNotes
-
-            # Down several octaves, to useful LFO frequencies
-            transpose = -12 * 5
-
-            # Midi note to frequency
-            hz = 440 * Math.pow 2, (note.key - 69 + transpose) / 12
-
-            # Wobble amplitude driven by LFO
-            wobbleAmp = Math.sin Math.PI * 2 * now * hz
-
-            # Wobble angle driven by LFO note and particle life
-            wobbleAngle = 10.0 * p.life + (Math.PI / 5) * p.note.key
-
-            x += wobbleAmp * Math.cos wobbleAngle
-            y += wobbleAmp * Math.sin wobbleAngle
+        theta = midiToAngle p.note.key
 
         # Radius: Particles spawn in center, fly outward
         radius = 3.0 * (1 - p.life)
-        x *= radius
-        y *= radius
 
-        # Use the XZ plane
-        p.point = [x, 0, y]
+        # Positioned in polar coordinates
+        x = radius * Math.cos theta
+        y = radius * Math.sin theta
 
         # One rainbow per octave
-        hue = (p.note.key - 60) / 12.0
-        p.color = OPC.hsv hue, 0.5, 0.8
+        hue = (p.note.key - 60 + 0.1) / 12.0
+        p.color = OPC.hsv hue, 0.3, 0.8
 
         # Intensity mapped to velocity, nonlinear
-        p.intensity = Math.pow(p.note.velocity / 100, 5.0) * brightness
+        p.intensity = Math.pow(p.note.velocity / 100, 3.0) * 0.25 * brightness
 
         # Falloff gets sharper as the note gets higher
         p.falloff = 20 + (p.note.key - 60) * 20
+
+        # Add influence of LFOs
+        for key, note of lfoNotes
+            age = now - note.timestamp
+            hz = midiToHz key
+            lfoAngle = midiToAngle key
+
+            # Amplitude starts with left hand velocity
+            wobbleAmp = Math.pow(note.velocity / 100, 3.0)
+
+            # Scale based on particle fuzziness
+            wobbleAmp *= 100.0 / p.falloff
+
+            # Fade over time
+            wobbleAmp /= 1 + age
+
+            # Wobble
+            wobbleAmp *= Math.sin(p.life * Math.pow(3, (p.note.key - 35) / 12.0))
+
+            # Wobble angle driven by LFO note and particle life
+            x += wobbleAmp * Math.cos lfoAngle
+            y += wobbleAmp * Math.sin lfoAngle
+
+        # Use the XZ plane
+        p.point = [x, 0, y]
 
         p.life -= timeStep / particleLifetime
 
