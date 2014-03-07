@@ -40,6 +40,11 @@ particleNotes = {}
 particleLifetime = 1.0
 brightness = 1.0
 spinRate = 1.0
+origin = [0, 0, 0]
+
+# Physics
+numTimesteps = 20
+gain = 0.005
 
 previousNow = 0
 spinAngle = 0
@@ -51,7 +56,7 @@ clock = () -> 0.001 * new Date().getTime()
 midiToHz = (key) -> 440 * Math.pow 2, (key - 69) / 12
 
 # Midi note to angle, one rev per octave
-midiToAngle = (key) -> (2 * Math.PI / 12) * key
+midiToAngle = (key) -> (2 * Math.PI / 24) * key
 
 
 input.on 'message', (deltaTime, message) ->
@@ -104,6 +109,8 @@ draw = () ->
         particles.push
             life: 1
             note: note
+            point: origin.slice 0
+            velocity: [0, 0, 0]
             timestamp: note.timestamp
 
     # Update appearance of all particles
@@ -121,13 +128,13 @@ draw = () ->
 
         # One rainbow per octave
         hue = (p.note.key - 60 + 0.1) / 12.0
-        p.color = OPC.hsv hue, 0.3, 0.8
+        p.color = OPC.hsv hue, 0.5, 0.8
 
         # Intensity mapped to velocity, nonlinear
-        p.intensity = Math.pow(p.note.velocity / 100, 3.0) * 0.25 * brightness
+        p.intensity = Math.pow(p.note.velocity / 100, 2.0) * 0.2 * brightness
 
         # Falloff gets sharper as the note gets higher
-        p.falloff = 20 + (p.note.key - 60) * 20
+        p.falloff = 15 * Math.pow(2, (p.note.key - 60) / 6)
 
         # Add influence of LFOs
         for key, note of lfoNotes
@@ -136,10 +143,10 @@ draw = () ->
             lfoAngle = midiToAngle key
 
             # Amplitude starts with left hand velocity
-            wobbleAmp = Math.pow(note.velocity / 100, 3.0)
+            wobbleAmp = Math.pow(note.velocity / 100, 2.0) * 12.0
 
             # Scale based on particle fuzziness
-            wobbleAmp *= 100.0 / p.falloff
+            wobbleAmp /= p.falloff
 
             # Fade over time
             wobbleAmp /= 1 + age
@@ -151,8 +158,15 @@ draw = () ->
             x += wobbleAmp * Math.cos lfoAngle
             y += wobbleAmp * Math.sin lfoAngle
 
-        # Use the XZ plane
-        p.point = [x, 0, y]
+        # Update velocity; use the XZ plane
+        p.velocity[0] += (x + origin[0] - p.point[0]) * gain
+        p.velocity[2] += (y + origin[2] - p.point[2]) * gain
+
+        # Fixed timestep physics
+        for i in [1 .. numTimesteps]
+            p.point[0] += p.velocity[0]
+            p.point[1] += p.velocity[1]
+            p.point[2] += p.velocity[2]
 
         p.life -= timeStep / particleLifetime
 
@@ -162,4 +176,4 @@ draw = () ->
     # Render particles to the LEDs
     client.mapParticles particles, model
 
-setInterval draw, 10
+setInterval draw, 5
