@@ -19,7 +19,7 @@
 # Default MIDI input
 midi = require 'midi'
 input = new midi.input
-input.openPort 0
+input.openPort 1
 input.ignoreTypes false, false, false
 
 # Default OPC output
@@ -51,8 +51,11 @@ clock = () -> 0.001 * new Date().getTime()
 midiToHz = (key) -> 440 * Math.pow 2, (key - 69) / 12
 
 # Midi note to angle, one rev per octave
-midiToAngle = (key) -> (2 * Math.PI / 12) * key
+midiToAngle = (key) -> (2 * Math.PI / 24) * key
 
+# Boundary between the left-hand and right-hand patterns.
+LIMINAL_KEY = 40
+SMOOTH_FACTOR = 0.1
 
 input.on 'message', (deltaTime, message) ->
     console.log message
@@ -71,7 +74,7 @@ input.on 'message', (deltaTime, message) ->
                 timestamp: clock()
 
             # Split keyboard into particles and LFOs
-            if key >= 60
+            if key >= LIMINAL_KEY
                 particleNotes[key] = info
             else
                 lfoNotes[key] = info
@@ -99,10 +102,16 @@ draw = () ->
     # Global spin update
     spinAngle = (spinAngle + timeStep * spinRate) % (Math.PI * 2)
 
+    # Experiment - moves the origin in a circle
+    theta = previousNow * 1.5
+    initX = 0.5 * Math.cos theta
+    initY = 0.5 * Math.sin theta
+
     # Launch new particles for all active notes
     for key, note of particleNotes
         particles.push
             life: 1
+            point: [initX, 0, initY]
             note: note
             timestamp: note.timestamp
 
@@ -116,18 +125,18 @@ draw = () ->
         radius = 3.0 * (1 - p.life)
 
         # Positioned in polar coordinates
-        x = radius * Math.cos theta
-        y = radius * Math.sin theta
+        x = radius * Math.cos(theta) + initX
+        y = radius * Math.sin(theta) + initY
 
         # One rainbow per octave
-        hue = (p.note.key - 60 + 0.1) / 12.0
+        hue = (p.note.key - LIMINAL_KEY + 0.1) / 12.0
         p.color = OPC.hsv hue, 0.3, 0.8
 
         # Intensity mapped to velocity, nonlinear
         p.intensity = Math.pow(p.note.velocity / 100, 3.0) * 0.25 * brightness
 
         # Falloff gets sharper as the note gets higher
-        p.falloff = 20 + (p.note.key - 60) * 20
+        p.falloff = 20 + (p.note.key - LIMINAL_KEY) * 20
 
         # Add influence of LFOs
         for key, note of lfoNotes
@@ -152,7 +161,12 @@ draw = () ->
             y += wobbleAmp * Math.sin lfoAngle
 
         # Use the XZ plane
-        p.point = [x, 0, y]
+        [oldx, _, oldy] = p.point
+        p.point = [oldx + (oldx - x)*SMOOTH_FACTOR,
+                   0,
+                   oldy + (oldy - y)*SMOOTH_FACTOR]
+        # p.point += ([x, 0, y] - p.point) * SMOOTH_FACTOR
+        # p.point = [x, 0, y]
 
         p.life -= timeStep / particleLifetime
 
