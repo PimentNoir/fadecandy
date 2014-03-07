@@ -2,8 +2,7 @@
 #
 # Particle system, playable with a MIDI keyboard!
 #
-# Dependencies:
-#    npm install midi coffee
+# Dependencies: run `npm install` in this directory.
 #
 # Assumes the default MIDI input port (0).
 # Specify a layout file on the command line, or use the default (grid32x16z)
@@ -13,18 +12,23 @@
 #    Left hand  -> Low frequency oscillators (wobble)
 #    Right hand -> Particles, shifting in color and pointiness
 #
-# 2014, Micah Elizabeth Scott & Keroserene
+# 2014, Micah Elizabeth Scott & ~keroserene
 #
+flags = require 'flags'
+flags.defineString 'layout', '../layouts/grid32x16z.json', 'LED board layout'
+flags.defineInteger 'midi', 0, 'MIDI input port'
+flags.parse()
 
-# Default MIDI input
+# Prepare MIDI input.
+# TODO: Intelligently find the right midi port instead of default to 0.
 midi = require 'midi'
 input = new midi.input
-input.openPort 1
+input.openPort flags.get('midi')
 input.ignoreTypes false, false, false
 
 # Default OPC output
 OPC = new require './opc'
-model = OPC.loadModel process.argv[2] || '../layouts/grid32x16z.json'
+model = OPC.loadModel flags.get('layout')
 client = new OPC 'localhost', 7890
 
 # Live particles
@@ -45,7 +49,7 @@ wobbleAmount = 24.0
 origin = [0, 0, 0]
 
 # Physics
-numPhysicsTimesteps = 20
+numPhysicsTimesteps = 1
 frameDelay = 5
 timestepSize = 0.010
 gain = 0.1
@@ -100,7 +104,7 @@ input.on 'message', (deltaTime, message) ->
             spinRate = (message[2] - 64) * 10.0 / 64
 
 
-draw = () ->
+draw = ->
 
     # Time delta calculations
     now = clock()
@@ -132,8 +136,8 @@ draw = () ->
         radius = 3.0 * (1 - p.life)
 
         # Positioned in polar coordinates
-        x = radius * Math.cos(theta)
-        y = radius * Math.sin(theta)
+        x = origin[0] + radius * Math.cos(theta)
+        y = origin[2] + radius * Math.sin(theta)
 
         # Hop around between almost-opposing colors, eventually going
         # around the rainbow. These ratios control what kinds of color
@@ -174,8 +178,8 @@ draw = () ->
             y += wobbleAmp * Math.sin lfoAngle
 
         # Update velocity; use the XZ plane
-        p.velocity[0] += (x + origin[0] - p.point[0]) * (gain / numPhysicsTimesteps)
-        p.velocity[2] += (y + origin[2] - p.point[2]) * (gain / numPhysicsTimesteps)
+        p.velocity[0] += (x - p.point[0]) * (gain / numPhysicsTimesteps)
+        p.velocity[2] += (y - p.point[2]) * (gain / numPhysicsTimesteps)
 
         # Fixed timestep physics
         for i in [1 .. numPhysicsTimesteps]
