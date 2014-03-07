@@ -39,7 +39,16 @@ particleNotes = {}
 # Adjustable parameters
 particleLifetime = 1.0
 brightness = 1.0
-spinRate = 1.0
+spinRate = 0
+noteSustain = 1.6
+wobbleAmount = 24.0
+origin = [0, 0, 0]
+
+# Physics
+numPhysicsTimesteps = 20
+frameDelay = 5
+timestepSize = 0.010
+gain = 0.1
 
 previousNow = 0
 spinAngle = 0
@@ -55,7 +64,6 @@ midiToAngle = (key) -> (2 * Math.PI / 24) * key
 
 # Boundary between the left-hand and right-hand patterns.
 LIMINAL_KEY = 40
-SMOOTH_FACTOR = 0.1
 
 input.on 'message', (deltaTime, message) ->
     console.log message
@@ -89,86 +97,93 @@ input.on 'message', (deltaTime, message) ->
 
         when 0xe0  # Voice 0, Pitch Bend
             # Default spin 1.0, but allow forward/backward
-            spinRate = 1.0 + (message[2] - 64) * 20.0 / 64
+            spinRate = (message[2] - 64) * 10.0 / 64
 
 
 draw = () ->
 
     # Time delta calculations
     now = clock()
-    timeStep = now - previousNow
-    previousNow = now
 
     # Global spin update
-    spinAngle = (spinAngle + timeStep * spinRate) % (Math.PI * 2)
+    spinAngle = (spinAngle + timestepSize * spinRate) % (Math.PI * 2)
 
     # Experiment - moves the origin in a circle
-    theta = previousNow * 1.5
-    initX = 0.5 * Math.cos theta
-    initY = 0.5 * Math.sin theta
+    theta = now * 2.5
+    origin[0] = 0.2 * Math.cos theta
+    origin[2] = 0.2 * Math.sin theta
 
     # Launch new particles for all active notes
     for key, note of particleNotes
         particles.push
             life: 1
-            point: [initX, 0, initY]
             note: note
+            point: origin.slice 0
+            velocity: [0, 0, 0]
             timestamp: note.timestamp
 
     # Update appearance of all particles
     for p in particles
 
         # Angle: Global spin, thne positional mapping to key
-        theta = midiToAngle p.note.key
+        theta = spinAngle + midiToAngle p.note.key
 
         # Radius: Particles spawn in center, fly outward
         radius = 3.0 * (1 - p.life)
 
         # Positioned in polar coordinates
-        x = radius * Math.cos(theta) + initX
-        y = radius * Math.sin(theta) + initY
+        x = radius * Math.cos(theta)
+        y = radius * Math.sin(theta)
 
-        # One rainbow per octave
-        hue = (p.note.key - LIMINAL_KEY + 0.1) / 12.0
-        p.color = OPC.hsv hue, 0.3, 0.8
+        # Hop around between almost-opposing colors, eventually going
+        # around the rainbow. These ratios control what kinds of color
+        # schemes we get for different chords.
+        hue = (p.note.key - LIMINAL_KEY + 0.1) * (7 / 12.0)
+        p.color = OPC.hsv hue, 0.5, 0.8
 
         # Intensity mapped to velocity, nonlinear
-        p.intensity = Math.pow(p.note.velocity / 100, 3.0) * 0.25 * brightness
+        p.intensity = Math.pow(p.note.velocity / 100, 2.0) * 0.2 * brightness
+
+        # Fade with age
+        noteAge = now - p.note.timestamp
+        p.intensity *= Math.max(0, 1 - (noteAge / noteSustain))
 
         # Falloff gets sharper as the note gets higher
-        p.falloff = 20 + (p.note.key - LIMINAL_KEY) * 20
+        p.falloff = 15 * Math.pow(2, (p.note.key - LIMINAL_KEY) / 6)
 
         # Add influence of LFOs
         for key, note of lfoNotes
-            age = now - note.timestamp
+            lfoAge = now - note.timestamp
             hz = midiToHz key
             lfoAngle = midiToAngle key
 
             # Amplitude starts with left hand velocity
-            wobbleAmp = Math.pow(note.velocity / 100, 3.0)
+            wobbleAmp = Math.pow(note.velocity / 100, 2.0) * wobbleAmount
 
             # Scale based on particle fuzziness
-            wobbleAmp *= 100.0 / p.falloff
+            wobbleAmp /= p.falloff
 
             # Fade over time
-            wobbleAmp /= 1 + age
+            wobbleAmp /= 1 + lfoAge
 
             # Wobble
-            wobbleAmp *= Math.sin(p.life * Math.pow(3, (p.note.key - 35) / 12.0))
+            wobbleAmp *= Math.sin(p.life * Math.pow(3, (p.note.key - LIMINAL_KEY/2) / 12.0))
 
             # Wobble angle driven by LFO note and particle life
             x += wobbleAmp * Math.cos lfoAngle
             y += wobbleAmp * Math.sin lfoAngle
 
-        # Use the XZ plane
-        [oldx, _, oldy] = p.point
-        p.point = [oldx + (oldx - x)*SMOOTH_FACTOR,
-                   0,
-                   oldy + (oldy - y)*SMOOTH_FACTOR]
-        # p.point += ([x, 0, y] - p.point) * SMOOTH_FACTOR
-        # p.point = [x, 0, y]
+        # Update velocity; use the XZ plane
+        p.velocity[0] += (x + origin[0] - p.point[0]) * (gain / numPhysicsTimesteps)
+        p.velocity[2] += (y + origin[2] - p.point[2]) * (gain / numPhysicsTimesteps)
 
-        p.life -= timeStep / particleLifetime
+        # Fixed timestep physics
+        for i in [1 .. numPhysicsTimesteps]
+            p.point[0] += p.velocity[0]
+            p.point[1] += p.velocity[1]
+            p.point[2] += p.velocity[2]
+
+        p.life -= timestepSize / particleLifetime
 
     # Filter out dead particles
     particles = particles.filter (p) -> p.life > 0
@@ -176,4 +191,4 @@ draw = () ->
     # Render particles to the LEDs
     client.mapParticles particles, model
 
-setInterval draw, 10
+setInterval draw, frameDelay
