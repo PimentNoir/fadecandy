@@ -39,7 +39,7 @@ particleNotes = {}
 # Adjustable parameters
 particleLifetime = 1.0
 brightness = 1.0
-spinRate = 1.0
+spinRate = 0
 noteSustain = 1.6
 wobbleAmount = 24.0
 origin = [0, 0, 0]
@@ -95,7 +95,7 @@ input.on 'message', (deltaTime, message) ->
 
         when 0xe0  # Voice 0, Pitch Bend
             # Default spin 1.0, but allow forward/backward
-            spinRate = 1.0 + (message[2] - 64) * 20.0 / 64
+            spinRate = (message[2] - 64) * 10.0 / 64
 
 
 draw = () ->
@@ -119,7 +119,7 @@ draw = () ->
     for p in particles
 
         # Angle: Global spin, thne positional mapping to key
-        theta = midiToAngle p.note.key
+        theta = spinAngle + midiToAngle p.note.key
 
         # Radius: Particles spawn in center, fly outward
         radius = 3.0 * (1 - p.life)
