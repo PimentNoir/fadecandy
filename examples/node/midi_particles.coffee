@@ -40,11 +40,15 @@ particleNotes = {}
 particleLifetime = 1.0
 brightness = 1.0
 spinRate = 1.0
+noteSustain = 1.6
+wobbleAmount = 24.0
 origin = [0, 0, 0]
 
 # Physics
-numTimesteps = 20
-gain = 0.005
+numPhysicsTimesteps = 20
+frameDelay = 5
+timestepSize = 0.010
+gain = 0.1
 
 previousNow = 0
 spinAngle = 0
@@ -98,11 +102,9 @@ draw = () ->
 
     # Time delta calculations
     now = clock()
-    timeStep = now - previousNow
-    previousNow = now
 
     # Global spin update
-    spinAngle = (spinAngle + timeStep * spinRate) % (Math.PI * 2)
+    spinAngle = (spinAngle + timestepSize * spinRate) % (Math.PI * 2)
 
     # Launch new particles for all active notes
     for key, note of particleNotes
@@ -133,23 +135,27 @@ draw = () ->
         # Intensity mapped to velocity, nonlinear
         p.intensity = Math.pow(p.note.velocity / 100, 2.0) * 0.2 * brightness
 
+        # Fade with age
+        noteAge = now - p.note.timestamp
+        p.intensity *= Math.max(0, 1 - (noteAge / noteSustain))
+
         # Falloff gets sharper as the note gets higher
         p.falloff = 15 * Math.pow(2, (p.note.key - 60) / 6)
 
         # Add influence of LFOs
         for key, note of lfoNotes
-            age = now - note.timestamp
+            lfoAge = now - note.timestamp
             hz = midiToHz key
             lfoAngle = midiToAngle key
 
             # Amplitude starts with left hand velocity
-            wobbleAmp = Math.pow(note.velocity / 100, 2.0) * 12.0
+            wobbleAmp = Math.pow(note.velocity / 100, 2.0) * wobbleAmount
 
             # Scale based on particle fuzziness
             wobbleAmp /= p.falloff
 
             # Fade over time
-            wobbleAmp /= 1 + age
+            wobbleAmp /= 1 + lfoAge
 
             # Wobble
             wobbleAmp *= Math.sin(p.life * Math.pow(3, (p.note.key - 35) / 12.0))
@@ -159,16 +165,16 @@ draw = () ->
             y += wobbleAmp * Math.sin lfoAngle
 
         # Update velocity; use the XZ plane
-        p.velocity[0] += (x + origin[0] - p.point[0]) * gain
-        p.velocity[2] += (y + origin[2] - p.point[2]) * gain
+        p.velocity[0] += (x + origin[0] - p.point[0]) * (gain / numPhysicsTimesteps)
+        p.velocity[2] += (y + origin[2] - p.point[2]) * (gain / numPhysicsTimesteps)
 
         # Fixed timestep physics
-        for i in [1 .. numTimesteps]
+        for i in [1 .. numPhysicsTimesteps]
             p.point[0] += p.velocity[0]
             p.point[1] += p.velocity[1]
             p.point[2] += p.velocity[2]
 
-        p.life -= timeStep / particleLifetime
+        p.life -= timestepSize / particleLifetime
 
     # Filter out dead particles
     particles = particles.filter (p) -> p.life > 0
@@ -176,4 +182,4 @@ draw = () ->
     # Render particles to the LEDs
     client.mapParticles particles, model
 
-setInterval draw, 5
+setInterval draw, frameDelay
