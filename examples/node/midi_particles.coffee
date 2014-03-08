@@ -4,27 +4,47 @@
 #
 # Dependencies: run `npm install` in this directory.
 #
-# Assumes the default MIDI input port (0).
-# Specify a layout file on the command line, or use the default (grid32x16z)
+# Command line options:
+#    
+#    --midiport <int>       Use a different MIDI port. Defaults to zero.
+#    --layout <file>        Pick a JSON layout file. Defaults to grid32x16z
+#    --opchost <hostname>   Network host running the OPC server. Defaults to localhost.
+#    --opcport <port>       Network port for the OPC server. Defaults to 7890.
 #
 # Controls:
-#    (Tested with Alesis Q49 keyboard controller)
 #    Left hand  -> Low frequency oscillators (wobble)
 #    Right hand -> Particles, shifting in color and pointiness
+#
+# Supported MIDI keyboards:
+#    - Basic MIDI works for any keyboard
+#    - Pitch bend / modulation / data knobs on Alesis Q49
+#    - Data sliders on Oxygen 61
 #
 # 2014, Micah Elizabeth Scott & Keroserene
 #
 
-# Default MIDI input
+parseArgs = require 'minimist'
 midi = require 'midi'
-input = new midi.input
-input.openPort 1
-input.ignoreTypes false, false, false
-
-# Default OPC output
 OPC = new require './opc'
-model = OPC.loadModel process.argv[2] || '../layouts/grid32x16z.json'
-client = new OPC 'localhost', 7890
+
+argv = parseArgs process.argv.slice(2),
+    default:
+        layout: '../layouts/grid32x16z.json'
+        midiport: 0
+        opchost: 'localhost'
+        opcport: 7890
+
+input = new midi.input
+if argv.midiport >= input.getPortCount()
+    console.log "MIDI port #{ argv.midiport } isn't available!"
+    process.exit 1
+
+console.log "Using MIDI port #{ argv.midiport }: #{ input.getPortName argv.midiport }"
+input.openPort argv.midiport
+
+console.log "Using OPC server at #{ argv.opchost }:#{ argv.opcport }"
+model = OPC.loadModel argv.layout
+client = new OPC argv.opchost, argv.opcport
 
 # Live particles
 particles = []
@@ -70,6 +90,7 @@ LOWEST_A = 1
 HIGHEST_C = 124
 getKeyName = (key) -> FLAT_NAMES[(key - LOWEST_A) % 12]
 
+input.ignoreTypes false, false, false
 input.on 'message', (deltaTime, message) ->
     logMsg = message
     msgType = Math.floor parseInt(message[0]) / 16  # Examine the 0xF0 byte.

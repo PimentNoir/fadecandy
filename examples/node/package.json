@@ -5,7 +5,8 @@
   },
   "dependencies": {
     "flags": "~0.1.1",
-    "midi": "~0.8.1"
+    "midi": "~0.8.1",
+    "minimist": "~0.0.8"
   },
   "private": true
 }
