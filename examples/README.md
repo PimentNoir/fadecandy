@@ -13,6 +13,10 @@ This directory contains sample projects and configuration files for Fadecandy.
   * Some examples written in [Python](http://python.org/)
 * `config`
   * Sample JSON configuration files for `fcserver`
+* `layouts`
+  * JSON layout files and layout generators
+  * Compatible with the Open Pixel Control `gl_server`.
+  * Compatible with some of the Node.js examples.
 
 LED Layouts
 -----------
