@@ -44,13 +44,9 @@ wobbleAmount = 24.0
 origin = [0, 0, 0]
 
 # Physics
-# numPhysicsTimesteps = 20  TODO: Re-enable when things become more complex
 frameDelay = 5
 timestepSize = 0.010
 gain = 0.1
-
-# Derived values
-particleDecay = timestepSize / particleLifetime
 
 # Controlled by the Pitch Transpose Knob
 spinAngle = 0
@@ -187,16 +183,14 @@ draw = () ->
             y += wobbleAmp * Math.sin lfoAngle
 
         # Update velocity; use the XZ plane
-        p.velocity[0] += (x - p.point[0]) * (gain) # / numPhysicsTimesteps)
-        p.velocity[2] += (y - p.point[2]) * (gain) # / numPhysicsTimesteps)
+        p.velocity[0] += (x - p.point[0]) * gain
+        p.velocity[2] += (y - p.point[2]) * gain
 
-        # Fixed timestep physics
-        # TODO: Re-enable this when it's not just re-adding the delta.
-        # for i in [1 .. numPhysicsTimesteps]
         p.point[0] += p.velocity[0]
         p.point[1] += p.velocity[1]
         p.point[2] += p.velocity[2]
-        p.life -= particleDecay
+
+        p.life -= timestepSize / particleLifetime
 
     # Filter out dead particles
     particles = particles.filter (p) -> p.life > 0
