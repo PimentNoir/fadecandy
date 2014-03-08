@@ -97,10 +97,11 @@ input.on 'message', (deltaTime, message) ->
 
         when 0xb  # Voice 0, Control Change
             switch message[1]
-                when 7   # "Data entry" slider, brightness
+                when 7, 33   # "Data entry" / "C1" slider, brightness
                     brightness = message[2] * 2.0 / 127
 
-                when 1   # "Modulation" slider, particle speed
+                when 1, 34   # "Modulation" / "C2" slider, particle speed
+                    console.log message[2]
                     particleLifetime = 0.1 + message[2] * 2.0 / 127
 
         when 0xe  # Voice 0, Pitch Bend
