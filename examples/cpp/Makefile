@@ -1,6 +1,7 @@
-PROGRAMS = simple
+PROGRAMS = simple rings
 
-CFLAGS = -O3 -Wall -Ilib -Wno-tautological-constant-out-of-range-compare
+CFLAGS = -O3 -Wall -Ilib 
+CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
 LFLAGS = -lm -lstdc++
 
 all: $(PROGRAMS)
