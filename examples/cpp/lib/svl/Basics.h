@@ -5,7 +5,8 @@
                     definitions, assertion and debugging facilities, and
                     miscellaneous useful template functions.
 
-                    This is a cut-down version for SVL.
+                    This is a cut-down version for SVL,
+                    with additional modifications for Fadecandy.
 
     Author(s):      Andrew Willmott
 
@@ -15,7 +16,7 @@
 
                     VL_CHECKING     - Include code for assertions,
                                       range errors and warnings.
-                    VL_FLOAT        - Use floats for real numbers. (Doubles
+                    VL_DOUBLE       - Use doubles for real numbers. (Floats
                                       are the default.)
                     VL_NO_BOOL      - There is no bool type.
                     VL_NO_TF        - true and false are not predefined.
@@ -24,7 +25,6 @@
 #ifndef __Basics__
 #define __Basics__
 
-#include "SVLConfig.h"
 #include <iostream>
 #include <cmath>
 
@@ -41,7 +41,7 @@ typedef long            Long;
 typedef unsigned char   Byte;
 typedef unsigned int    UInt;
 
-#ifndef VL_FLOAT
+#ifdef VL_DOUBLE
 typedef Double          Real;
 #else
 typedef Float           Real;
