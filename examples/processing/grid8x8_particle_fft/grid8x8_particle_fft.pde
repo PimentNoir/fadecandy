@@ -19,9 +19,10 @@ float[] fftFilter;
 int AudioBufferSize = 512;
 
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-"02 - Plastic People.mp3" }; 
+String[] filename = {"http://www.ledjamradio.com/sound"};
+//String[] filename = {"10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+//"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+//"02 - Plastic People.mp3" }; 
 AudioPlayer[] sound = new AudioPlayer[filename.length];
 boolean isPlaying;
 boolean isPlayer = true;
@@ -78,10 +79,11 @@ void setup()
           
   dot = loadImage("dot.png");
   colors = loadImage("colors.png");
+  
 
   // Connect to the local instance of fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
-  
+    
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
     
   // Make the status LED quiet
@@ -172,6 +174,9 @@ void reinit_sound_fft() {
      init_sound_fft();
 }
 
+float pulse = 0;
+float noise_scalex = 0, noise_scaley = 0; 
+
 void draw()
 {
   background(0);
@@ -191,9 +196,7 @@ void draw()
     fftin.forward(in.mix);
     //fftout.forward(out.mix);
   }
-    
-  float fftFiltermax = 0;
-        
+         
   for (int i = 0; i < fftFilter.length; i++) {
     if (isPlayer) { 
       fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftsong.getBand(i)));
@@ -201,13 +204,13 @@ void draw()
       fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftin.getBand(i)));
       //fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftout.getBand(i)));
     }
-    fftFiltermax = max(fftFilter);
+    
   }
   
-  float noise_scalex = 0, noise_scaley = 0; 
-    
+  float fftFiltermax = max(fftFilter);
+        
   for (int i = 0; i < fftFilter.length; i++) { 
-    float pulse = (sin(fftFilter[i] - 0.75) * 0.75); 
+    if (fftFiltermax != 0) pulse = (sin(1 - (fftFilter[i]/fftFiltermax)) * decay * 0.5125); 
     color rgb = colors.get(int(map(i, 0, fftFilter.length-1, 0, colors.width-1)), colors.height/2);
     tint(rgb, fftFilter[i] * opacity);
     blendMode(ADD);
