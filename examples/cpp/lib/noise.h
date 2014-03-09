@@ -2,7 +2,8 @@
  * Simplex Perlin Noise
  *
  * Originally by Casey Duncan, from https://github.com/caseman/noise.
- * Repackaged as a plain C header by Micah Elizabeth Scott.
+ * Repackaged as a plain C header by Micah Elizabeth Scott, with
+ * support for SVL vector types.
  *
  * Copyright (c) 2008 Casey Duncan
  *
@@ -26,8 +27,11 @@
  */
 
 #pragma once
+
 #include <math.h>
 #include <float.h>
+
+#include "svl/SVL.h"
 
 const float GRAD3[][3] = {
 	{1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0}, 
@@ -170,6 +174,12 @@ noise2(float x, float y)
   return (noise[0] + noise[1] + noise[2]) * 70.0f;
 }
 
+static inline float 
+noise2(Vec2 v)
+{
+  return noise2(v[0], v[1]);
+} 
+
 #define dot3(v1, v2) ((v1)[0]*(v2)[0] + (v1)[1]*(v2)[1] + (v1)[2]*(v2)[2])
 
 #define ASSIGN(a, v0, v1, v2) (a)[0] = v0; (a)[1] = v1; (a)[2] = v2;
@@ -245,8 +255,14 @@ noise3(float x, float y, float z)
   return (noise[0] + noise[1] + noise[2] + noise[3]) * 32.0f;
 }
 
+static inline float 
+noise3(Vec3 v)
+{
+  return noise3(v[0], v[1], v[2]);
+} 
+
 static inline float
-fbm_noise3(float x, float y, float z, int octaves, float persistence, float lacunarity) {
+fbm_noise3(float x, float y, float z, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
     float freq = 1.0f;
     float amp = 1.0f;
     float max = 1.0f;
@@ -260,6 +276,11 @@ fbm_noise3(float x, float y, float z, int octaves, float persistence, float lacu
         total += noise3(x * freq, y * freq, z * freq) * amp;
     }
     return total / max;
+}
+
+static inline float
+fbm_noise3(Vec3 v, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
+  return fbm_noise3(v[0], v[1], v[2], octaves, persistence, lacunarity);
 }
 
 #define dot4(v1, x, y, z, w) ((v1)[0]*(x) + (v1)[1]*(y) + (v1)[2]*(z) + (v1)[3]*(w))
@@ -354,8 +375,13 @@ noise4(float x, float y, float z, float w) {
     return 27.0 * (noise[0] + noise[1] + noise[2] + noise[3] + noise[4]);
 }
 
+static inline float 
+noise4(Vec4 v) {
+  return noise4(v[0], v[1], v[2], v[3]);
+}
+
 static inline float
-fbm_noise4(float x, float y, float z, float w, int octaves, float persistence, float lacunarity) {
+fbm_noise4(float x, float y, float z, float w, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
     float freq = 1.0f;
     float amp = 1.0f;
     float max = 1.0f;
@@ -369,4 +395,9 @@ fbm_noise4(float x, float y, float z, float w, int octaves, float persistence, f
         total += noise4(x * freq, y * freq, z * freq, w * freq) * amp;
     }
     return total / max;
+}
+
+static inline float
+fbm_noise4(Vec4 v, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
+  return fbm_noise4(v[0], v[1], v[2], v[3], octaves, persistence, lacunarity);
 }

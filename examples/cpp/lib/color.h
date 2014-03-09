@@ -4,7 +4,9 @@
 
 #pragma once
 
-static inline void hsv2rgb(float rgb[3], float h, float s, float v)
+#include "svl/SVL.h"
+
+static inline void hsv2rgb(Vec3 &rgb, float h, float s, float v)
 {
     /*
      * Converts an HSV color value to RGB.
@@ -34,4 +36,9 @@ static inline void hsv2rgb(float rgb[3], float h, float s, float v)
         case 4: rgb[0] = t; rgb[1] = p; rgb[2] = v; break;
         case 5: rgb[0] = v; rgb[1] = p; rgb[2] = q; break;
     }
+}
+
+static inline void hsv2rgb(Vec3 &rgb, Vec3 hsv)
+{
+    return hsv2rgb(rgb, hsv[0], hsv[1], hsv[2]);
 }

@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 #include "opcclient.h"
-
+#include "svl/SVL.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/filestream.h"
 #include "rapidjson/document.h"
@@ -49,7 +49,7 @@ public:
     PixelInfo(unsigned index, const rapidjson::Value &layout);
 
     // Point coordinates
-    float x, y, z;
+    Vec3 point;
 
     // Index in the framebuffer
     unsigned index;
@@ -67,7 +67,7 @@ public:
     // Calculate a pixel value, using floating point RGB in the range [0, 1].
     // Caller is responsible for clamping if necessary. This supports effects
     // that layer with other effects using greater than 8-bit precision.
-    virtual void calculatePixel(float rgb[3], const PixelInfo &p) = 0;
+    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p) = 0;
 };
 
 
@@ -109,14 +109,14 @@ private:
 
 
 inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
-    : x(0), y(0), z(0), index(index), layout(layout)
+    : point(0, 0, 0), index(index), layout(layout)
 {
     if (layout.IsObject()) {
-        const rapidjson::Value& point = layout["point"];
-        if (point.IsArray()) {
-            if (point.Size() >= 1) x = point[0u].GetDouble();
-            if (point.Size() >= 2) y = point[1u].GetDouble();
-            if (point.Size() >= 3) z = point[2u].GetDouble();
+        const rapidjson::Value& pointValue = layout["point"];
+        if (pointValue.IsArray()) {
+            for (unsigned i = 0; i < 3 && i < pointValue.Size(); i++) {
+                point[i] = pointValue[i].GetDouble();
+            }
         }
     }
 }
@@ -235,7 +235,7 @@ inline void EffectRunner::doFrame(float timeDelta)
     uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
     for (std::vector<PixelInfo>::iterator i = pixelInfo.begin(), e = pixelInfo.end(); i != e; ++i) {
-        float rgb[3] = { 0, 0, 0 };
+        Vec3 rgb(0, 0, 0);
         const PixelInfo &p = *i;
 
         if (p.layout.IsObject()) {

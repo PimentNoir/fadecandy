@@ -20,10 +20,10 @@ public:
         angle = fmodf(angle + timeDelta * speed, 2 * M_PI);
     }
 
-    virtual void calculatePixel(float rgb[3], const PixelInfo &p)
+    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
-        float distance = sqrtf(sq(p.x) + sq(p.y) + sq(p.z));
-        float wave = sinf(3.0 * distance - angle) + noise3(p.x, p.y, p.z);
+        float distance = len(p.point);
+        float wave = sinf(3.0 * distance - angle) + noise3(p.point);
         hsv2rgb(rgb, 0.2, 0.3, wave);
     }
 };

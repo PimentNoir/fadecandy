@@ -16,12 +16,12 @@ class Rings : public Effect
 {
 public:
     Rings()
-        : dx(0), dz(0), dw(0), now(0) {}
+        : d(0, 0, 0, 0), now(0) {}
 
     static const float xyzSpeed = 0.006;
+    static const float xyzScale = 0.08;
     static const float wSpeed = 0.002;
     static const float wRate = 0.0001;
-    static const float xyzScale = 0.08;
     static const float ringScale = 1.5;
     static const float ringScaleRate = 0.01;
     static const float ringDepth = 0.2;
@@ -31,13 +31,13 @@ public:
     static const float hueRate = 0.001;
 
     // State variables
-    float dx, dz, dw;
+    Vec4 d;
     double now;
 
     // Calculated once per frame
     float hue, saturation;
     float spacing;
-    float centerx, centery, centerz;
+    Vec3 center;
 
     virtual void nextFrame(float timeDelta)
     {
@@ -51,42 +51,27 @@ public:
         // Rotate movement in the XZ plane
         float angle = noise2(now * 0.01, 30.5) * 10.0;
         float speed = pow(fabsf(noise2(now * 0.01, 40.5)), 2.5) * xyzSpeed;
-        dx += cosf(angle) * speed;
-        dz += sinf(angle) * speed;
+        d[0] += cosf(angle) * speed;
+        d[2] += sinf(angle) * speed;
 
         // Random wander along the W axis
-        dw += noise2(now * wRate, 3.5) * wSpeed;
+        d[3] += noise2(now * wRate, 3.5) * wSpeed;
 
         // Update center position
-        centerx = noise2(now * wanderSpeed, 50.9) * wanderSize;
-        centery = noise2(now * wanderSpeed, 51.4) * wanderSize;
-        centerz = noise2(now * wanderSpeed, 51.7) * wanderSize;
+        center = Vec3(noise2(now * wanderSpeed, 50.9),
+                      noise2(now * wanderSpeed, 51.4),
+                      noise2(now * wanderSpeed, 51.7)) * wanderSize;
     }
 
-    virtual void calculatePixel(float rgb[3], const PixelInfo &p)
+    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
-        float distx = p.x - centerx;
-        float disty = p.y - centery;
-        float distz = p.z - centerz;
+        float dist = len(p.point - center);
+        Vec4 pulse = Vec4(sinf(d[2] + dist * spacing) * ringDepth, 0, 0, 0);
+        Vec4 s = Vec4(p.point * xyzScale, 0) + d;
+        Vec4 chromaOffset = Vec4(0, 0, 0, 10);
 
-        float dist = sqrtf(sq(distx) + sq(disty) + sq(distz));
-        float pulse = sinf(dz + dist * spacing) * ringDepth;
-      
-        float n = fbm_noise4(
-            p.x * xyzScale + dx + pulse,
-            p.y * xyzScale,
-            p.z * xyzScale + dz,
-            dw,
-            4, 0.5, 2
-        ) * 2.5f + 0.1f;
-
-        float m = fbm_noise4(
-            p.x * xyzScale + dx,
-            p.y * xyzScale,
-            p.z * xyzScale + dz,
-            dw  + 10.0,
-            4, 0.5, 2
-        );
+        float n = fbm_noise4(s + pulse, 4) * 2.5f + 0.1f;
+        float m = fbm_noise4(s + chromaOffset, 4);
 
         hsv2rgb(rgb,
             hue + 0.5 * m,
