@@ -130,5 +130,8 @@ bool OPCClient::connectSocket()
     int flag = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof flag);
 
+    flag = 1;
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (char*) &flag, sizeof flag);
+
     return true;
 }
