@@ -22,7 +22,7 @@ public:
 
     virtual void calculatePixel(float rgb[3], const PixelInfo &p)
     {
-        float distance = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+        float distance = sqrtf(sq(p.x) + sq(p.y) + sq(p.z));
         float wave = sinf(3.0 * distance - angle) + noise3(p.x, p.y, p.z);
         hsv2rgb(rgb, 0.2, 0.3, wave);
     }
