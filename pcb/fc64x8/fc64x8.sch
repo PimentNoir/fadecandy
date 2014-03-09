@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="6.3">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -7716,6 +7716,112 @@ Source: http://www.osram.convergy.de/</description>
 </deviceset>
 </devicesets>
 </library>
+<library name="microbuilder">
+<description>&lt;h2&gt;&lt;b&gt;microBuilder.eu&lt;/b&gt; Eagle Footprint Library&lt;/h2&gt;
+
+&lt;p&gt;Footprints for common components used in our projects and products.  This is the same library that we use internally, and it is regularly updated.  The newest version can always be found at &lt;b&gt;www.microBuilder.eu&lt;/b&gt;.  If you find this library useful, please feel free to purchase something from our online store. Please also note that all holes are optimised for metric drill bits!&lt;/p&gt;
+
+&lt;h3&gt;Obligatory Warning&lt;/h3&gt;
+&lt;p&gt;While it probably goes without saying, there are no guarantees that the footprints or schematic symbols in this library are flawless, and we make no promises of fitness for production, prototyping or any other purpose. These libraries are provided for information puposes only, and are used at your own discretion.  While we make every effort to produce accurate footprints, and many of the items found in this library have be proven in production, we can't make any promises of suitability for a specific purpose. If you do find any errors, though, please feel free to contact us at www.microbuilder.eu to let us know about it so that we can update the library accordingly!&lt;/p&gt;
+
+&lt;h3&gt;License&lt;/h3&gt;
+&lt;p&gt;This work is placed in the public domain, and may be freely used for commercial and non-commercial work with the following conditions:&lt;/p&gt;
+&lt;p&gt;THIS SOFTWARE IS PROVIDED ''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+&lt;/p&gt;</description>
+<packages>
+<package name="FIDUCIAL-1X2.5">
+<circle x="0" y="0" radius="1.1" width="1.2" layer="29"/>
+<circle x="0" y="0" radius="1.1" width="1.2" layer="39"/>
+<circle x="0" y="0" radius="1.1" width="1.2" layer="41"/>
+<smd name="1" x="0" y="0" dx="1" dy="1" layer="1" roundness="100" cream="no"/>
+<text x="-0.508" y="-1.016" size="0.4064" layer="25">1mm</text>
+</package>
+<package name="PASS-ROUND">
+<description>&lt;b&gt;FIDUCIAL MARKER&lt;/b&gt;&lt;p&gt;
+round, layers 1 + 16 + 21 + 39 + 49</description>
+<wire x1="0" y1="0.508" x2="0.508" y2="0" width="1.4224" layer="49" curve="-90" cap="flat"/>
+<wire x1="-0.508" y1="0" x2="0" y2="-0.508" width="1.4224" layer="49" curve="90" cap="flat"/>
+<wire x1="0" y1="0.508" x2="0.508" y2="0" width="1.4224" layer="49" curve="-90" cap="flat"/>
+<wire x1="-0.508" y1="0" x2="0" y2="-0.508" width="1.4224" layer="49" curve="90" cap="flat"/>
+<wire x1="-2.54" y1="0" x2="-1.27" y2="0" width="0.1524" layer="49"/>
+<wire x1="0" y1="2.54" x2="0" y2="1.27" width="0.1524" layer="49"/>
+<wire x1="0" y1="-2.54" x2="0" y2="-1.27" width="0.1524" layer="49"/>
+<wire x1="2.54" y1="0" x2="1.27" y2="0" width="0.1524" layer="49"/>
+<wire x1="-2.54" y1="0" x2="-1.524" y2="0" width="0.1524" layer="1"/>
+<wire x1="0" y1="2.54" x2="0" y2="1.524" width="0.1524" layer="1"/>
+<wire x1="0" y1="-2.54" x2="0" y2="-1.524" width="0.1524" layer="1"/>
+<wire x1="2.54" y1="0" x2="1.524" y2="0" width="0.1524" layer="1"/>
+<wire x1="-2.54" y1="0" x2="-1.524" y2="0" width="0.1524" layer="16"/>
+<wire x1="0" y1="2.54" x2="0" y2="1.524" width="0.1524" layer="16"/>
+<wire x1="0" y1="-2.54" x2="0" y2="-1.524" width="0.1524" layer="16"/>
+<wire x1="2.54" y1="0" x2="1.524" y2="0" width="0.1524" layer="16"/>
+<wire x1="0.0254" y1="0.5842" x2="0.5842" y2="0.0254" width="1.1176" layer="16" curve="-90" cap="flat"/>
+<wire x1="0.0254" y1="0.5842" x2="0.5842" y2="0.0254" width="1.1176" layer="1" curve="-90" cap="flat"/>
+<wire x1="-0.5842" y1="-0.0254" x2="-0.0254" y2="-0.5842" width="1.1176" layer="16" curve="90" cap="flat"/>
+<wire x1="-0.5842" y1="-0.0254" x2="-0.0254" y2="-0.5842" width="1.1176" layer="1" curve="90" cap="flat"/>
+<circle x="0" y="0" radius="1.27" width="0.1524" layer="49"/>
+<circle x="0" y="0" radius="1.27" width="0.1524" layer="49"/>
+<circle x="0" y="0" radius="1.27" width="0.1524" layer="1"/>
+<circle x="0" y="0" radius="1.27" width="0.1524" layer="16"/>
+<circle x="0" y="0" radius="2.54" width="0" layer="29"/>
+<circle x="0" y="0" radius="2.54" width="0" layer="30"/>
+</package>
+<package name="FIDUCIAL_1MM">
+<smd name="1" x="0" y="0" dx="1" dy="1" layer="1" roundness="100" cream="no"/>
+<wire x1="-0.75" y1="0" x2="0" y2="0.75" width="0.5" layer="29" curve="-90"/>
+<wire x1="0" y1="0.75" x2="0.75" y2="0" width="0.5" layer="29" curve="-90"/>
+<wire x1="0.75" y1="0" x2="0" y2="-0.75" width="0.5" layer="29" curve="-90"/>
+<wire x1="0" y1="-0.75" x2="-0.75" y2="0" width="0.5" layer="29" curve="-90"/>
+<wire x1="-0.75" y1="0" x2="0" y2="0.75" width="0.5" layer="41" curve="-90"/>
+<wire x1="0" y1="0.75" x2="0.75" y2="0" width="0.5" layer="41" curve="-90"/>
+<wire x1="0.75" y1="0" x2="0" y2="-0.75" width="0.5" layer="41" curve="-90"/>
+<wire x1="0" y1="-0.75" x2="-0.75" y2="0" width="0.5" layer="41" curve="-90"/>
+<wire x1="-0.75" y1="0" x2="0" y2="0.75" width="0.5" layer="39" curve="-90"/>
+<wire x1="0" y1="0.75" x2="0.75" y2="0" width="0.5" layer="39" curve="-90"/>
+<wire x1="0.75" y1="0" x2="0" y2="-0.75" width="0.5" layer="39" curve="-90"/>
+<wire x1="0" y1="-0.75" x2="-0.75" y2="0" width="0.5" layer="39" curve="-90"/>
+</package>
+</packages>
+<symbols>
+<symbol name="FIDUCIAL">
+<wire x1="-0.762" y1="0.762" x2="0.762" y2="-0.762" width="0.254" layer="94"/>
+<wire x1="0.762" y1="0.762" x2="-0.762" y2="-0.762" width="0.254" layer="94"/>
+<circle x="0" y="0" radius="1.27" width="0.254" layer="94"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="FIDUCIAL" prefix="FID">
+<description>&lt;b&gt;Fiducial Alignment Points&lt;/b&gt;
+&lt;p&gt;Various fiducial points for machine vision alignment.&lt;/p&gt;</description>
+<gates>
+<gate name="G$1" symbol="FIDUCIAL" x="0" y="0"/>
+</gates>
+<devices>
+<device name="1X2.5" package="FIDUCIAL-1X2.5">
+<technologies>
+<technology name="">
+<attribute name="BOM" value="EXCLUDE" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="ROUND" package="PASS-ROUND">
+<technologies>
+<technology name="">
+<attribute name="BOM" value="EXCLUDE" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="&quot;&quot;" package="FIDUCIAL_1MM">
+<technologies>
+<technology name="">
+<attribute name="BOM" value="EXCLUDE" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -7729,11 +7835,11 @@ Source: http://www.osram.convergy.de/</description>
 <part name="X1" library="scanlime" deviceset="TSX-3225" device="0" value="16 MHz"/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="U1" library="scanlime" deviceset="MK20DX128VLF5" device="" value="MK20DX128VLF5"/>
-<part name="C1" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="2.2uF"/>
+<part name="C1" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="10uF"/>
 <part name="C2" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="0.1uF"/>
 <part name="C3" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="0.1uF"/>
 <part name="C4" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="0.1uF"/>
-<part name="C5" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="2.2uF"/>
+<part name="C5" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="10uF"/>
 <part name="C6" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="0.1uF"/>
 <part name="FB1" library="scanlime" deviceset="FB" device="0805/NO-OUTLINE"/>
 <part name="FB2" library="scanlime" deviceset="FB" device="0805/NO-OUTLINE"/>
@@ -7757,14 +7863,14 @@ Source: http://www.osram.convergy.de/</description>
 <part name="GND9" library="supply1" deviceset="GND" device=""/>
 <part name="C10" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="2.2uF"/>
 <part name="C11" library="scanlime" deviceset="C-US" device="0805/NO-OUTLINE" value="0.1uF"/>
-<part name="R4" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R5" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R6" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R7" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R8" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R9" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R10" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
-<part name="R11" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="75"/>
+<part name="R4" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R5" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R6" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R7" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R8" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R9" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R10" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
+<part name="R11" library="scanlime" deviceset="R-US_" device="0805/NO-OUTLINE" value="68"/>
 <part name="J2" library="pinhead" deviceset="PINHD-2X8" device="" value="Outputs"/>
 <part name="GND10" library="supply1" deviceset="GND" device=""/>
 <part name="RESET" library="testpad" deviceset="TP" device="TP18SQ" value="TPTP18SQ"/>
@@ -7787,6 +7893,9 @@ Source: http://www.osram.convergy.de/</description>
 <part name="JP1" library="pinhead" deviceset="PINHD-1X1" device=""/>
 <part name="JP2" library="pinhead" deviceset="PINHD-1X1" device=""/>
 <part name="GND11" library="supply1" deviceset="GND" device=""/>
+<part name="FID1" library="microbuilder" deviceset="FIDUCIAL" device="&quot;&quot;"/>
+<part name="FID2" library="microbuilder" deviceset="FIDUCIAL" device="&quot;&quot;"/>
+<part name="FID3" library="microbuilder" deviceset="FIDUCIAL" device="&quot;&quot;"/>
 </parts>
 <sheets>
 <sheet>
@@ -7934,6 +8043,9 @@ Source: http://www.osram.convergy.de/</description>
 <instance part="JP1" gate="G$1" x="226.06" y="157.48"/>
 <instance part="JP2" gate="G$1" x="226.06" y="147.32"/>
 <instance part="GND11" gate="1" x="213.36" y="139.7"/>
+<instance part="FID1" gate="G$1" x="7.62" y="170.18"/>
+<instance part="FID2" gate="G$1" x="7.62" y="162.56"/>
+<instance part="FID3" gate="G$1" x="12.7" y="167.64"/>
 </instances>
 <busses>
 </busses>
