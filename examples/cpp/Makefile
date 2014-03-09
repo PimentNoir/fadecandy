@@ -1,4 +1,4 @@
-PROGRAMS = simple rings
+PROGRAMS = simple rings spokes
 
 CFLAGS = -O3 -Wall -Ilib 
 CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
