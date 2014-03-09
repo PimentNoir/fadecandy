@@ -1,5 +1,5 @@
 /*
- * Simple and efficient C++ client for Open Pixel Control
+ * Tiny and fast C++ client for Open Pixel Control
  *
  * Copyright (c) 2014 Micah Elizabeth Scott <micah@scanlime.org>
  *
@@ -26,9 +26,18 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <netinet/in.h>
+
 #include <vector>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+
 
 class OPCClient {
 public:
@@ -71,3 +80,105 @@ private:
     bool connectSocket();
     void closeSocket();
 };
+
+
+inline OPCClient::OPCClient()
+{
+    fd = -1;
+    memset(&address, 0, sizeof address);
+}
+
+inline OPCClient::~OPCClient()
+{
+    closeSocket();
+}
+
+inline void OPCClient::closeSocket()
+{
+    if (isConnected()) {
+        close(fd);
+        fd = -1;
+    }
+}
+
+inline bool OPCClient::resolve(const char *hostport, int defaultPort)
+{
+    fd = -1;
+
+    char *host = strdup(hostport);
+    char *colon = strchr(host, ':');
+    int port = defaultPort;
+    bool success = false;
+
+    if (colon) {
+        *colon = '\0';
+        port = strtol(colon + 1, 0, 10);
+    }
+
+    if (port) {
+        struct addrinfo *addr;
+        getaddrinfo(*host ? host : "localhost", 0, 0, &addr);
+
+        for (struct addrinfo *i = addr; i; i = i->ai_next) {
+            if (i->ai_family == PF_INET) {
+                memcpy(&address, i->ai_addr, sizeof address);
+                address.sin_port = htons(port);
+                success = true;
+                break;
+            }
+        }
+        freeaddrinfo(addr);
+    }
+
+    free(host);
+    return success;
+}
+
+inline bool OPCClient::isConnected()
+{
+    return fd > 0;
+}
+
+inline bool OPCClient::write(const uint8_t *data, ssize_t length)
+{
+    if (!isConnected()) {
+        if (!connectSocket()) {
+            return false;
+        }
+    }
+
+    while (length > 0) {
+        int result = send(fd, data, length, 0);
+        if (result <= 0) {
+            closeSocket();
+            return false;
+        }
+        length -= result;
+        data += result;
+    }
+
+    return true;
+}
+
+inline bool OPCClient::write(const std::vector<uint8_t> &data)
+{
+    return write(&data[0], data.size());
+}
+
+inline bool OPCClient::connectSocket()
+{
+    fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (connect(fd, (struct sockaddr*) &address, sizeof address) < 0) {
+        close(fd);
+        return false;
+    }
+
+    int flag = 1;
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof flag);
+
+    flag = 1;
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (char*) &flag, sizeof flag);
+
+    return true;
+}
