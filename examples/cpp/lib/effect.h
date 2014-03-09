@@ -43,6 +43,23 @@
 #include "rapidjson/document.h"
 
 
+// Information about one LED pixel
+class PixelInfo {
+public:
+    PixelInfo(unsigned index, const rapidjson::Value &layout);
+
+    // Point coordinates
+    float x, y, z;
+
+    // Index in the framebuffer
+    unsigned index;
+
+    // Parsed JSON for this pixel's layout
+    const rapidjson::Value &layout;
+};
+
+
+// Abstract base class for one LED effect
 class Effect {
 public:
     virtual void nextFrame(float timeDelta);
@@ -50,7 +67,7 @@ public:
     // Calculate a pixel value, using floating point RGB in the range [0, 1].
     // Caller is responsible for clamping if necessary. This supports effects
     // that layer with other effects using greater than 8-bit precision.
-    virtual void calculatePixel(rapidjson::Value &layout, float rgb[3]) = 0;
+    virtual void calculatePixel(float rgb[3], const PixelInfo &p) = 0;
 };
 
 
@@ -85,10 +102,24 @@ private:
     Effect *effect;
     struct timeval lastTime;
     std::vector<uint8_t> frameBuffer;
+    std::vector<PixelInfo> pixelInfo;
 
     int usage(const char *name);
 };
 
+
+inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
+    : x(0), y(0), z(0), index(index), layout(layout)
+{
+    if (layout.IsObject()) {
+        const rapidjson::Value& point = layout["point"];
+        if (point.IsArray()) {
+            if (point.Size() >= 1) x = point[0u].GetDouble();
+            if (point.Size() >= 2) y = point[1u].GetDouble();
+            if (point.Size() >= 3) z = point[2u].GetDouble();
+        }
+    }
+}
 
 inline void Effect::nextFrame(float timeDelta)
 {
@@ -137,6 +168,13 @@ inline bool EffectRunner::setLayout(const char *filename)
     int frameBytes = layout.Size() * 3;
     frameBuffer.resize(sizeof(OPCClient::Header) + frameBytes);
     OPCClient::Header::view(frameBuffer).init(0, opc.SET_PIXEL_COLORS, frameBytes);
+
+    // Set up PixelInfo instances
+    pixelInfo.clear();
+    for (unsigned i = 0; i < layout.Size(); i++) {
+        PixelInfo p(i, layout[i]);
+        pixelInfo.push_back(p);
+    }
 
     return true;
 }
@@ -196,13 +234,12 @@ inline void EffectRunner::doFrame(float timeDelta)
 
     uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
-    for (unsigned i = 0; i < layout.Size(); i++) {
+    for (std::vector<PixelInfo>::iterator i = pixelInfo.begin(), e = pixelInfo.end(); i != e; ++i) {
         float rgb[3] = { 0, 0, 0 };
+        const PixelInfo &p = *i;
 
-        rapidjson::Value &pixelLayout = layout[i];
-
-        if (pixelLayout.IsObject()) {
-            effect->calculatePixel(pixelLayout, rgb);
+        if (p.layout.IsObject()) {
+            effect->calculatePixel(rgb, p);
         }
 
         for (unsigned i = 0; i < 3; i++) {

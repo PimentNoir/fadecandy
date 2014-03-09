@@ -20,15 +20,10 @@ public:
         angle = fmodf(angle + timeDelta * speed, 2 * M_PI);
     }
 
-    virtual void calculatePixel(rapidjson::Value &layout, float rgb[3])
+    virtual void calculatePixel(float rgb[3], const PixelInfo &p)
     {
-        float x = layout["point"][0u].GetDouble();
-        float y = layout["point"][1u].GetDouble();
-        float z = layout["point"][2u].GetDouble();
-
-        float distance = sqrtf(x*x + y*y + z*z);
-        float wave = sinf(3.0 * distance - angle) + noise3(x, y, z);
-
+        float distance = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+        float wave = sinf(3.0 * distance - angle) + noise3(p.x, p.y, p.z);
         hsv2rgb(rgb, 0.2, 0.3, wave);
     }
 };
