@@ -307,3 +307,9 @@ inline int EffectRunner::usage(const char *name)
     fprintf(stderr, "usage: %s [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]\n", name);
     return 1;
 }
+
+static inline float sq(float a)
+{
+    // Fast square
+    return a*a;
+}
