@@ -1,5 +1,4 @@
 // Simple example effect:
-// Uses the grid32x16z layout, connects to a local OPC server.
 // Draws a noise pattern modulated by an expanding sine wave.
 
 #include <math.h>
@@ -34,14 +33,16 @@ public:
     }
 };
 
-int main()
+int main(int argc, char **argv)
 {
     EffectRunner r;
+
     MyEffect e;
     r.setEffect(&e);
+
+    // Defaults, overridable with command line options
     r.setMaxFrameRate(100);
-    r.setServer("localhost");
     r.setLayout("../layouts/grid32x16z.json");
-    r.run();
-    return 0;
+
+    return r.main(argc, argv);
 }

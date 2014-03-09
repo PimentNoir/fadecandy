@@ -32,6 +32,9 @@
 #include <algorithm>
 #include <vector>
 #include <sys/time.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "opcclient.h"
 
@@ -60,14 +63,20 @@ public:
     void setEffect(Effect* effect);
     void setMaxFrameRate(float fps);
 
+    bool hasLayout();
     const rapidjson::Document& getLayout();
     Effect* getEffect();
     OPCClient& getClient();
 
+    // Main loop body
     void doFrame();
     void doFrame(float timeDelta);
 
+    // Minimal main loop
     void run();
+
+    // Simple argument parsing and main loop
+    int main(int argc, char **argv);
 
 private:
     float minTimeDelta;
@@ -76,6 +85,8 @@ private:
     Effect *effect;
     struct timeval lastTime;
     std::vector<uint8_t> frameBuffer;
+
+    int usage(const char *name);
 };
 
 
@@ -89,6 +100,9 @@ inline EffectRunner::EffectRunner()
 {
     lastTime.tv_sec = 0;
     lastTime.tv_usec = 0;
+
+    // Default server
+    setServer("localhost");
 }
 
 inline void EffectRunner::setMaxFrameRate(float fps)
@@ -132,6 +146,11 @@ inline const rapidjson::Document& EffectRunner::getLayout()
     return layout;
 }
 
+inline bool EffectRunner::hasLayout()
+{
+    return layout.IsArray();
+}
+
 inline void EffectRunner::setEffect(Effect *effect)
 {
     this->effect = effect;
@@ -169,7 +188,7 @@ inline void EffectRunner::doFrame()
 
 inline void EffectRunner::doFrame(float timeDelta)
 {
-    if (!effect || !layout.IsArray()) {
+    if (!getEffect() || !hasLayout()) {
         return;
     }
 
@@ -202,4 +221,52 @@ inline void EffectRunner::doFrame(float timeDelta)
 inline OPCClient& EffectRunner::getClient()
 {
     return opc;
+}
+
+inline int EffectRunner::main(int argc, char **argv)
+{
+    for (int i = 1; i < argc; i++) {
+
+        if (!strcmp(argv[i], "-fps") && (i+1 < argc)) {
+            float rate = atof(argv[++i]);
+            if (rate <= 0) {
+                fprintf(stderr, "Invalid frame rate\n");
+                return usage(argv[0]);
+            }
+            setMaxFrameRate(rate);
+            continue;
+        }
+
+        if (!strcmp(argv[i], "-layout") && (i+1 < argc)) {
+            if (!setLayout(argv[++i])) {
+                fprintf(stderr, "Can't load layout from %s\n", argv[i]);
+                return 1;
+            }
+            continue;
+        }
+
+        if (!strcmp(argv[i], "-server") && (i+1 < argc)) {
+            if (!setServer(argv[++i])) {
+                fprintf(stderr, "Can't resolve server name %s\n", argv[i]);
+                return 1;
+            }
+            continue;
+        }
+
+        return usage(argv[0]);
+    }
+
+    if (!hasLayout()) {
+        fprintf(stderr, "No layout specified\n");
+        return usage(argv[0]);
+    }
+
+    run();
+    return 0;
+}
+
+inline int EffectRunner::usage(const char *name)
+{
+    fprintf(stderr, "usage: %s [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]\n", name);
+    return 1;
 }
