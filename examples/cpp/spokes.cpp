@@ -13,7 +13,7 @@ class Spokes : public Effect
 {
 public:
     Spokes()
-        : now(0) {}
+        : spin(0) {}
 
     static const float wanderSpeed = 0.04;
     static const float wanderSize = 1.8;
@@ -28,26 +28,24 @@ public:
     static const float brightness = 1.2;
 
     // State variables
-    double now, spin;
+    double spin;
 
     // Calculated once per frame
     float hue, saturation;
     Vec3 center, noiseOffset;
 
-    virtual void nextFrame(float timeDelta)
+    virtual void beginFrame(const FrameInfo &f)
     {
-        now += timeDelta;
+        noiseOffset[2] += f.timeDelta * noiseSpeed;
 
-        noiseOffset[2] += timeDelta * noiseSpeed;
+        spin = fmodf(spin + f.timeDelta * noise2(f.time * spinRate, 5.8f) * spinSpeed, M_PI * 2.0f);
 
-        spin = fmodf(spin + timeDelta * noise2(now * spinRate, 5.8f) * spinSpeed, M_PI * 2.0f);
-
-        hue = noise2(now * hueRate, 20.5) * hueScale;
-        saturation = sq(std::min(std::max(0.7f * (0.5f + noise2(now * 0.01, 0.5)), 0.0f), 1.0f));
+        hue = noise2(f.time * hueRate, 20.5) * hueScale;
+        saturation = sq(std::min(std::max(0.7f * (0.5f + noise2(f.time * 0.01, 0.5)), 0.0f), 1.0f));
 
         // Update center position
-        center = Vec3(noise2(now * wanderSpeed, 50.9), 0,
-                      noise2(now * wanderSpeed, 51.7)) * wanderSize;
+        center = Vec3(noise2(f.time * wanderSpeed, 50.9), 0,
+                      noise2(f.time * wanderSpeed, 51.7)) * wanderSize;
     }
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)

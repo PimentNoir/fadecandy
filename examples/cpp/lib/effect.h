@@ -46,7 +46,7 @@
 // Information about one LED pixel
 class PixelInfo {
 public:
-    PixelInfo(unsigned index, const rapidjson::Value &layout);
+    PixelInfo(unsigned index, const rapidjson::Value& layout);
 
     // Point coordinates
     Vec3 point;
@@ -59,15 +59,34 @@ public:
 };
 
 
+// Information about one Effect frame
+class FrameInfo {
+public:
+    FrameInfo();
+    void init(const rapidjson::Value &layout);
+    void advance(float timeDelta);
+
+    // Seconds passed since the last frame
+    float timeDelta;
+
+    // Time since the pattern started
+    double time;
+
+    // Info for every pixel
+    std::vector<PixelInfo> pixels;
+};    
+
+
 // Abstract base class for one LED effect
 class Effect {
 public:
-    virtual void nextFrame(float timeDelta);
+    virtual void beginFrame(const FrameInfo& f);
+    virtual void endFrame(const FrameInfo& f);
 
     // Calculate a pixel value, using floating point RGB in the range [0, 1].
     // Caller is responsible for clamping if necessary. This supports effects
     // that layer with other effects using greater than 8-bit precision.
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p) = 0;
+    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p) = 0;
 };
 
 
@@ -102,7 +121,7 @@ private:
     Effect *effect;
     struct timeval lastTime;
     std::vector<uint8_t> frameBuffer;
-    std::vector<PixelInfo> pixelInfo;
+    FrameInfo frameInfo;
 
     int usage(const char *name);
 };
@@ -121,10 +140,29 @@ inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
     }
 }
 
-inline void Effect::nextFrame(float timeDelta)
+inline FrameInfo::FrameInfo()
+    : timeDelta(0), time(0) {}
+
+inline void FrameInfo::init(const rapidjson::Value &layout)
 {
-    // Default implementation; do nothing.
+    timeDelta = 0;
+    time = 0;
+    pixels.clear();
+
+    for (unsigned i = 0; i < layout.Size(); i++) {
+        PixelInfo p(i, layout[i]);
+        pixels.push_back(p);
+    }
 }
+
+inline void FrameInfo::advance(float timeDelta)
+{
+    this->timeDelta = timeDelta;
+    this->time += timeDelta;
+}
+
+inline void Effect::beginFrame(const FrameInfo &f) {}
+inline void Effect::endFrame(const FrameInfo &f) {}
 
 inline EffectRunner::EffectRunner()
     : minTimeDelta(0), effect(0)
@@ -169,12 +207,8 @@ inline bool EffectRunner::setLayout(const char *filename)
     frameBuffer.resize(sizeof(OPCClient::Header) + frameBytes);
     OPCClient::Header::view(frameBuffer).init(0, opc.SET_PIXEL_COLORS, frameBytes);
 
-    // Set up PixelInfo instances
-    pixelInfo.clear();
-    for (unsigned i = 0; i < layout.Size(); i++) {
-        PixelInfo p(i, layout[i]);
-        pixelInfo.push_back(p);
-    }
+    // Init pixel info
+    frameInfo.init(layout);
 
     return true;
 }
@@ -230,11 +264,13 @@ inline void EffectRunner::doFrame(float timeDelta)
         return;
     }
 
-    effect->nextFrame(timeDelta);
+    frameInfo.advance(timeDelta);
+    effect->beginFrame(frameInfo);
 
     uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
-    for (std::vector<PixelInfo>::iterator i = pixelInfo.begin(), e = pixelInfo.end(); i != e; ++i) {
+    for (std::vector<PixelInfo>::iterator i = frameInfo.pixels.begin(),
+            e = frameInfo.pixels.end(); i != e; ++i) {
         Vec3 rgb(0, 0, 0);
         const PixelInfo &p = *i;
 
@@ -248,6 +284,8 @@ inline void EffectRunner::doFrame(float timeDelta)
     }
 
     opc.write(frameBuffer);
+
+    effect->endFrame(frameInfo);
 
     // Extra delay, to adjust frame rate
     if (timeDelta < minTimeDelta) {

@@ -14,10 +14,10 @@ public:
 
     float angle;
 
-    virtual void nextFrame(float timeDelta)
+    virtual void beginFrame(const FrameInfo &f)
     {
         const float speed = 10.0;
-        angle = fmodf(angle + timeDelta * speed, 2 * M_PI);
+        angle = fmodf(angle + f.timeDelta * speed, 2 * M_PI);
     }
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)

@@ -16,7 +16,7 @@ class Rings : public Effect
 {
 public:
     Rings()
-        : d(0, 0, 0, 0), now(0) {}
+        : d(0, 0, 0, 0) {}
 
     static const float xyzSpeed = 0.006;
     static const float xyzScale = 0.08;
@@ -32,35 +32,32 @@ public:
 
     // State variables
     Vec4 d;
-    double now;
 
     // Calculated once per frame
     float hue, saturation;
     float spacing;
     Vec3 center;
 
-    virtual void nextFrame(float timeDelta)
+    virtual void beginFrame(const FrameInfo &f)
     {
-        now += timeDelta;
+        hue = noise2(f.time * hueRate, 20.5) * hueScale;
 
-        hue = noise2(now * hueRate, 20.5) * hueScale;
-
-        saturation = sq(std::min(std::max(0.7f * (0.5f + noise2(now * 0.01, 0.5)), 0.0f), 1.0f));
-        spacing = sq(0.5 + noise2(now * ringScaleRate, 1.5)) * ringScale;
+        saturation = sq(std::min(std::max(0.7f * (0.5f + noise2(f.time * 0.01, 0.5)), 0.0f), 1.0f));
+        spacing = sq(0.5 + noise2(f.time * ringScaleRate, 1.5)) * ringScale;
 
         // Rotate movement in the XZ plane
-        float angle = noise2(now * 0.01, 30.5) * 10.0;
-        float speed = pow(fabsf(noise2(now * 0.01, 40.5)), 2.5) * xyzSpeed;
+        float angle = noise2(f.time * 0.01, 30.5) * 10.0;
+        float speed = pow(fabsf(noise2(f.time * 0.01, 40.5)), 2.5) * xyzSpeed;
         d[0] += cosf(angle) * speed;
         d[2] += sinf(angle) * speed;
 
         // Random wander along the W axis
-        d[3] += noise2(now * wRate, 3.5) * wSpeed;
+        d[3] += noise2(f.time * wRate, 3.5) * wSpeed;
 
         // Update center position
-        center = Vec3(noise2(now * wanderSpeed, 50.9),
-                      noise2(now * wanderSpeed, 51.4),
-                      noise2(now * wanderSpeed, 51.7)) * wanderSize;
+        center = Vec3(noise2(f.time * wanderSpeed, 50.9),
+                      noise2(f.time * wanderSpeed, 51.4),
+                      noise2(f.time * wanderSpeed, 51.7)) * wanderSize;
     }
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
