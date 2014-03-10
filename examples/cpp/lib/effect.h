@@ -56,7 +56,13 @@ public:
 
     // Parsed JSON for this pixel's layout
     const rapidjson::Value &layout;
+
+    // Is this pixel being used, or is it a placeholder?
+    bool isMapped() const;
 };
+
+typedef std::vector<PixelInfo> PixelInfoVec;
+typedef std::vector<PixelInfo>::const_iterator PixelInfoIter;
 
 
 // Information about one Effect frame
@@ -73,7 +79,7 @@ public:
     double time;
 
     // Info for every pixel
-    std::vector<PixelInfo> pixels;
+    PixelInfoVec pixels;
 };    
 
 
@@ -130,7 +136,7 @@ private:
 inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
     : point(0, 0, 0), index(index), layout(layout)
 {
-    if (layout.IsObject()) {
+    if (isMapped()) {
         const rapidjson::Value& pointValue = layout["point"];
         if (pointValue.IsArray()) {
             for (unsigned i = 0; i < 3 && i < pointValue.Size(); i++) {
@@ -139,6 +145,12 @@ inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
         }
     }
 }
+
+inline bool PixelInfo::isMapped() const
+{
+    return layout.IsObject();
+}
+
 
 inline FrameInfo::FrameInfo()
     : timeDelta(0), time(0) {}
@@ -269,12 +281,11 @@ inline void EffectRunner::doFrame(float timeDelta)
 
     uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
-    for (std::vector<PixelInfo>::iterator i = frameInfo.pixels.begin(),
-            e = frameInfo.pixels.end(); i != e; ++i) {
+    for (PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
         Vec3 rgb(0, 0, 0);
         const PixelInfo &p = *i;
 
-        if (p.layout.IsObject()) {
+        if (p.isMapped()) {
             effect->calculatePixel(rgb, p);
         }
 

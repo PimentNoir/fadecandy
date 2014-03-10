@@ -8,6 +8,7 @@
 #include "color.h"
 #include "effect.h"
 #include "noise.h"
+#include "brightness.h"
 
 class Spokes : public Effect
 {
@@ -25,7 +26,6 @@ public:
     static const float noiseDepth = 3.0;
     static const float noiseScale = 0.2;
     static const float noiseSpeed = 1.0;
-    static const float brightness = 1.2;
 
     // State variables
     double spin;
@@ -61,16 +61,21 @@ public:
         hsv2rgb(rgb,
             hue + angle * hueShift,
             saturation,
-            brightness * sq(std::max(0.0f, sinf(angle * 5.0f))) * std::min(0.8f, sqrlen(s))
+            sq(std::max(0.0f, sinf(angle * 5.0f))) * std::min(0.8f, sqrlen(s))
         );
     }
 };
 
 int main(int argc, char **argv)
 {
-    EffectRunner r;
     Spokes e;
-    r.setEffect(&e);
+
+    // Global brightness control
+    Brightness br(e);
+    br.set(0.2);
+
+    EffectRunner r;
+    r.setEffect(&br);
     r.setMaxFrameRate(200);
     r.setLayout("../layouts/grid32x16z.json");
     return r.main(argc, argv);
