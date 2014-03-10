@@ -42,57 +42,76 @@
 #include "rapidjson/filestream.h"
 #include "rapidjson/document.h"
 
-
-// Information about one LED pixel
-class PixelInfo {
-public:
-    PixelInfo(unsigned index, const rapidjson::Value& layout);
-
-    // Point coordinates
-    Vec3 point;
-
-    // Index in the framebuffer
-    unsigned index;
-
-    // Parsed JSON for this pixel's layout
-    const rapidjson::Value &layout;
-
-    // Is this pixel being used, or is it a placeholder?
-    bool isMapped() const;
-};
-
-typedef std::vector<PixelInfo> PixelInfoVec;
-typedef std::vector<PixelInfo>::const_iterator PixelInfoIter;
-
-
-// Information about one Effect frame
-class FrameInfo {
-public:
-    FrameInfo();
-    void init(const rapidjson::Value &layout);
-    void advance(float timeDelta);
-
-    // Seconds passed since the last frame
-    float timeDelta;
-
-    // Time since the pattern started
-    double time;
-
-    // Info for every pixel
-    PixelInfoVec pixels;
-};    
+class EffectRunner;
 
 
 // Abstract base class for one LED effect
 class Effect {
 public:
-    virtual void beginFrame(const FrameInfo& f);
-    virtual void endFrame(const FrameInfo& f);
+    class PixelInfo;
+    class FrameInfo;
+    class DebugInfo;
+
 
     // Calculate a pixel value, using floating point RGB in the range [0, 1].
     // Caller is responsible for clamping if necessary. This supports effects
     // that layer with other effects using greater than 8-bit precision.
     virtual void calculatePixel(Vec3& rgb, const PixelInfo& p) = 0;
+
+    // Optional begin/end frame callbacks
+    virtual void beginFrame(const FrameInfo& f);
+    virtual void endFrame(const FrameInfo& f);
+
+    // Optional callback, invoked once per second when verbose mode is enabled.
+    // This can print parameters out to the console.
+    virtual void debug(const DebugInfo& d);
+
+
+    // Information about one LED pixel
+    class PixelInfo {
+    public:
+        PixelInfo(unsigned index, const rapidjson::Value& layout);
+
+        // Point coordinates
+        Vec3 point;
+
+        // Index in the framebuffer
+        unsigned index;
+
+        // Parsed JSON for this pixel's layout
+        const rapidjson::Value &layout;
+
+        // Is this pixel being used, or is it a placeholder?
+        bool isMapped() const;
+    };
+
+    typedef std::vector<PixelInfo> PixelInfoVec;
+    typedef std::vector<PixelInfo>::const_iterator PixelInfoIter;
+
+    // Information about one Effect frame
+    class FrameInfo {
+    public:
+        FrameInfo();
+        void init(const rapidjson::Value &layout);
+        void advance(float timeDelta);
+
+        // Seconds passed since the last frame
+        float timeDelta;
+
+        // Time since the pattern started
+        double time;
+
+        // Info for every pixel
+        PixelInfoVec pixels;
+    };
+
+    // Information passed to debug() callbacks
+    class DebugInfo {
+    public:
+        DebugInfo(EffectRunner &runner);
+
+        EffectRunner &runner;
+    };
 };
 
 
@@ -104,11 +123,19 @@ public:
     bool setLayout(const char *filename);
     void setEffect(Effect* effect);
     void setMaxFrameRate(float fps);
+    void setVerbose(bool verbose = true);
 
     bool hasLayout();
     const rapidjson::Document& getLayout();
     Effect* getEffect();
     OPCClient& getClient();
+
+    // Time stats
+    float getFrameRate();
+    float getTimePerFrame();
+    float getBusyTimePerFrame();
+    float getIdleTimePerFrame();
+    float getPercentBusy();
 
     // Main loop body
     void doFrame();
@@ -127,19 +154,30 @@ protected:
     virtual void argumentUsage();
 
 private:
-    float minTimeDelta;
-    rapidjson::Document layout;
     OPCClient opc;
+    rapidjson::Document layout;
     Effect *effect;
-    struct timeval lastTime;
     std::vector<uint8_t> frameBuffer;
-    FrameInfo frameInfo;
+    Effect::FrameInfo frameInfo;
+
+    float minTimeDelta;
+    float currentDelay;
+    float filteredTimeDelta;
+    bool verbose;
+    struct timeval lastTime;
+    double lastDebugTimestamp;
 
     int usage(const char *name);
+    void debug();
 };
 
 
-inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
+/*****************************************************************************************
+ *                                   Implementation
+ *****************************************************************************************/
+
+
+inline Effect::PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
     : point(0, 0, 0), index(index), layout(layout)
 {
     if (isMapped()) {
@@ -152,16 +190,16 @@ inline PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
     }
 }
 
-inline bool PixelInfo::isMapped() const
+inline bool Effect::PixelInfo::isMapped() const
 {
     return layout.IsObject();
 }
 
 
-inline FrameInfo::FrameInfo()
+inline Effect::FrameInfo::FrameInfo()
     : timeDelta(0), time(0) {}
 
-inline void FrameInfo::init(const rapidjson::Value &layout)
+inline void Effect::FrameInfo::init(const rapidjson::Value &layout)
 {
     timeDelta = 0;
     time = 0;
@@ -173,17 +211,28 @@ inline void FrameInfo::init(const rapidjson::Value &layout)
     }
 }
 
-inline void FrameInfo::advance(float timeDelta)
+inline void Effect::FrameInfo::advance(float timeDelta)
 {
     this->timeDelta = timeDelta;
     this->time += timeDelta;
 }
 
+
+inline Effect::DebugInfo::DebugInfo(EffectRunner &runner)
+    : runner(runner) {}
+
+
 inline void Effect::beginFrame(const FrameInfo &f) {}
 inline void Effect::endFrame(const FrameInfo &f) {}
+inline void Effect::debug(const DebugInfo &f) {}
 
 inline EffectRunner::EffectRunner()
-    : minTimeDelta(0), effect(0)
+    : effect(0),
+      minTimeDelta(0),
+      currentDelay(0),
+      filteredTimeDelta(0),
+      verbose(false),
+      lastDebugTimestamp(0)
 {
     lastTime.tv_sec = 0;
     lastTime.tv_usec = 0;
@@ -196,6 +245,11 @@ inline EffectRunner::EffectRunner()
 inline void EffectRunner::setMaxFrameRate(float fps)
 {
     minTimeDelta = 1.0 / fps;
+}
+
+inline void EffectRunner::setVerbose(bool verbose)
+{
+    this->verbose = verbose;
 }
 
 inline bool EffectRunner::setServer(const char *hostport)
@@ -252,13 +306,38 @@ inline Effect* EffectRunner::getEffect()
     return effect;
 }
 
+inline float EffectRunner::getFrameRate()
+{
+    return filteredTimeDelta > 0.0f ? 1.0f / filteredTimeDelta : 0.0f;
+}
+
+inline float EffectRunner::getTimePerFrame()
+{
+    return filteredTimeDelta;
+}
+
+inline float EffectRunner::getBusyTimePerFrame()
+{
+    return getTimePerFrame() - getIdleTimePerFrame();
+}
+
+inline float EffectRunner::getIdleTimePerFrame()
+{
+    return std::max(0.0f, currentDelay);
+}
+
+inline float EffectRunner::getPercentBusy()
+{
+    return 100.0f * getBusyTimePerFrame() / getTimePerFrame();
+}
+
 inline void EffectRunner::run()
 {
     while (true) {
         doFrame();
     }
 }
-
+   
 inline void EffectRunner::doFrame()
 {
     struct timeval now;
@@ -279,39 +358,58 @@ inline void EffectRunner::doFrame()
 
 inline void EffectRunner::doFrame(float timeDelta)
 {
-    if (!getEffect() || !hasLayout()) {
-        return;
-    }
-
     frameInfo.advance(timeDelta);
-    effect->beginFrame(frameInfo);
 
-    // Only calculate the effect if we have a connection
-    if (opc.tryConnect()) {
+    if (getEffect() && hasLayout()) {
+        effect->beginFrame(frameInfo);
 
-        uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
+        // Only calculate the effect if we have a connection
+        if (opc.tryConnect()) {
 
-        for (PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
-            Vec3 rgb(0, 0, 0);
-            const PixelInfo &p = *i;
+            uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
-            if (p.isMapped()) {
-                effect->calculatePixel(rgb, p);
+            for (Effect::PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
+                Vec3 rgb(0, 0, 0);
+                const Effect::PixelInfo &p = *i;
+
+                if (p.isMapped()) {
+                    effect->calculatePixel(rgb, p);
+                }
+
+                for (unsigned i = 0; i < 3; i++) {
+                    *(dest++) = std::min<int>(255, std::max<int>(0, rgb[i] * 255 + 0.5));
+                }
             }
 
-            for (unsigned i = 0; i < 3; i++) {
-                *(dest++) = std::min<int>(255, std::max<int>(0, rgb[i] * 255 + 0.5));
-            }
+            opc.write(frameBuffer);
         }
 
-        opc.write(frameBuffer);
+        effect->endFrame(frameInfo);
     }
 
-    effect->endFrame(frameInfo);
+    // Low-pass filter for timeDelta, to estimate our frame rate
+    const float filterGain = 0.05;
+    filteredTimeDelta += (timeDelta - filteredTimeDelta) * filterGain;
 
-    // Extra delay, to adjust frame rate
-    if (timeDelta < minTimeDelta) {
-        usleep((minTimeDelta - timeDelta) * 1e6);
+    // Negative feedback loop to adjust the delay until we hit a target frame rate.
+    // This lets us hit the target rate smoothly, without a lot of jitter between frames.
+    // If we calculated a new delay value on each frame, we'd easily end up alternating
+    // between too-long and too-short frame delays.
+    currentDelay += (minTimeDelta - timeDelta) * filterGain;
+
+    // Make sure filteredTimeDelta >= currentDelay. (The "busy time" estimate will be >= 0)
+    filteredTimeDelta = std::max(filteredTimeDelta, currentDelay);
+
+    // Periodically output debug info, if we're in verbose mode
+    const float debugInterval = 1.0f;
+    if (verbose && frameInfo.time - lastDebugTimestamp >= debugInterval) {
+        lastDebugTimestamp = frameInfo.time;
+        debug();
+    }
+
+    // Add the extra delay, if we have one. This is how we throttle down the frame rate.
+    if (currentDelay > 0) {
+        usleep(currentDelay * 1e6);
     }
 }
 
@@ -344,8 +442,27 @@ inline int EffectRunner::usage(const char *name)
     return 1;
 }
 
-bool EffectRunner::parseArgument(int &i, int &argc, char **argv)
+inline void EffectRunner::debug()
 {
+    fprintf(stderr, " %7.2f FPS -- %6.2f%% CPU [%.2fms busy, %.2fms idle]\n",
+        getFrameRate(),
+        getPercentBusy(),
+        1e3f * getBusyTimePerFrame(),
+        1e3f * getIdleTimePerFrame());
+
+    if (effect) {
+        Effect::DebugInfo d(*this);
+        effect->debug(d);
+    }
+}
+
+inline bool EffectRunner::parseArgument(int &i, int &argc, char **argv)
+{
+    if (!strcmp(argv[i], "-v")) {
+        setVerbose();
+        return true;
+    }
+
     if (!strcmp(argv[i], "-fps") && (i+1 < argc)) {
         float rate = atof(argv[++i]);
         if (rate <= 0) {
@@ -375,7 +492,7 @@ bool EffectRunner::parseArgument(int &i, int &argc, char **argv)
     return false;
 }
 
-bool EffectRunner::validateArguments()
+inline bool EffectRunner::validateArguments()
 {
     if (!hasLayout()) {
         fprintf(stderr, "No layout specified\n");
@@ -385,14 +502,14 @@ bool EffectRunner::validateArguments()
     return true;
 }
 
-void EffectRunner::argumentUsage()
+inline void EffectRunner::argumentUsage()
 {
-    fprintf(stderr, "[-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]");
+    fprintf(stderr, "[-v] [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]");
 }
 
 
 static inline float sq(float a)
 {
     // Fast square
-    return a*a;
+    return a * a;
 }
