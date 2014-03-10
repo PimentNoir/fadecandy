@@ -18,7 +18,7 @@ var client = new OPC('localhost', 7890);
 
 var noiseScale = 0.02;
 var speed = 0.002;
-var wspeed = 5.0;
+var wspeed = 0.01;
 var scale = 0.1;
 var ringScale = 3.0;
 var wanderSpeed = 0.00005;
@@ -61,7 +61,6 @@ function draw()
     var now = new Date().getTime();
 
     var angle = sin(now * 0.001);
-    var w = now * 0.0001;
     var hue = now * 1.0;
 
     var saturation = min(max(pow(1.15 * noise(now * 0.000122), 2.5), 0), 1);
@@ -72,7 +71,7 @@ function draw()
     dz += sin(angle) * speed;
 
     // Random wander along the W axis
-    dw += (noise(now * 0.000002) - 0.5) * wspeed;
+    dw += (noise(now * 0.00002) - 0.5) * wspeed;
 
     var centerx = (noise(now * wanderSpeed, 0.9) - 0.5) * 1.25;
     var centery = (noise(now * wanderSpeed, 1.4) - 0.5) * 1.25;
@@ -95,18 +94,18 @@ function draw()
             x * scale + dx + pulse,
             y * scale,
             z * scale + dz,
-            w
+            dw
         ) - 0.95;
 
         var m = fractalNoise(
             x * scale + dx,
             y * scale,
             z * scale + dz,
-            w  + 10.0
+            dw  + 10.0
         ) - 0.75;
 
         return OPC.hsv(
-            hue + 0.4 * m,
+            hue + 0.2 * m,
             saturation,
             min(max(pow(3.0 * n, 1.5), 0), 0.9)
         );
