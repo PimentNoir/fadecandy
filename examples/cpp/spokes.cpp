@@ -5,10 +5,10 @@
  */
 
 #include <math.h>
-#include "color.h"
-#include "effect.h"
-#include "noise.h"
-#include "brightness.h"
+#include "lib/color.h"
+#include "lib/effect.h"
+#include "lib/noise.h"
+#include "lib/brightness.h"
 
 class Spokes : public Effect
 {

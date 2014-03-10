@@ -8,10 +8,9 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Vec4__
-#define __Vec4__
+#pragma once
 
-#include "svl/Vec3.h"
+#include "Vec3.h"
 
 
 // --- Vec4 Class -------------------------------------------------------------
@@ -375,5 +374,3 @@ inline Void normalise(Vec4 &v)
 {
     v /= len(v);
 }
-
-#endif

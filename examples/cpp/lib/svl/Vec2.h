@@ -8,9 +8,7 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Vec2__
-#define __Vec2__
-
+#pragma once
 
 // --- Vec2 Class -------------------------------------------------------------
 
@@ -360,5 +358,3 @@ inline Bool Vec2::operator != (const Vec2 &a) const
 {
     return(elt[0] != a[0] || elt[1] != a[1]);
 }
-
-#endif

@@ -8,9 +8,9 @@
  */
 
 #include <math.h>
-#include "color.h"
-#include "effect.h"
-#include "noise.h"
+#include "lib/color.h"
+#include "lib/effect.h"
+#include "lib/noise.h"
 
 class Rings : public Effect
 {

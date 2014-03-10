@@ -2,9 +2,9 @@
 // Draws a noise pattern modulated by an expanding sine wave.
 
 #include <math.h>
-#include "color.h"
-#include "effect.h"
-#include "noise.h"
+#include "lib/color.h"
+#include "lib/effect.h"
+#include "lib/noise.h"
 
 class MyEffect : public Effect
 {
