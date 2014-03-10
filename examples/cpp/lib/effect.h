@@ -120,6 +120,12 @@ public:
     // Simple argument parsing and main loop
     int main(int argc, char **argv);
 
+protected:
+    // Extensibility for argument parsing
+    virtual bool parseArgument(int &i, int &argc, char **argv);
+    virtual bool validateArguments();
+    virtual void argumentUsage();
+
 private:
     float minTimeDelta;
     rapidjson::Document layout;
@@ -282,7 +288,7 @@ inline void EffectRunner::doFrame(float timeDelta)
 
     // Only calculate the effect if we have a connection
     if (opc.tryConnect()) {
-        
+
         uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
         for (PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
@@ -317,38 +323,12 @@ inline OPCClient& EffectRunner::getClient()
 inline int EffectRunner::main(int argc, char **argv)
 {
     for (int i = 1; i < argc; i++) {
-
-        if (!strcmp(argv[i], "-fps") && (i+1 < argc)) {
-            float rate = atof(argv[++i]);
-            if (rate <= 0) {
-                fprintf(stderr, "Invalid frame rate\n");
-                return usage(argv[0]);
-            }
-            setMaxFrameRate(rate);
-            continue;
+        if (!parseArgument(i, argc, argv)) {
+            return usage(argv[0]);
         }
-
-        if (!strcmp(argv[i], "-layout") && (i+1 < argc)) {
-            if (!setLayout(argv[++i])) {
-                fprintf(stderr, "Can't load layout from %s\n", argv[i]);
-                return 1;
-            }
-            continue;
-        }
-
-        if (!strcmp(argv[i], "-server") && (i+1 < argc)) {
-            if (!setServer(argv[++i])) {
-                fprintf(stderr, "Can't resolve server name %s\n", argv[i]);
-                return 1;
-            }
-            continue;
-        }
-
-        return usage(argv[0]);
     }
 
-    if (!hasLayout()) {
-        fprintf(stderr, "No layout specified\n");
+    if (!validateArguments()) {
         return usage(argv[0]);
     }
 
@@ -358,9 +338,58 @@ inline int EffectRunner::main(int argc, char **argv)
 
 inline int EffectRunner::usage(const char *name)
 {
-    fprintf(stderr, "usage: %s [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]\n", name);
+    fprintf(stderr, "usage: %s ", name);
+    argumentUsage();
+    fprintf(stderr, "\n");
     return 1;
 }
+
+bool EffectRunner::parseArgument(int &i, int &argc, char **argv)
+{
+    if (!strcmp(argv[i], "-fps") && (i+1 < argc)) {
+        float rate = atof(argv[++i]);
+        if (rate <= 0) {
+            fprintf(stderr, "Invalid frame rate\n");
+            return false;
+        }
+        setMaxFrameRate(rate);
+        return true;
+    }
+
+    if (!strcmp(argv[i], "-layout") && (i+1 < argc)) {
+        if (!setLayout(argv[++i])) {
+            fprintf(stderr, "Can't load layout from %s\n", argv[i]);
+            return false;
+        }
+        return true;
+    }
+
+    if (!strcmp(argv[i], "-server") && (i+1 < argc)) {
+        if (!setServer(argv[++i])) {
+            fprintf(stderr, "Can't resolve server name %s\n", argv[i]);
+            return false;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool EffectRunner::validateArguments()
+{
+    if (!hasLayout()) {
+        fprintf(stderr, "No layout specified\n");
+        return false;
+    }
+
+    return true;
+}
+
+void EffectRunner::argumentUsage()
+{
+    fprintf(stderr, "[-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]");
+}
+
 
 static inline float sq(float a)
 {

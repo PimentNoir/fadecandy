@@ -83,7 +83,6 @@ int main(int argc, char **argv)
     EffectRunner r;
     Rings e;
     r.setEffect(&e);
-    r.setMaxFrameRate(60);
     r.setLayout("../layouts/grid32x16z.json");
     return r.main(argc, argv);
 }
