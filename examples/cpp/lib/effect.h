@@ -182,7 +182,8 @@ inline EffectRunner::EffectRunner()
     lastTime.tv_sec = 0;
     lastTime.tv_usec = 0;
 
-    // Default server
+    // Defaults
+    setMaxFrameRate(300);
     setServer("localhost");
 }
 
@@ -279,22 +280,26 @@ inline void EffectRunner::doFrame(float timeDelta)
     frameInfo.advance(timeDelta);
     effect->beginFrame(frameInfo);
 
-    uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
+    // Only calculate the effect if we have a connection
+    if (opc.tryConnect()) {
+        
+        uint8_t *dest = OPCClient::Header::view(frameBuffer).data();
 
-    for (PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
-        Vec3 rgb(0, 0, 0);
-        const PixelInfo &p = *i;
+        for (PixelInfoIter i = frameInfo.pixels.begin(), e = frameInfo.pixels.end(); i != e; ++i) {
+            Vec3 rgb(0, 0, 0);
+            const PixelInfo &p = *i;
 
-        if (p.isMapped()) {
-            effect->calculatePixel(rgb, p);
+            if (p.isMapped()) {
+                effect->calculatePixel(rgb, p);
+            }
+
+            for (unsigned i = 0; i < 3; i++) {
+                *(dest++) = std::min<int>(255, std::max<int>(0, rgb[i] * 255 + 0.5));
+            }
         }
 
-        for (unsigned i = 0; i < 3; i++) {
-            *(dest++) = std::min<int>(255, std::max<int>(0, rgb[i] * 255 + 0.5));
-        }
+        opc.write(frameBuffer);
     }
-
-    opc.write(frameBuffer);
 
     effect->endFrame(frameInfo);
 

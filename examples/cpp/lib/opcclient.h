@@ -47,6 +47,8 @@ public:
     bool resolve(const char *hostport, int defaultPort = 7890);
     bool write(const uint8_t *data, ssize_t length);
     bool write(const std::vector<uint8_t> &data);
+
+    bool tryConnect();
     bool isConnected();
 
     struct Header {
@@ -139,12 +141,15 @@ inline bool OPCClient::isConnected()
     return fd > 0;
 }
 
+inline bool OPCClient::tryConnect()
+{
+    return isConnected() || connectSocket();
+}
+
 inline bool OPCClient::write(const uint8_t *data, ssize_t length)
 {
-    if (!isConnected()) {
-        if (!connectSocket()) {
-            return false;
-        }
+    if (!tryConnect()) {
+        return false;
     }
 
     while (length > 0) {
@@ -170,7 +175,7 @@ inline bool OPCClient::connectSocket()
     fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (connect(fd, (struct sockaddr*) &address, sizeof address) < 0) {
-        close(fd);
+        closeSocket();
         return false;
     }
 
