@@ -50,10 +50,11 @@ public:
 
     // Interpolated sampling. Texture coordinates in the range [0, 1]
     Vec3 sample(Vec2 texcoord);
+    Vec3 sample(float x, float y);
 
     // Raw sampling, integer pixel coordinates.
-    uint32_t sampleRGBA32(int x, int y);
-    Vec3 sample(int x, int y);
+    uint32_t sampleIntRGBA32(int x, int y);
+    Vec3 sampleInt(int x, int y);
 
 private:
     unsigned long width, height;
@@ -129,7 +130,7 @@ inline bool Texture::isLoaded()
     return width && height;
 }
 
-inline uint32_t Texture::sampleRGBA32(int x, int y)
+inline uint32_t Texture::sampleIntRGBA32(int x, int y)
 {
     if (!isLoaded()) {
         return 0;
@@ -140,9 +141,9 @@ inline uint32_t Texture::sampleRGBA32(int x, int y)
     return ((uint32_t*)(&pixels[0]))[ x + y * width ];
 }
 
-inline Vec3 Texture::sample(int x, int y)
+inline Vec3 Texture::sampleInt(int x, int y)
 {
-    uint32_t rgba = sampleRGBA32(x, y);
+    uint32_t rgba = sampleIntRGBA32(x, y);
     return Vec3(
         ((rgba      ) & 0xFF) / 255.0f,
         ((rgba >> 8 ) & 0xFF) / 255.0f,
@@ -151,17 +152,22 @@ inline Vec3 Texture::sample(int x, int y)
 
 inline Vec3 Texture::sample(Vec2 texcoord)
 {
-    float fx = texcoord[0] * width;
-    float fy = texcoord[1] * height;
+    return sample(texcoord[0], texcoord[1]);
+}
+
+inline Vec3 Texture::sample(float x, float y)
+{
+    float fx = x * width;
+    float fy = y * height;
 
     int ix = fx;
     int iy = fy;
 
     // Sample four points
-    Vec3 aa = sample(ix,     iy);
-    Vec3 ba = sample(ix + 1, iy);
-    Vec3 ab = sample(ix,     iy + 1);
-    Vec3 bb = sample(ix + 1, iy + 1);
+    Vec3 aa = sampleInt(ix,     iy);
+    Vec3 ba = sampleInt(ix + 1, iy);
+    Vec3 ab = sampleInt(ix,     iy + 1);
+    Vec3 bb = sampleInt(ix + 1, iy + 1);
 
     // X interpolation
     Vec3 ca = aa + (ba - aa) * (fx - ix);
