@@ -1,6 +1,6 @@
 PROGRAMS = simple rings spokes
 
-CFLAGS = -O3 -Wall -Ilib -g -march=native
+CFLAGS = -O3 -Wall -Ilib -g -march=native -ffast-math
 CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
 LFLAGS = -lm -lstdc++ -g
 
