@@ -146,7 +146,7 @@ inline void Brightness::beginFrame(const FrameInfo& f)
         } else {
             adjustment = 1.0f;
         }
-        currentScale *= adjustment;
+        currentScale = std::max(epsilon, currentScale * adjustment);
 
         // Was this adjustment negligible? We can quit early.
         if (fabsf(adjustment - 1.0f) < epsilon) {
