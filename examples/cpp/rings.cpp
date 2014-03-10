@@ -18,9 +18,9 @@ public:
     Rings()
         : d(0, 0, 0, 0) {}
 
-    static const float xyzSpeed = 0.006;
+    static const float xyzSpeed = 0.6;
     static const float xyzScale = 0.08;
-    static const float wSpeed = 0.002;
+    static const float wSpeed = 0.2;
     static const float wRate = 0.0001;
     static const float ringScale = 1.5;
     static const float ringScaleRate = 0.01;
@@ -48,11 +48,11 @@ public:
         // Rotate movement in the XZ plane
         float angle = noise2(f.time * 0.01, 30.5) * 10.0;
         float speed = pow(fabsf(noise2(f.time * 0.01, 40.5)), 2.5) * xyzSpeed;
-        d[0] += cosf(angle) * speed;
-        d[2] += sinf(angle) * speed;
+        d[0] += cosf(angle) * speed * f.timeDelta;
+        d[2] += sinf(angle) * speed * f.timeDelta;
 
         // Random wander along the W axis
-        d[3] += noise2(f.time * wRate, 3.5) * wSpeed;
+        d[3] += noise2(f.time * wRate, 3.5) * wSpeed * f.timeDelta;
 
         // Update center position
         center = Vec3(noise2(f.time * wanderSpeed, 50.9),
