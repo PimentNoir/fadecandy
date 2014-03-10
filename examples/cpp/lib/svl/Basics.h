@@ -22,8 +22,7 @@
                     VL_NO_TF        - true and false are not predefined.
 */
 
-#ifndef __Basics__
-#define __Basics__
+#pragma once
 
 #include <iostream>
 #include <cmath>
@@ -158,5 +157,3 @@ template<class Value>
     {
         return(x * x);
     };
-
-#endif

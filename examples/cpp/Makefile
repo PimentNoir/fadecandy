@@ -1,8 +1,14 @@
-PROGRAMS = simple rings spokes
+PROGRAMS = simple rings spokes dot
 
-CFLAGS = -O3 -Wall -Ilib -g -march=native -ffast-math
-CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
-LFLAGS = -lm -lstdc++ -g
+# Important optimization options
+CFLAGS = -O3  -march=native -ffast-math
+
+# Standard libraries
+LFLAGS = -lm -lstdc++
+
+# Debugging
+CFLAGS += -g -Wall -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
+LFLAGS += -g
 
 all: $(PROGRAMS)
 

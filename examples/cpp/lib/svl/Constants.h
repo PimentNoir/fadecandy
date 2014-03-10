@@ -8,8 +8,7 @@
     Copyright:  (c) 1999-2001, Andrew Willmott
 */
 
-#ifndef __VLConstants__
-#define __VLConstants__
+#pragma once
 
 #include <cmath>
 
@@ -39,5 +38,3 @@ typedef Axis        vl_axis;
 
 const UInt          VL_REF_FLAG = UInt(1) << (sizeof(UInt) * 8 - 1);
 const UInt          VL_REF_MASK = (~VL_REF_FLAG);
-
-#endif

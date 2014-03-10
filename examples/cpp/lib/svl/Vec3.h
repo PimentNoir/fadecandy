@@ -8,10 +8,9 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Vec3__
-#define __Vec3__
+#pragma once
 
-#include "svl/Vec2.h"
+#include "Vec2.h"
 
 
 // --- Vec3 Class -------------------------------------------------------------
@@ -410,5 +409,3 @@ inline Vec2 proj(const Vec3 &v)
 
     return(result);
 }
-
-#endif

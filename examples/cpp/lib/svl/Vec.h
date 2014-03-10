@@ -8,8 +8,7 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Vec__
-#define __Vec__
+#pragma once
 
 class Vec2;
 class Vec3;
@@ -231,7 +230,3 @@ inline Vec &Vec::Normalise()
     SELF /= len(SELF);
     return(SELF);
 }
-
-
-#endif
-

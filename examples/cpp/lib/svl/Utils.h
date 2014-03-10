@@ -8,8 +8,7 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __VL_MATH__
-#define __VL_MATH__
+#pragma once
 
 #include <cstdlib>
 
@@ -81,5 +80,3 @@ inline Void SetReal(Float &a, Double b)
 { a = Float(b); }
 inline Void SetReal(Double &a, Double b)
 { a = b; }
-
-#endif

@@ -8,10 +8,9 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Mat2__
-#define __Mat2__
+#pragma once
 
-#include "svl/Vec2.h"
+#include "Vec2.h"
 
 
 // --- Mat2 Class -------------------------------------------------------------
@@ -374,6 +373,4 @@ inline Vec2 xform(const Mat2 &m, const Vec2 &v)
 { return(m * v); }
 inline Mat2 xform(const Mat2 &m, const Mat2 &n)
 { return(m * n); }
-#endif
-
 #endif

@@ -45,6 +45,7 @@ public:
 
     virtual void beginFrame(const FrameInfo& f);
     virtual void endFrame(const FrameInfo& f);
+    virtual void debug(const DebugInfo& f);
     virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
 
 private:
@@ -54,6 +55,11 @@ private:
     float currentScale;
     float gamma;
 };
+
+
+/*****************************************************************************************
+ *                                   Implementation
+ *****************************************************************************************/
 
 
 inline Brightness::Brightness(Effect &next)
@@ -158,6 +164,11 @@ inline void Brightness::beginFrame(const FrameInfo& f)
 inline void Brightness::endFrame(const FrameInfo& f)
 {
     next.endFrame(f);
+}
+
+inline void Brightness::debug(const DebugInfo& d)
+{
+    next.debug(d);
 }
 
 inline void Brightness::calculatePixel(Vec3& rgb, const PixelInfo& p)

@@ -8,10 +8,9 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
 */
 
-#ifndef __Mat3__
-#define __Mat3__
+#pragma once
 
-#include "svl/Vec3.h"
+#include "Vec3.h"
 
 
 // --- Mat3 Class -------------------------------------------------------------
@@ -219,6 +218,4 @@ inline Vec3 xform(const Mat3 &m, const Vec3 &v)
 { return(m * v); }
 inline Mat3 xform(const Mat3 &m, const Mat3 &n)
 { return(m * n); }
-#endif
-
 #endif

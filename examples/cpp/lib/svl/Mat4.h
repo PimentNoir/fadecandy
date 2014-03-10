@@ -8,11 +8,10 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Mat4__
-#define __Mat4__
+#pragma once
 
-#include "svl/Vec3.h"
-#include "svl/Vec4.h"
+#include "Vec3.h"
+#include "Vec4.h"
 
 
 // --- Mat4 Class -------------------------------------------------------------
@@ -184,6 +183,4 @@ inline Vec4 xform(const Mat4 &m, const Vec4 &v)
 { return(m * v); }
 inline Mat4 xform(const Mat4 &m, const Mat4 &n)
 { return(m * n); }
-#endif
-
 #endif

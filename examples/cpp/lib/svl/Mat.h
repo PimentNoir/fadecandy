@@ -8,10 +8,9 @@
     Copyright:      (c) 1995-2001, Andrew Willmott
  */
 
-#ifndef __Mat__
-#define __Mat__
+#pragma once
 
-#include "svl/Vec.h"
+#include "Vec.h"
 
 class Mat2;
 class Mat3;
@@ -209,5 +208,3 @@ inline Mat::~Mat()
     if (!IsRef())
         delete[] data;
 }
-
-#endif
