@@ -1,4 +1,4 @@
-PROGRAMS = simple rings spokes
+PROGRAMS = simple rings spokes dot
 
 # Important optimization options
 CFLAGS = -O3  -march=native -ffast-math
