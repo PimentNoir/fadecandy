@@ -21,7 +21,7 @@ public:
     static const float xyzSpeed = 0.6;
     static const float xyzScale = 0.08;
     static const float wSpeed = 0.2;
-    static const float wRate = 0.0001;
+    static const float wRate = 0.001;
     static const float ringScale = 1.5;
     static const float ringScaleRate = 0.01;
     static const float ringDepth = 0.2;
@@ -60,6 +60,13 @@ public:
                       noise2(f.time * wanderSpeed, 51.7)) * wanderSize;
     }
 
+    virtual void debug(const DebugInfo &di)
+    {
+        fprintf(stderr, "\t[rings] center = %f, %f, %f\n", center[0], center[1], center[2]);
+        fprintf(stderr, "\t[rings] d = %f, %f, %f, %f\n", d[0], d[1], d[2], d[3]);
+        fprintf(stderr, "\t[rings] hue = %f, saturation = %f\n", hue, saturation);
+    }
+
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
         float dist = len(p.point - center);
@@ -68,7 +75,7 @@ public:
         Vec4 chromaOffset = Vec4(0, 0, 0, 10);
 
         float n = fbm_noise4(s + pulse, 4) * 2.5f + 0.1f;
-        float m = fbm_noise4(s + chromaOffset, 4);
+        float m = fbm_noise4(s + chromaOffset, 2);
 
         hsv2rgb(rgb,
             hue + 0.5 * m,
