@@ -53,7 +53,7 @@ public:
     Vec3 sample(float x, float y);
 
     // Raw sampling, integer pixel coordinates.
-    uint32_t sampleIntRGBA32(int x, int y);
+    uint8_t *sampleIntRGBA32(int x, int y);
     Vec3 sampleInt(int x, int y);
 
 private:
@@ -130,7 +130,7 @@ inline bool Texture::isLoaded()
     return width && height;
 }
 
-inline uint32_t Texture::sampleIntRGBA32(int x, int y)
+inline uint8_t* Texture::sampleIntRGBA32(int x, int y)
 {
     if (!isLoaded()) {
         return 0;
@@ -138,16 +138,16 @@ inline uint32_t Texture::sampleIntRGBA32(int x, int y)
 
     x = std::max<int>(0, std::min<int>(width - 1, x));
     y = std::max<int>(0, std::min<int>(height - 1, y));
-    return ((uint32_t*)(&pixels[0]))[ x + y * width ];
+    return &pixels[ (x + y * width) << 2 ];
 }
 
 inline Vec3 Texture::sampleInt(int x, int y)
 {
-    uint32_t rgba = sampleIntRGBA32(x, y);
+    uint8_t* rgba = sampleIntRGBA32(x, y);
     return Vec3(
-        ((rgba      ) & 0xFF) / 255.0f,
-        ((rgba >> 8 ) & 0xFF) / 255.0f,
-        ((rgba >> 16) & 0xFF) / 255.0f );
+        (rgba[0] & 0xFF) / 255.0f,
+        (rgba[1] & 0xFF) / 255.0f,
+        (rgba[2] & 0xFF) / 255.0f );
 }
 
 inline Vec3 Texture::sample(Vec2 texcoord)

@@ -1,4 +1,4 @@
-// Simple particle system example for C++. Ported from the "particle_trail" Node.js example.
+// Simple particle system example for C++.
 
 #include <math.h>
 #include "lib/color.h"
@@ -11,9 +11,9 @@ public:
     virtual void beginFrame(const FrameInfo &f)
     {
         float t = 9.0f * f.time;
-        const int numParticles = 200;
+        const unsigned numParticles = 200;
 
-        displayList.resize(numParticles);
+        appearance.resize(numParticles);
         for (unsigned i = 0; i < numParticles; i++) {
             float s = float(i) / numParticles;
 
@@ -23,12 +23,14 @@ public:
             float y = radius * sin(theta + 10.0 * sin(theta * 0.15));
             float hue = t * 0.01 + s * 0.2;
 
-            ParticleAppearance& p = displayList[i];
+            ParticleAppearance& p = appearance[i];
             p.point = Vec3(x, 0, y);
             p.intensity = 0.2f * s;
-            p.falloff = 60.0f;
+            p.radius = 0.1 + 0.4f * s;
             hsv2rgb(p.color, hue, 0.5, 0.8);
         }
+
+        ParticleEffect::beginFrame(f);
     }
 };
 

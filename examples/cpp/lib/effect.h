@@ -70,7 +70,7 @@ public:
     // Information about one LED pixel
     class PixelInfo {
     public:
-        PixelInfo(unsigned index, const rapidjson::Value& layout);
+        PixelInfo(unsigned index, const rapidjson::Value* layout);
 
         // Point coordinates
         Vec3 point;
@@ -79,10 +79,15 @@ public:
         unsigned index;
 
         // Parsed JSON for this pixel's layout
-        const rapidjson::Value &layout;
+        const rapidjson::Value* layout;
 
         // Is this pixel being used, or is it a placeholder?
         bool isMapped() const;
+
+	// Look up data from the JSON layout
+	const rapidjson::Value& get(const char *attribute);
+	double getNumber(const char *attribute);
+	double getArrayNumber(const char *attribute, int index);
     };
 
     typedef std::vector<PixelInfo> PixelInfoVec;
@@ -177,24 +182,43 @@ private:
  *****************************************************************************************/
 
 
-inline Effect::PixelInfo::PixelInfo(unsigned index, const rapidjson::Value& layout)
-    : point(0, 0, 0), index(index), layout(layout)
+inline Effect::PixelInfo::PixelInfo(unsigned index, const rapidjson::Value* layout)
+    : index(index), layout(layout)
 {
     if (isMapped()) {
-        const rapidjson::Value& pointValue = layout["point"];
-        if (pointValue.IsArray()) {
-            for (unsigned i = 0; i < 3 && i < pointValue.Size(); i++) {
-                point[i] = pointValue[i].GetDouble();
-            }
+        for (unsigned i = 0; i < 3; i++) {
+            point[i] = getArrayNumber("point", i);
         }
     }
 }
 
 inline bool Effect::PixelInfo::isMapped() const
 {
-    return layout.IsObject();
+    return layout && layout->IsObject();
 }
 
+inline const rapidjson::Value& Effect::PixelInfo::get(const char *attribute)
+{
+    return (*layout)[attribute];
+}
+
+inline double Effect::PixelInfo::getNumber(const char *attribute)
+{
+    const rapidjson::Value& n = get(attribute);
+    return n.IsNumber() ? n.GetDouble() : 0.0;
+}
+
+inline double Effect::PixelInfo::getArrayNumber(const char *attribute, int index)
+{
+    const rapidjson::Value& a = get(attribute);
+    if (a.IsArray()) {
+        const rapidjson::Value& b = a[index];
+        if (b.IsNumber()) {
+            return b.GetDouble();
+        }
+    }
+    return 0.0;
+}
 
 inline Effect::FrameInfo::FrameInfo()
     : timeDelta(0), time(0) {}
@@ -206,7 +230,7 @@ inline void Effect::FrameInfo::init(const rapidjson::Value &layout)
     pixels.clear();
 
     for (unsigned i = 0; i < layout.Size(); i++) {
-        PixelInfo p(i, layout[i]);
+        PixelInfo p(i, &layout[i]);
         pixels.push_back(p);
     }
 }
