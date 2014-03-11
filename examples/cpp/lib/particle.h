@@ -39,8 +39,8 @@ public:
     struct ParticleAppearance {
         Vec3 point;
         Vec3 color;
+        float radius;
         float intensity;
-        float falloff;
     };
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
@@ -51,12 +51,45 @@ protected:
      * or keep it persistent across frames and update the parts you're changing.
      */
     std::vector<ParticleAppearance> displayList;
+
+    /*
+     * Kernel function; determines particle shape
+     * Poly6 kernel, Müller, Charypar, & Gross (2003)
+     * q normalized in range [0, 1].
+     * Has compact support; kernel forced to zero outside this range.
+     */
+    float kernel(float q);
+
+    // Variant of kernel function called with q^2
+    float kernel2(float q2);
+
+    // First derivative of kernel()
+    float kernelDerivative(float q);
 };
 
 
 /*****************************************************************************************
  *                                   Implementation
  *****************************************************************************************/
+
+
+inline float ParticleEffect::kernel(float q)
+{
+    float a = 1 - q * q;
+    return a * a * a;
+}
+
+inline float ParticleEffect::kernel2(float q2)
+{
+    float a = 1 - q2;
+    return a * a * a;
+}
+
+inline float ParticleEffect::kernelDerivative(float q)
+{
+    float a = 1 - q * q;
+    return -6.0f * q * a * a;
+}
 
 
 inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
@@ -69,8 +102,12 @@ inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
     for (; i != e; ++i) {
         ParticleAppearance &particle = *i;
         float dist2 = sqrlen(particle.point - point);
-        float intensity = particle.intensity / (1.0f + particle.falloff * dist2);
-        accumulator += particle.color * intensity;
+
+        // Normalized distance
+        float q2 = dist2 / sq(particle.radius);
+        if (q2 < 1.0f) {
+            accumulator += particle.color * (particle.intensity * kernel2(q2));
+        }
     }
 
     rgb = accumulator;

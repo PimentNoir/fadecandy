@@ -1,4 +1,4 @@
-// Simple particle system example for C++. Ported from the "particle_trail" Node.js example.
+// Simple particle system example for C++.
 
 #include <math.h>
 #include "lib/color.h"
@@ -26,7 +26,7 @@ public:
             ParticleAppearance& p = displayList[i];
             p.point = Vec3(x, 0, y);
             p.intensity = 0.2f * s;
-            p.falloff = 60.0f;
+            p.radius = 0.1 + 0.4f * s;
             hsv2rgb(p.color, hue, 0.5, 0.8);
         }
     }
