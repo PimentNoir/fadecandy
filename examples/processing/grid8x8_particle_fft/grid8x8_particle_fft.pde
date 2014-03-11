@@ -1,6 +1,6 @@
 // Some real-time FFT! This visualizes music in the frequency domain using a
 // polar-coordinate particle system. Particle size and radial distance are modulated
-// using a filtered FFT. Color is sampled from an image.
+// using a filtered FFT and a tuned simplex noise FBM. Color is sampled from an image.
 
 import ddf.minim.analysis.*;
 import ddf.minim.*;
@@ -33,7 +33,7 @@ float opacity = 40;
 float minSize = 0.15;
 float sizeScale = 1;
 
-float zoom = 4;
+float zoom = 2;
 
 // Random sound array index startup
 int song = (int)random(0, filename.length);
@@ -44,9 +44,9 @@ float centerx = width/2, centery = height/2;
 void setup()
 {
   size((int)zoom*100, (int)zoom*100, P3D);
-  colorMode(RGB,255);
+  colorMode(RGB, 255);
   //TODO: make framerate depend on beat detection
-  int framerate = 60;
+  int framerate = 72;
   frameRate(framerate);
      
   minim = new Minim(this);
