@@ -20,14 +20,12 @@
 class Rings : public Effect
 {
 public:
-    Rings()
-        : palette("data/sky.png"),
+    Rings(const char *palette, float seed)
+        : palette(palette),
+          seed(seed),
           d(0, 0, 0, 0),
           threshold(-1.0)
-    {
-        srand(time(0));
-        seed = fmod(rand() / 1e3, 1e3);
-    }
+    {}
 
     static const float xyzSpeed = 0.6;
     static const float xyzScale = 0.08;
@@ -38,8 +36,8 @@ public:
     static const float ringDepth = 0.2;
     static const float wanderSpeed = 0.04;
     static const float wanderSize = 1.2;
-    static const float brightnessContrast = 15.0;
-    static const float colorContrast = 2.0;
+    static const float brightnessContrast = 8.0;
+    static const float colorContrast = 4.0;
     static const float targetBrightness = 0.1;
     static const float thresholdGain = 0.1;
 
@@ -133,9 +131,14 @@ public:
 
 int main(int argc, char **argv)
 {
+    srand(time(0));
+    float seed = fmod(rand() / 1e3, 1e3);
+
+    Rings e("data/glass.png", seed);
+
     EffectRunner r;
-    Rings e;
     r.setEffect(&e);
+
     r.setLayout("../layouts/grid32x16z.json");
     return r.main(argc, argv);
 }
