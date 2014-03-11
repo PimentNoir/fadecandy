@@ -50,7 +50,7 @@ protected:
      * List of appearances for particles we're drawing. Calculate this in beginFrame(),
      * or keep it persistent across frames and update the parts you're changing.
      */
-    std::vector<ParticleAppearance> displayList;
+    std::vector<ParticleAppearance> appearance;
 
     /*
      * Kernel function; determines particle shape
@@ -96,8 +96,8 @@ inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
 {
     Vec3 accumulator(0, 0, 0);
     Vec3 point = p.point;
-    std::vector<ParticleAppearance>::iterator i = displayList.begin();
-    std::vector<ParticleAppearance>::iterator e = displayList.end();
+    std::vector<ParticleAppearance>::iterator i = appearance.begin();
+    std::vector<ParticleAppearance>::iterator e = appearance.end();
 
     for (; i != e; ++i) {
         ParticleAppearance &particle = *i;
