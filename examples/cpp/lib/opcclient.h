@@ -37,6 +37,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#include <signal.h>
 
 
 class OPCClient {
@@ -187,8 +188,12 @@ inline bool OPCClient::connectSocket()
     int flag = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof flag);
 
-    flag = 1;
-    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (char*) &flag, sizeof flag);
+    #ifdef SO_NOSIGPIPE
+        flag = 1;
+        setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (char*) &flag, sizeof flag);
+    #else
+        signal(SIGPIPE, SIG_IGN);
+    #endif
 
     return true;
 }

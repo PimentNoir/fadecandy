@@ -1,7 +1,7 @@
 PROGRAMS = simple rings spokes dot particle_trail
 
 # Important optimization options
-CFLAGS = -O3  -march=native -ffast-math
+CFLAGS = -O3 -ffast-math
 
 # Standard libraries
 LFLAGS = -lm -lstdc++
