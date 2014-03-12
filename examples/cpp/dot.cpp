@@ -1,3 +1,4 @@
+#include "lib/effect_runner.h"
 #include "dot.h"
 
 int main(int argc, char **argv)

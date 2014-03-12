@@ -1,6 +1,8 @@
 // Simple example that mixes multiple effects.
 
-#include "lib/effect.h"
+#include "lib/effect_runner.h"
+#include "lib/effect_mixer.h"
+
 #include "rings.h"
 #include "dot.h"
 #include "spokes.h"
