@@ -40,6 +40,7 @@ public:
     static const float targetBrightness = 0.1;
     static const float thresholdGain = 0.1;
     static const float thresholdStepLimit = 0.02;
+    static const unsigned octaves = 4;
 
     // Sample colors along a curved path through a texture
     Texture palette;
@@ -53,8 +54,9 @@ public:
     // Calculated once per frame
     float spacing;
     float colorParam;
-    float pixelTotal;
-    unsigned pixelCount;
+    float pixelTotalNumerator;
+    unsigned pixelTotalDenominator;
+    bool is3D;
     Vec3 center;
 
     virtual void beginFrame(const FrameInfo &f)
@@ -81,32 +83,89 @@ public:
         colorParam = seed + timer * 0.05f;
 
         // Reset pixel total accumulators, used for the brightness calc in endFrame
-        pixelTotal = 0;
-        pixelCount = 0;
+        pixelTotalNumerator = 0;
+
+        // Count mapped pixels and determine whether this is 2D or 3D
+        pixelTotalDenominator = 0;
+        is3D = false;
+        for (Effect::PixelInfoIter i = f.pixels.begin(), e = f.pixels.end(); i != e; ++i) {
+            const Effect::PixelInfo &p = *i;
+            pixelTotalDenominator += 3;
+            if (p.point[1] != 0.0f) {
+                is3D = true;
+            }
+        }
     }
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
-        float dist = len(p.point - center);
-        Vec4 pulse = Vec4(sinf(d[2] + dist * spacing) * ringDepth, 0, 0, 0);
+        // Noise sampling location
         Vec4 s = Vec4(p.point * xyzScale, seed) + d;
 
-        float n = (fbm_noise4(s + pulse, 4) + threshold) * brightnessContrast;
-        if (n > 0.0f) {
-            // Positive brightness is possible
+        // Ring function, displaces the noise sampling coordinate
+        float dist = len(p.point - center);
+        Vec4 pulse = Vec4(sinf(d[2] + dist * spacing) * ringDepth, 0, 0, 0);
 
-            Vec4 chromaOffset = Vec4(0, 0, 0, 10);
-            float m = fbm_noise4(s + chromaOffset, 2) * colorContrast;
+        /*
+         * Brightness is calculated by:
+         *
+         *    n = (fbm_noise4(s + pulse, octaves) + threshold) * brightnessContrast;
+         *
+         * But if we can determine that n <= 0, we can exit early. Check this after
+         * each fbm octave, to see if we can save another costly noise calculation.
+         * Also, use 3D noise instead of 4D if the Y axis is unused.
+         */
 
-            rgb = color(colorParam + m, sq(n));
+        float n = threshold * brightnessContrast;
+        float amplitude = brightnessContrast;
+        Vec4 arg = s + pulse;
+        unsigned i = octaves;
 
-            // Keep a rough approximate brightness total, for closed-loop feedback
-            for (unsigned i = 0; i < 3; i++) {
-                pixelTotal += sq(std::min(1.0f, std::max(0.0f, rgb[i])));
+        while (true) {
+            n += amplitude * dNoise(arg);
+            --i;
+            if (!(n > -amplitude * fbmTotal(i))) {
+                // Too low for further octaves to bring back above 0.
+                // On the last octave, note fbmTotal(0) == 0
+                // Should also exit in case of NaN.
+                return;
             }
-        }
+            if (!i) {
+                break;
+            }
 
-        pixelCount += 3;
+            amplitude *= 0.5f;
+            arg *= 2.0f;
+        }
+        n /= fbmTotal(octaves);
+
+        /*
+         * Another hybrid 2D/3D fbm for chroma. Use half the octaves.
+         */
+
+        float m = 0;
+        amplitude = colorContrast;
+        arg = s + Vec4(0, 0, 0, 10);
+        i = octaves;
+
+        while (true) {
+            m += amplitude * dNoise(arg);
+            if (--i == 0) {
+                break;
+            }
+
+            amplitude *= 0.5f;
+            arg *= 2.0f;
+        }
+        n /= fbmTotal(octaves);
+
+        // Assemble color using a lookup through our palette
+        rgb = color(colorParam + m, sq(n));
+
+        // Keep a rough approximate brightness total, for closed-loop feedback
+        for (unsigned i = 0; i < 3; i++) {
+            pixelTotalNumerator += sq(std::min(1.0f, std::max(0.0f, rgb[i])));
+        }
     }
 
     virtual void endFrame(const FrameInfo &f)
@@ -116,7 +175,7 @@ public:
         // to try and keep the average pixel brightness at a particular level.
 
         float target = targetBrightness;
-        float current = pixelCount ? pixelTotal / pixelCount : 0.0f;
+        float current = pixelTotalDenominator ? pixelTotalNumerator / pixelTotalDenominator : 0.0f;
 
         if (wantToReseed()) {
             // Fade to black
@@ -138,18 +197,12 @@ public:
 
     virtual void debug(const DebugInfo &di)
     {
+        fprintf(stderr, "\t[rings] %s model\n", is3D ? "3D" : "2D"); 
         fprintf(stderr, "\t[rings] seed = %f%s\n", seed, wantToReseed() ? " [reseed pending]" : "");
         fprintf(stderr, "\t[rings] timer = %f\n", timer);
         fprintf(stderr, "\t[rings] center = %f, %f, %f\n", center[0], center[1], center[2]);
         fprintf(stderr, "\t[rings] d = %f, %f, %f, %f\n", d[0], d[1], d[2], d[3]);
         fprintf(stderr, "\t[rings] threshold = %f\n", threshold);
-    }
-
-    virtual Vec3 color(float parameter, float brightness)
-    {
-        // Sample a color from our palette, using a lissajous curve within an image texture
-        return palette.sample( sinf(parameter) * 0.5f + 0.5f,
-                               sinf(parameter * 0.86f) * 0.5f + 0.5f) * brightness;
     }
 
 private:
@@ -193,6 +246,35 @@ private:
                !(d[1] > -1000.0f) |
                !(d[2] > -1000.0f) |
                !(d[3] > -1000.0f) ;
+    }
+
+    // Sample a color from our palette, using a lissajous curve within an image texture
+
+    Vec3 color(float parameter, float brightness)
+    {
+        return palette.sample( sinf(parameter) * 0.5f + 0.5f,
+                               sinf(parameter * 0.86f) * 0.5f + 0.5f) * brightness;
+    }
+
+    // Sample 3 or 4 dimensional noise. If (!is3D), we use 3 dimensional noise, ignoring the Y axis.
+
+    float dNoise(Vec4 v)
+    {
+        return is3D ? noise4(v) : noise3(v[0], v[2], v[3]);
+    }
+
+    // Normalization factor for fractional brownian motion with N octaves
+
+    float fbmTotal(int i)
+    {
+        float n = 0;
+        float amp = 1.0f;
+        while (i > 0) {
+            n += amp;
+            amp *= 0.5;
+            i--;
+        }
+        return n;
     }
 };
 
