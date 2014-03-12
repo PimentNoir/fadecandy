@@ -9,8 +9,8 @@
 class DotEffect : public Effect
 {
 public:
-    DotEffect()
-        : dot ("data/dot.png"),
+    DotEffect(const char *filename)
+        : dot(filename),
           angle1(0), angle2(0), angle3(0)
     {}
 
