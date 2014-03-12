@@ -6,7 +6,8 @@
  * Uses noise functions modulated by sinusoidal rings, which themselves
  * wander and shift according to some noise functions.
  *
- * 2014 Micah Elizabeth Scott
+ * (c) 2014 Micah Elizabeth Scott
+ * http://creativecommons.org/licenses/by/3.0/
  */
 
 #pragma once
