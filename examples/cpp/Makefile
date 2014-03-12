@@ -1,7 +1,7 @@
 PROGRAMS = simple rings spokes dot particle_trail mixer
 
 # Important optimization options
-CFLAGS = -O3 -ffast-math
+CFLAGS = -O3 -ffast-math -fno-rtti
 
 # Standard libraries
 LFLAGS = -lm -lstdc++ -lpthread
@@ -12,9 +12,6 @@ LFLAGS += -g
 
 # Annoying warnings on by default on Mac OS
 CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
-
-# Disable exceptions and RTTI
-CFLAGS += -fno-exceptions -fno-rtti
 
 
 all: $(PROGRAMS)
