@@ -89,18 +89,23 @@ public:
         float dist = len(p.point - center);
         Vec4 pulse = Vec4(sinf(d[2] + dist * spacing) * ringDepth, 0, 0, 0);
         Vec4 s = Vec4(p.point * xyzScale, seed) + d;
-        Vec4 chromaOffset = Vec4(0, 0, 0, 10);
 
         float n = (fbm_noise4(s + pulse, 4) + threshold) * brightnessContrast;
-        float m = fbm_noise4(s + chromaOffset, 2) * colorContrast;
+        if (n > 0.0f) {
+            // Positive brightness is possible
 
-        rgb = color(colorParam + m, sq(std::max(0.0f, n)));
+            Vec4 chromaOffset = Vec4(0, 0, 0, 10);
+            float m = fbm_noise4(s + chromaOffset, 2) * colorContrast;
 
-        // Keep a rough approximate brightness total, for closed-loop feedback
-        for (unsigned i = 0; i < 3; i++) {
-            pixelTotal += sq(std::min(1.0f, std::max(0.0f, rgb[i])));
-            pixelCount++;
+            rgb = color(colorParam + m, sq(n));
+
+            // Keep a rough approximate brightness total, for closed-loop feedback
+            for (unsigned i = 0; i < 3; i++) {
+                pixelTotal += sq(std::min(1.0f, std::max(0.0f, rgb[i])));
+            }
         }
+
+        pixelCount += 3;
     }
 
     virtual void endFrame(const FrameInfo &f)
