@@ -2,6 +2,7 @@
 *.exe
 simple
 rings
+rings_2d
 spokes
 dot
 particle_trail
