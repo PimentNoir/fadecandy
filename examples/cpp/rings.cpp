@@ -40,7 +40,8 @@ public:
     static const float targetBrightness = 0.1;
     static const float thresholdGain = 0.1;
     static const float thresholdStepLimit = 0.02;
-    static const unsigned octaves = 4;
+    static const unsigned brightnessOctaves = 4;
+    static const unsigned colorOctaves = 2;
 
     // Sample colors along a curved path through a texture
     Texture palette;
@@ -119,7 +120,7 @@ public:
         float n = threshold * brightnessContrast;
         float amplitude = brightnessContrast;
         Vec4 arg = s + pulse;
-        unsigned i = octaves;
+        unsigned i = brightnessOctaves;
 
         while (true) {
             n += amplitude * dNoise(arg);
@@ -137,7 +138,7 @@ public:
             amplitude *= 0.5f;
             arg *= 2.0f;
         }
-        n /= fbmTotal(octaves);
+        n /= fbmTotal(brightnessOctaves);
 
         /*
          * Another hybrid 2D/3D fbm for chroma. Use half the octaves.
@@ -146,7 +147,7 @@ public:
         float m = 0;
         amplitude = colorContrast;
         arg = s + Vec4(0, 0, 0, 10);
-        i = octaves;
+        i = colorOctaves;
 
         while (true) {
             m += amplitude * dNoise(arg);
@@ -157,7 +158,7 @@ public:
             amplitude *= 0.5f;
             arg *= 2.0f;
         }
-        n /= fbmTotal(octaves);
+        m /= fbmTotal(colorOctaves);
 
         // Assemble color using a lookup through our palette
         rgb = color(colorParam + m, sq(n));
