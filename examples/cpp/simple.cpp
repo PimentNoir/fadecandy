@@ -10,20 +10,20 @@ class MyEffect : public Effect
 {
 public:
     MyEffect()
-        : angle (0) {}
+        : cycle (0) {}
 
-    float angle;
+    float cycle;
 
     virtual void beginFrame(const FrameInfo &f)
     {
         const float speed = 10.0;
-        angle = fmodf(angle + f.timeDelta * speed, 2 * M_PI);
+        cycle = fmodf(cycle + f.timeDelta * speed, 2 * M_PI);
     }
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
         float distance = len(p.point);
-        float wave = sinf(3.0 * distance - angle) + noise3(p.point);
+        float wave = sinf(3.0 * distance - cycle) + noise3(p.point);
         hsv2rgb(rgb, 0.2, 0.3, wave);
     }
 };

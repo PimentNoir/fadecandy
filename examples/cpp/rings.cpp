@@ -20,12 +20,11 @@
 class Rings : public Effect
 {
 public:
-    Rings(const char *palette, float seed)
-        : palette(palette),
-          seed(seed),
-          d(0, 0, 0, 0),
-          threshold(-1.0)
-    {}
+    Rings(const char *palette)
+        : palette(palette)
+    {
+        reseed();
+    }
 
     static const float xyzSpeed = 0.6;
     static const float xyzScale = 0.08;
@@ -40,15 +39,15 @@ public:
     static const float colorContrast = 4.0;
     static const float targetBrightness = 0.1;
     static const float thresholdGain = 0.1;
+    static const float thresholdStepLimit = 0.02;
 
     // Sample colors along a curved path through a texture
     Texture palette;
 
-    // Pseudorandom number seed
-    float seed;
-
     // State variables
     Vec4 d;
+    float timer;
+    float seed;
     float threshold;
 
     // Calculated once per frame
@@ -60,24 +59,26 @@ public:
 
     virtual void beginFrame(const FrameInfo &f)
     {
-        spacing = sq(0.5 + noise2(f.time * ringScaleRate, 1.5)) * ringScale;
+        timer += f.timeDelta;
+
+        spacing = sq(0.5 + noise2(timer * ringScaleRate, 1.5)) * ringScale;
 
         // Rotate movement in the XZ plane
-        float angle = noise2(f.time * 0.01, seed + 30.5) * 10.0;
-        float speed = pow(fabsf(noise2(f.time * 0.01, seed + 40.5)), 2.5) * xyzSpeed;
+        float angle = noise2(timer * 0.01, seed + 30.5) * 10.0;
+        float speed = pow(fabsf(noise2(timer * 0.01, seed + 40.5)), 2.5) * xyzSpeed;
         d[0] += cosf(angle) * speed * f.timeDelta;
         d[2] += sinf(angle) * speed * f.timeDelta;
 
         // Random wander along the W axis
-        d[3] += noise2(f.time * wRate, seed + 3.5) * wSpeed * f.timeDelta;
+        d[3] += noise2(timer * wRate, seed + 3.5) * wSpeed * f.timeDelta;
 
         // Update center position
-        center = Vec3(noise2(f.time * wanderSpeed, seed + 50.9),
-                      noise2(f.time * wanderSpeed, seed + 51.4),
-                      noise2(f.time * wanderSpeed, seed + 51.7)) * wanderSize;
+        center = Vec3(noise2(timer * wanderSpeed, seed + 50.9),
+                      noise2(timer * wanderSpeed, seed + 51.4),
+                      noise2(timer * wanderSpeed, seed + 51.7)) * wanderSize;
 
         // Wander around the color palette
-        colorParam = seed + f.time * 0.05f;
+        colorParam = seed + timer * 0.05f;
 
         // Reset pixel total accumulators, used for the brightness calc in endFrame
         pixelTotal = 0;
@@ -110,17 +111,35 @@ public:
 
     virtual void endFrame(const FrameInfo &f)
     {
+        // Per-frame brightness calculations.
         // Adjust threshold in brightness-determining noise function, in order
         // to try and keep the average pixel brightness at a particular level.
 
-        if (pixelCount > 0) {
-            threshold += (targetBrightness - pixelTotal / pixelCount) * thresholdGain;
+        float target = targetBrightness;
+        float current = pixelCount ? pixelTotal / pixelCount : 0.0f;
+
+        if (wantToReseed()) {
+            // Fade to black
+            target = 0;
+
+            if (current <= 0) {
+                // At black level. Reseed invisibly!
+                reseed();
+            }
         }
+
+        // Rate limited servo loop
+
+        float step = (target - current) * thresholdGain;
+        if (step > thresholdStepLimit) step = thresholdStepLimit;
+        if (step < -thresholdStepLimit) step = -thresholdStepLimit;
+        threshold += step;
     }
 
     virtual void debug(const DebugInfo &di)
     {
-        fprintf(stderr, "\t[rings] seed = %f\n", seed);
+        fprintf(stderr, "\t[rings] seed = %f%s\n", seed, wantToReseed() ? " [reseed pending]" : "");
+        fprintf(stderr, "\t[rings] timer = %f\n", timer);
         fprintf(stderr, "\t[rings] center = %f, %f, %f\n", center[0], center[1], center[2]);
         fprintf(stderr, "\t[rings] d = %f, %f, %f, %f\n", d[0], d[1], d[2], d[3]);
         fprintf(stderr, "\t[rings] threshold = %f\n", threshold);
@@ -132,14 +151,54 @@ public:
         return palette.sample( sinf(parameter) * 0.5f + 0.5f,
                                sinf(parameter * 0.86f) * 0.5f + 0.5f) * brightness;
     }
+
+private:
+    // Totally reinitialize our state variables. We do this periodically
+    // during normal operation, during blank periods.
+
+    void reseed()
+    {
+        // Get okay seed mixing even with depressing rand() implementations
+        srand(time(0));
+        for (int i = 0; i < 50; i++) {
+            rand();
+        }
+        seed = rand() / double(RAND_MAX / 1024);
+
+        // Starting point
+        d = Vec4(0,0,0,0);
+        timer = 0;
+
+        // Initial threshold gives us time to fade in
+        threshold = -1.0f;
+    }
+
+    // Do our state variables need resetting? This is like a watchdog timer,
+    // keeping an eye on the simulation parameters. If we need to start over,
+    // we'll start fading out and reseed during the darkness. This will happen
+    // periodically in order to keep our numbers within the useful resolution of
+    // a 32-bit float.
+
+    bool wantToReseed()
+    {
+        // Comparisons carefully written to NaN always causes reseed
+        return !(timer < 9000.0f) |
+               !(threshold <  10.0f) |
+               !(threshold > -10.0f) |
+               !(d[0] < 1000.0f) |
+               !(d[1] < 1000.0f) |
+               !(d[2] < 1000.0f) |
+               !(d[3] < 1000.0f) |
+               !(d[0] > -1000.0f) |
+               !(d[1] > -1000.0f) |
+               !(d[2] > -1000.0f) |
+               !(d[3] > -1000.0f) ;
+    }
 };
 
 int main(int argc, char **argv)
 {
-    srand(time(0));
-    float seed = fmod(rand() / 1e3, 1e3);
-
-    Rings e("data/glass.png", seed);
+    Rings e("data/glass.png");
 
     EffectRunner r;
     r.setEffect(&e);

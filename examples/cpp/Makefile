@@ -1,4 +1,4 @@
-PROGRAMS = simple rings rings_2d spokes dot particle_trail
+PROGRAMS = simple rings spokes dot particle_trail
 
 # Important optimization options
 CFLAGS = -O3 -ffast-math

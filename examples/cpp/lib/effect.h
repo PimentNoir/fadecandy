@@ -98,13 +98,9 @@ public:
     public:
         FrameInfo();
         void init(const rapidjson::Value &layout);
-        void advance(float timeDelta);
 
         // Seconds passed since the last frame
         float timeDelta;
-
-        // Time since the pattern started
-        double time;
 
         // Info for every pixel
         PixelInfoVec pixels;
@@ -168,9 +164,9 @@ private:
     float minTimeDelta;
     float currentDelay;
     float filteredTimeDelta;
+    float debugTimer;
     bool verbose;
     struct timeval lastTime;
-    double lastDebugTimestamp;
 
     int usage(const char *name);
     void debug();
@@ -221,24 +217,17 @@ inline double Effect::PixelInfo::getArrayNumber(const char *attribute, int index
 }
 
 inline Effect::FrameInfo::FrameInfo()
-    : timeDelta(0), time(0) {}
+    : timeDelta(0) {}
 
 inline void Effect::FrameInfo::init(const rapidjson::Value &layout)
 {
     timeDelta = 0;
-    time = 0;
     pixels.clear();
 
     for (unsigned i = 0; i < layout.Size(); i++) {
         PixelInfo p(i, &layout[i]);
         pixels.push_back(p);
     }
-}
-
-inline void Effect::FrameInfo::advance(float timeDelta)
-{
-    this->timeDelta = timeDelta;
-    this->time += timeDelta;
 }
 
 
@@ -255,8 +244,8 @@ inline EffectRunner::EffectRunner()
       minTimeDelta(0),
       currentDelay(0),
       filteredTimeDelta(0),
-      verbose(false),
-      lastDebugTimestamp(0)
+      debugTimer(0),
+      verbose(false)
 {
     lastTime.tv_sec = 0;
     lastTime.tv_usec = 0;
@@ -382,7 +371,7 @@ inline void EffectRunner::doFrame()
 
 inline void EffectRunner::doFrame(float timeDelta)
 {
-    frameInfo.advance(timeDelta);
+    frameInfo.timeDelta = timeDelta;
 
     if (getEffect() && hasLayout()) {
         effect->beginFrame(frameInfo);
@@ -426,8 +415,8 @@ inline void EffectRunner::doFrame(float timeDelta)
 
     // Periodically output debug info, if we're in verbose mode
     const float debugInterval = 1.0f;
-    if (verbose && frameInfo.time - lastDebugTimestamp >= debugInterval) {
-        lastDebugTimestamp = frameInfo.time;
+    if ((debugTimer += timeDelta) > debugInterval) {
+        debugTimer = fmodf(debugTimer, debugInterval);
         debug();
     }
 
