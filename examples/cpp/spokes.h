@@ -12,10 +12,10 @@
 #include "lib/noise.h"
 #include "lib/brightness.h"
 
-class Spokes : public Effect
+class SpokesEffect : public Effect
 {
 public:
-    Spokes()
+    SpokesEffect()
         : spin(0) {}
 
     static const float cycleRate = 0.001;

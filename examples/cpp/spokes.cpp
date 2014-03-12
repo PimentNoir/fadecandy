@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv)
 {
-    Spokes e;
+    SpokesEffect e;
 
     // Global brightness control
     Brightness br(e);

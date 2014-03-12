@@ -7,10 +7,10 @@
 #include "lib/effect.h"
 #include "lib/particle.h"
 
-class ParticleTrail : public ParticleEffect
+class ParticleTrailEffect : public ParticleEffect
 {
 public:
-    ParticleTrail()
+    ParticleTrailEffect()
         : angle1(0), angle2(0), baseHue(0)
     {}
 
