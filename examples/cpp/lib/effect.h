@@ -139,13 +139,14 @@ public:
     float getPercentBusy();
 
     // Main loop body
-    void doFrame();
+    float doFrame();
     void doFrame(float timeDelta);
 
     // Minimal main loop
     void run();
 
-    // Simple argument parsing and main loop
+    // Simple argument parsing and optional main loop
+    bool parseArguments(int argc, char **argv);
     int main(int argc, char **argv);
 
 protected:
@@ -168,8 +169,20 @@ private:
     bool verbose;
     struct timeval lastTime;
 
-    int usage(const char *name);
+    void usage(const char *name);
     void debug();
+};
+
+
+class EffectMixer : public Effect {
+public:
+    std::vector<Effect*> effects;
+    std::vector<float> faders;
+
+    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
+    virtual void beginFrame(const FrameInfo& f);
+    virtual void endFrame(const FrameInfo& f);
+    virtual void debug(const DebugInfo& d);
 };
 
 
@@ -351,7 +364,7 @@ inline void EffectRunner::run()
     }
 }
    
-inline void EffectRunner::doFrame()
+inline float EffectRunner::doFrame()
 {
     struct timeval now;
 
@@ -367,6 +380,7 @@ inline void EffectRunner::doFrame()
     }
 
     doFrame(delta);
+    return delta;
 }
 
 inline void EffectRunner::doFrame(float timeDelta)
@@ -431,28 +445,38 @@ inline OPCClient& EffectRunner::getClient()
     return opc;
 }
 
-inline int EffectRunner::main(int argc, char **argv)
+inline bool EffectRunner::parseArguments(int argc, char **argv)
 {
     for (int i = 1; i < argc; i++) {
         if (!parseArgument(i, argc, argv)) {
-            return usage(argv[0]);
+            usage(argv[0]);
+            return false;
         }
     }
 
     if (!validateArguments()) {
-        return usage(argv[0]);
+        usage(argv[0]);
+        return false;
+    }
+
+    return true;
+}
+
+inline int EffectRunner::main(int argc, char **argv)
+{
+    if (!parseArguments(argc, argv)) {
+        return 1;
     }
 
     run();
     return 0;
 }
 
-inline int EffectRunner::usage(const char *name)
+inline void EffectRunner::usage(const char *name)
 {
     fprintf(stderr, "usage: %s ", name);
     argumentUsage();
     fprintf(stderr, "\n");
-    return 1;
 }
 
 inline void EffectRunner::debug()
@@ -518,6 +542,44 @@ inline bool EffectRunner::validateArguments()
 inline void EffectRunner::argumentUsage()
 {
     fprintf(stderr, "[-v] [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]");
+}
+
+inline void EffectMixer::calculatePixel(Vec3& rgb, const PixelInfo& p)
+{
+    unsigned count = std::min<unsigned>(effects.size(), faders.size());
+    Vec3 total(0,0,0);
+
+    for (unsigned i = 0; i < count; i++) {
+        float f = faders[i];
+        if (f != 0) {
+            Vec3 sub(0,0,0);
+            effects[i]->calculatePixel(sub, p);
+            total += f * sub;
+        }
+    }
+
+    rgb = total;
+}
+
+inline void EffectMixer::beginFrame(const FrameInfo& f)
+{
+    for (unsigned i = 0; i < effects.size(); ++i) {
+        effects[i]->beginFrame(f);
+    }
+}
+
+inline void EffectMixer::endFrame(const FrameInfo& f)
+{
+    for (unsigned i = 0; i < effects.size(); ++i) {
+        effects[i]->endFrame(f);
+    }
+}
+
+inline void EffectMixer::debug(const DebugInfo& d)
+{
+    for (unsigned i = 0; i < effects.size(); ++i) {
+        effects[i]->debug(d);
+    }
 }
 
 
