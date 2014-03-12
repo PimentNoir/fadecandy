@@ -46,7 +46,7 @@ public:
     virtual void beginFrame(const FrameInfo& f);
     virtual void endFrame(const FrameInfo& f);
     virtual void debug(const DebugInfo& f);
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
+    virtual void shader(Vec3& rgb, const PixelInfo& p) const;
 
 private:
     Effect &next;
@@ -104,7 +104,7 @@ inline void Brightness::beginFrame(const FrameInfo& f)
 
         for (;pi != pe; ++pi, ++ci) {
             if (pi->isMapped()) {
-                next.calculatePixel(*ci, *pi);
+                next.shader(*ci, *pi);
                 count++;
             }
         }
@@ -171,7 +171,7 @@ inline void Brightness::debug(const DebugInfo& d)
     next.debug(d);
 }
 
-inline void Brightness::calculatePixel(Vec3& rgb, const PixelInfo& p)
+inline void Brightness::shader(Vec3& rgb, const PixelInfo& p) const
 {
     rgb = colors[p.index] * currentScale;
 }

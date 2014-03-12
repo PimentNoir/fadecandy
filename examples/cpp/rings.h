@@ -101,12 +101,8 @@ public:
         }
     }
 
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
+    virtual void shader(Vec3& rgb, const PixelInfo &p) const
     {
-        // All calculated pixels count toward the total, even if we early-out because
-        // they're all black.
-        pixelTotalDenominator += 3;
-
         // Noise sampling location
         Vec4 s = Vec4(p.point * xyzScale, seed) + d;
 
@@ -169,10 +165,14 @@ public:
 
         // Assemble color using a lookup through our palette
         rgb = color(colorParam + m, sq(n));
+    }
 
+    inline void postProcess(const Vec3& rgb, const PixelInfo& p)
+    {
         // Keep a rough approximate brightness total, for closed-loop feedback
         for (unsigned i = 0; i < 3; i++) {
             pixelTotalNumerator += sq(std::min(1.0f, std::max(0.0f, rgb[i])));
+            pixelTotalDenominator++;
         }
     }
 
@@ -262,7 +262,7 @@ private:
 
     // Sample a color from our palette, using a lissajous curve within an image texture
 
-    Vec3 color(float parameter, float brightness)
+    Vec3 color(float parameter, float brightness) const
     {
         return palette.sample( sinf(parameter) * 0.5f + 0.5f,
                                sinf(parameter * 0.86f) * 0.5f + 0.5f) * brightness;
@@ -270,14 +270,14 @@ private:
 
     // Sample 3 or 4 dimensional noise. If (!is3D), we use 3 dimensional noise, ignoring the Y axis.
 
-    float dNoise(Vec4 v)
+    float dNoise(Vec4 v) const
     {
         return is3D ? noise4(v) : noise3(v[0], v[2], v[3]);
     }
 
     // Normalization factor for fractional brownian motion with N octaves
 
-    float fbmTotal(int i)
+    static float fbmTotal(int i)
     {
         float n = 0;
         float amp = 1.0f;

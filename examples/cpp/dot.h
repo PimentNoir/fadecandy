@@ -30,7 +30,7 @@ public:
         angle3 = fmodf(angle3 + f.timeDelta * speed * 0.7f, 2 * M_PI);
     }
 
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
+    virtual void shader(Vec3& rgb, const PixelInfo &p) const
     {
         // Project onto the XZ plane
         Vec2 plane = Vec2(p.point[0], p.point[2]);

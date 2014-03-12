@@ -57,7 +57,7 @@ public:
                       noise2(cyclePos * wanderSpeed, 51.7)) * wanderSize;
     }
 
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
+    virtual void shader(Vec3& rgb, const PixelInfo &p) const
     {
         // Vector to center
         Vec3 s = p.point - center;

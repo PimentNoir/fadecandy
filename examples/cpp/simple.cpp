@@ -20,7 +20,7 @@ public:
         cycle = fmodf(cycle + f.timeDelta * speed, 2 * M_PI);
     }
 
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
+    virtual void shader(Vec3& rgb, const PixelInfo &p) const
     {
         float distance = len(p.point);
         float wave = sinf(3.0 * distance - cycle) + noise3(p.point);

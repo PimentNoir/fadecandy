@@ -52,11 +52,26 @@ public:
     class FrameInfo;
     class DebugInfo;
 
+    /*
+     * Calculate a pixel value, using floating point RGB in the nominal range [0, 1].
+     *
+     * The 'rgb' vector is initialized to (0, 0, 0). Caller is responsible for
+     * clamping the results if necessary. This supports effects that layer with
+     * other effects using full floating point precision and dynamic range.
+     *
+     * This function may be run in parallel, not run at all, or run multiple times
+     * per pixel. It therefore can't have side-effects other than producing an RGB
+     * value.
+     */
+    virtual void shader(Vec3& rgb, const PixelInfo& p) const = 0;
 
-    // Calculate a pixel value, using floating point RGB in the range [0, 1].
-    // Caller is responsible for clamping if necessary. This supports effects
-    // that layer with other effects using greater than 8-bit precision.
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p) = 0;
+    /*
+     * Serialized post-processing on one pixel. This runs after shader(), once
+     * per mapped pixel, with the ability to modify Effect data. This shoudln't
+     * be used for anything CPU-intensive, but some effects require closed-loop
+     * feedback based on the calculated color.
+     */
+    virtual void postProcess(const Vec3& rgb, const PixelInfo& p);
 
     // Optional begin/end frame callbacks
     virtual void beginFrame(const FrameInfo& f);
@@ -179,7 +194,7 @@ public:
     std::vector<Effect*> effects;
     std::vector<float> faders;
 
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
+    virtual void shader(Vec3& rgb, const PixelInfo& p) const;
     virtual void beginFrame(const FrameInfo& f);
     virtual void endFrame(const FrameInfo& f);
     virtual void debug(const DebugInfo& d);
@@ -251,6 +266,8 @@ inline Effect::DebugInfo::DebugInfo(EffectRunner &runner)
 inline void Effect::beginFrame(const FrameInfo &f) {}
 inline void Effect::endFrame(const FrameInfo &f) {}
 inline void Effect::debug(const DebugInfo &f) {}
+inline void Effect::postProcess(const Vec3& rgb, const PixelInfo& p) {}
+
 
 inline EffectRunner::EffectRunner()
     : effect(0),
@@ -400,7 +417,8 @@ inline void EffectRunner::doFrame(float timeDelta)
                 const Effect::PixelInfo &p = *i;
 
                 if (p.isMapped()) {
-                    effect->calculatePixel(rgb, p);
+                    effect->shader(rgb, p);
+                    effect->postProcess(rgb, p);
                 }
 
                 for (unsigned i = 0; i < 3; i++) {
@@ -544,7 +562,7 @@ inline void EffectRunner::argumentUsage()
     fprintf(stderr, "[-v] [-fps LIMIT] [-layout FILE.json] [-server HOST[:port]]");
 }
 
-inline void EffectMixer::calculatePixel(Vec3& rgb, const PixelInfo& p)
+inline void EffectMixer::shader(Vec3& rgb, const PixelInfo& p) const
 {
     unsigned count = std::min<unsigned>(effects.size(), faders.size());
     Vec3 total(0,0,0);
@@ -553,7 +571,8 @@ inline void EffectMixer::calculatePixel(Vec3& rgb, const PixelInfo& p)
         float f = faders[i];
         if (f != 0) {
             Vec3 sub(0,0,0);
-            effects[i]->calculatePixel(sub, p);
+            effects[i]->shader(sub, p);
+            effects[i]->postProcess(sub, p);
             total += f * sub;
         }
     }
