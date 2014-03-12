@@ -19,10 +19,10 @@
 #include "lib/noise.h"
 #include "lib/texture.h"
 
-class Rings : public Effect
+class RingsEffect : public Effect
 {
 public:
-    Rings(const char *palette)
+    RingsEffect(const char *palette)
         : palette(palette)
     {
         reseed();
@@ -42,6 +42,7 @@ public:
     static const float targetBrightness = 0.1;
     static const float thresholdGain = 0.1;
     static const float thresholdStepLimit = 0.02;
+    static const float initialThreshold = -1.0f;
     static const unsigned brightnessOctaves = 4;
     static const unsigned colorOctaves = 2;
 
@@ -87,13 +88,12 @@ public:
 
         // Reset pixel total accumulators, used for the brightness calc in endFrame
         pixelTotalNumerator = 0;
-
-        // Count mapped pixels and determine whether this is 2D or 3D
         pixelTotalDenominator = 0;
+
+        // Is this 2D or 3D?
         is3D = false;
         for (Effect::PixelInfoIter i = f.pixels.begin(), e = f.pixels.end(); i != e; ++i) {
             const Effect::PixelInfo &p = *i;
-            pixelTotalDenominator += 3;
             if (p.point[1] != 0.0f) {
                 is3D = true;
             }
@@ -102,6 +102,10 @@ public:
 
     virtual void calculatePixel(Vec3& rgb, const PixelInfo &p)
     {
+        // All calculated pixels count toward the total, even if we early-out because
+        // they're all black.
+        pixelTotalDenominator += 3;
+
         // Noise sampling location
         Vec4 s = Vec4(p.point * xyzScale, seed) + d;
 
@@ -179,23 +183,27 @@ public:
 
         float target = targetBrightness;
         float current = pixelTotalDenominator ? pixelTotalNumerator / pixelTotalDenominator : 0.0f;
+        bool blackLevel = current <= 0.0f;
 
         if (wantToReseed()) {
             // Fade to black
             target = 0;
 
-            if (current <= 0) {
+            if (blackLevel) {
                 // At black level. Reseed invisibly!
                 reseed();
             }
         }
 
-        // Rate limited servo loop
+        // Rate limited servo loop.
+        // Disabled if we aren't calculating pixel values.
 
-        float step = (target - current) * thresholdGain;
-        if (step > thresholdStepLimit) step = thresholdStepLimit;
-        if (step < -thresholdStepLimit) step = -thresholdStepLimit;
-        threshold += step;
+        if (pixelTotalDenominator) {
+            float step = (target - current) * thresholdGain;
+            if (step > thresholdStepLimit) step = thresholdStepLimit;
+            if (step < -thresholdStepLimit) step = -thresholdStepLimit;
+            threshold += step;
+        }
     }
 
     virtual void debug(const DebugInfo &di)
@@ -226,7 +234,7 @@ private:
         timer = 0;
 
         // Initial threshold gives us time to fade in
-        threshold = -1.0f;
+        threshold = initialThreshold;
     }
 
     // Do our state variables need resetting? This is like a watchdog timer,

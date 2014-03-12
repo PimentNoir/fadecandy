@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv)
 {
-    Rings e("data/glass.png");
+    RingsEffect e("data/glass.png");
 
     EffectRunner r;
     r.setEffect(&e);
