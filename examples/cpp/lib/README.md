@@ -16,6 +16,7 @@ This library includes:
 * [Perlin Noise](http://www.algorithmic-worlds.net/info/info.php?page=pg-perlin) function
 * Generalized *Effect* framework
 * Main loop with smooth frame rate throttling
+* Concurrent rendering on multiple CPU cores, via the EffectMixer class
 * Command line parameters
 * Debug output including performance metrics
 
