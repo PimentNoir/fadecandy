@@ -105,6 +105,7 @@ inline void Brightness::beginFrame(const FrameInfo& f)
         for (;pi != pe; ++pi, ++ci) {
             if (pi->isMapped()) {
                 next.shader(*ci, *pi);
+                next.postProcess(*ci, *pi);
                 count++;
             }
         }
