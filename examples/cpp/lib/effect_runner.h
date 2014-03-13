@@ -284,10 +284,12 @@ inline void EffectRunner::doFrame(float timeDelta)
     filteredTimeDelta = std::max(filteredTimeDelta, currentDelay);
 
     // Periodically output debug info, if we're in verbose mode
-    const float debugInterval = 1.0f;
-    if ((debugTimer += timeDelta) > debugInterval) {
-        debugTimer = fmodf(debugTimer, debugInterval);
-        debug();
+    if (verbose) {
+        const float debugInterval = 1.0f;
+        if ((debugTimer += timeDelta) > debugInterval) {
+            debugTimer = fmodf(debugTimer, debugInterval);
+            debug();
+        }
     }
 
     // Add the extra delay, if we have one. This is how we throttle down the frame rate.
