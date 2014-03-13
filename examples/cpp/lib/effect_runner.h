@@ -58,7 +58,9 @@ public:
     const rapidjson::Document& getLayout() const;
     Effect* getEffect() const;
     OPCClient& getClient();
-    const Effect::FrameInfo& getFrameInfo() const;
+
+    // Access to most recent framebuffer information
+    const Effect::PixelInfoVec& getPixelInfo() const;
     const uint8_t* getPixel(unsigned index) const;
     void getPixelColor(unsigned index, Vec3 &rgb) const;
 
@@ -306,9 +308,9 @@ inline OPCClient& EffectRunner::getClient()
     return opc;
 }
 
-inline const Effect::FrameInfo& EffectRunner::getFrameInfo() const
+inline const Effect::PixelInfoVec& EffectRunner::getPixelInfo() const
 {
-    return frameInfo;
+    return frameInfo.pixels;
 }
 
 inline const uint8_t* EffectRunner::getPixel(unsigned index) const
