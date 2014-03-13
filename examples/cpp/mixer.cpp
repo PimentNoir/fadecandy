@@ -1,4 +1,5 @@
-// Simple example that mixes multiple effects.
+// Simple example for EffectMixer. Mixers let you run multiple effects, and they
+// handle concurrent rendering on multiple CPU cores.
 
 #include "lib/effect_runner.h"
 #include "lib/effect_mixer.h"
@@ -13,14 +14,13 @@ int main(int argc, char **argv)
     DotEffect dot("data/dot.png");
     SpokesEffect spokes;
 
-    EffectMixer mix;
-    mix.effects.push_back(&rings);
-    mix.effects.push_back(&dot);
-    mix.effects.push_back(&spokes);
-    mix.faders.resize(mix.effects.size());
+    EffectMixer mixer;
+    mixer.add(&rings);
+    mixer.add(&dot);
+    mixer.add(&spokes);
 
     EffectRunner r;
-    r.setEffect(&mix);
+    r.setEffect(&mixer);
     r.setLayout("../layouts/grid32x16z.json");
     if (!r.parseArguments(argc, argv)) {
         return 1;
@@ -34,9 +34,9 @@ int main(int argc, char **argv)
 
         // Animate the mixer's fader controls
         state = fmod(state + timeDelta * speed, 2 * M_PI);
-        for (int i = 0; i < mix.faders.size(); i++) {
-            float theta = state + i * (2 * M_PI) / mix.faders.size();
-            mix.faders[i] = std::max(0.0f, sinf(theta));
+        for (int i = 0; i < mixer.numChannels(); i++) {
+            float theta = state + i * (2 * M_PI) / mixer.numChannels();
+            mixer.setFader(i, std::max(0.0f, sinf(theta)));
         }
     }
 }
