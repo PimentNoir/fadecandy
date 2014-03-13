@@ -54,17 +54,20 @@ public:
     void setMaxFrameRate(float fps);
     void setVerbose(bool verbose = true);
 
-    bool hasLayout();
-    const rapidjson::Document& getLayout();
-    Effect* getEffect();
+    bool hasLayout() const;
+    const rapidjson::Document& getLayout() const;
+    Effect* getEffect() const;
     OPCClient& getClient();
+    const Effect::FrameInfo& getFrameInfo() const;
+    const uint8_t* getPixel(unsigned index) const;
+    void getPixelColor(unsigned index, Vec3 &rgb) const;
 
     // Time stats
-    float getFrameRate();
-    float getTimePerFrame();
-    float getBusyTimePerFrame();
-    float getIdleTimePerFrame();
-    float getPercentBusy();
+    float getFrameRate() const;
+    float getTimePerFrame() const;
+    float getBusyTimePerFrame() const;
+    float getIdleTimePerFrame() const;
+    float getPercentBusy() const;
 
     // Main loop body
     float doFrame();
@@ -167,12 +170,12 @@ inline bool EffectRunner::setLayout(const char *filename)
     return true;
 }
 
-inline const rapidjson::Document& EffectRunner::getLayout()
+inline const rapidjson::Document& EffectRunner::getLayout() const
 {
     return layout;
 }
 
-inline bool EffectRunner::hasLayout()
+inline bool EffectRunner::hasLayout() const
 {
     return layout.IsArray();
 }
@@ -182,32 +185,32 @@ inline void EffectRunner::setEffect(Effect *effect)
     this->effect = effect;
 }
 
-inline Effect* EffectRunner::getEffect()
+inline Effect* EffectRunner::getEffect() const
 {
     return effect;
 }
 
-inline float EffectRunner::getFrameRate()
+inline float EffectRunner::getFrameRate() const
 {
     return filteredTimeDelta > 0.0f ? 1.0f / filteredTimeDelta : 0.0f;
 }
 
-inline float EffectRunner::getTimePerFrame()
+inline float EffectRunner::getTimePerFrame() const
 {
     return filteredTimeDelta;
 }
 
-inline float EffectRunner::getBusyTimePerFrame()
+inline float EffectRunner::getBusyTimePerFrame() const
 {
     return getTimePerFrame() - getIdleTimePerFrame();
 }
 
-inline float EffectRunner::getIdleTimePerFrame()
+inline float EffectRunner::getIdleTimePerFrame() const
 {
     return std::max(0.0f, currentDelay);
 }
 
-inline float EffectRunner::getPercentBusy()
+inline float EffectRunner::getPercentBusy() const
 {
     return 100.0f * getBusyTimePerFrame() / getTimePerFrame();
 }
@@ -301,6 +304,24 @@ inline void EffectRunner::doFrame(float timeDelta)
 inline OPCClient& EffectRunner::getClient()
 {
     return opc;
+}
+
+inline const Effect::FrameInfo& EffectRunner::getFrameInfo() const
+{
+    return frameInfo;
+}
+
+inline const uint8_t* EffectRunner::getPixel(unsigned index) const
+{
+    return OPCClient::Header::view(frameBuffer).data() + index * 3;
+}
+
+inline void EffectRunner::getPixelColor(unsigned index, Vec3 &rgb) const
+{
+    const uint8_t *byte = getPixel(index);
+    for (unsigned i = 0; i < 3; i++) {
+        rgb[i] = *(byte++) / 255.0f;
+    }
 }
 
 inline bool EffectRunner::parseArguments(int argc, char **argv)
