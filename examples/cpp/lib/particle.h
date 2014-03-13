@@ -47,7 +47,7 @@ public:
     ParticleEffect();
 
     virtual void beginFrame(const FrameInfo& f);
-    virtual void calculatePixel(Vec3& rgb, const PixelInfo& p);
+    virtual void shader(Vec3& rgb, const PixelInfo& p) const;
     virtual void debug(const DebugInfo& d);
 
 protected:
@@ -84,18 +84,13 @@ protected:
      * q normalized in range [0, 1].
      * Has compact support; kernel forced to zero outside this range.
      */
-    float kernel(float q);
+    static float kernel(float q);
 
     // Variant of kernel function called with q^2
-    float kernel2(float q2);
+    static float kernel2(float q2);
 
     // First derivative of kernel()
-    float kernelDerivative(float q);
-
-private:
-    // Debug statistics
-    unsigned particlesPerPixelNumerator;
-    unsigned particlesPerPixelDenominator; 
+    static float kernelDerivative(float q);
 
 public:
     // Implementation glue for our KD-tree index
@@ -189,13 +184,9 @@ inline void ParticleEffect::beginFrame(const FrameInfo& f)
 
     // Rebuild KD-tree
     index.tree.buildIndex();
-
-    // Reset debug counters
-    particlesPerPixelNumerator = 0;
-    particlesPerPixelDenominator = 0;
 }
 
-inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
+inline void ParticleEffect::shader(Vec3& rgb, const PixelInfo& p) const
 {
     Vec3 accumulator(0, 0, 0);
 
@@ -206,7 +197,7 @@ inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
     unsigned numHits = index.tree.radiusSearch(&p.point[0], sq(index.radiusMax), hits, params);
 
     for (unsigned i = 0; i < numHits; i++) {
-        ParticleAppearance &particle = appearance[hits[i].first];
+        const ParticleAppearance &particle = appearance[hits[i].first];
         float dist2 = hits[i].second;
 
         // Normalized distance
@@ -217,15 +208,11 @@ inline void ParticleEffect::calculatePixel(Vec3& rgb, const PixelInfo& p)
     }
 
     rgb = accumulator;
-
-    particlesPerPixelNumerator += numHits;
-    particlesPerPixelDenominator++;
 }
 
 inline void ParticleEffect::debug(const DebugInfo& d)
 {
-    fprintf(stderr, "\t[particle] %.1f kB, radius=%.1f, %.2f hits/pixel\n",
+    fprintf(stderr, "\t[particle] %.1f kB, radius=%.1f\n",
         index.tree.usedMemory() / 1024.0f,
-        index.radiusMax,
-        float(particlesPerPixelNumerator) / float(particlesPerPixelDenominator));
+        index.radiusMax);
 }
