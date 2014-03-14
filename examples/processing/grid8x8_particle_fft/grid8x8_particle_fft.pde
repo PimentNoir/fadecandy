@@ -247,7 +247,7 @@ void draw()
       color hsb = color( 
          hue % 100,
          saturation,
-         100 * constrain(fftFilter[i], 0.2515, 0.251525) 
+         100 * constrain(fftFilter[i], 0.2525, 0.252525) 
          );
       tint(hsb, fftFilter[i] * opacity);
     }
