@@ -46,15 +46,15 @@ public:
 
     bool load(const char *filename);
     bool load(std::vector<unsigned char> png);
-    bool isLoaded();
+    bool isLoaded() const;
 
     // Interpolated sampling. Texture coordinates in the range [0, 1]
-    Vec3 sample(Vec2 texcoord);
-    Vec3 sample(float x, float y);
+    Vec3 sample(Vec2 texcoord) const;
+    Vec3 sample(float x, float y) const;
 
     // Raw sampling, integer pixel coordinates.
-    uint8_t *sampleIntRGBA32(int x, int y);
-    Vec3 sampleInt(int x, int y);
+    const uint8_t *sampleIntRGBA32(int x, int y) const;
+    Vec3 sampleInt(int x, int y) const;
 
 private:
     unsigned long width, height;
@@ -125,12 +125,12 @@ inline bool Texture::load(std::vector<unsigned char> png)
     return true;
 }
 
-inline bool Texture::isLoaded()
+inline bool Texture::isLoaded() const
 {
     return width && height;
 }
 
-inline uint8_t* Texture::sampleIntRGBA32(int x, int y)
+inline const uint8_t* Texture::sampleIntRGBA32(int x, int y) const
 {
     if (!isLoaded()) {
         return 0;
@@ -141,21 +141,21 @@ inline uint8_t* Texture::sampleIntRGBA32(int x, int y)
     return &pixels[ (x + y * width) << 2 ];
 }
 
-inline Vec3 Texture::sampleInt(int x, int y)
+inline Vec3 Texture::sampleInt(int x, int y) const
 {
-    uint8_t* rgba = sampleIntRGBA32(x, y);
+    const uint8_t* rgba = sampleIntRGBA32(x, y);
     return Vec3(
         (rgba[0] & 0xFF) / 255.0f,
         (rgba[1] & 0xFF) / 255.0f,
         (rgba[2] & 0xFF) / 255.0f );
 }
 
-inline Vec3 Texture::sample(Vec2 texcoord)
+inline Vec3 Texture::sample(Vec2 texcoord) const
 {
     return sample(texcoord[0], texcoord[1]);
 }
 
-inline Vec3 Texture::sample(float x, float y)
+inline Vec3 Texture::sample(float x, float y) const
 {
     float fx = x * width;
     float fy = y * height;

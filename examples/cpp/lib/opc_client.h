@@ -67,9 +67,15 @@ public:
         uint8_t *data() {
             return (uint8_t*) &this[1];
         }
+        const uint8_t *data() const {
+            return (uint8_t*) &this[1];
+        }
 
         // Use a Header() to manipulate packet data in a std::vector
         static Header& view(std::vector<uint8_t> &data) {
+            return *(Header*) &data[0];
+        }
+        static const Header& view(const std::vector<uint8_t> &data) {
             return *(Header*) &data[0];
         }
     };
