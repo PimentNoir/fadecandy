@@ -30,6 +30,7 @@ Getting Started
 In order to build the binary from source you need to run the following commands inside of the **server** directory:
 
 `$ make submodules`
+
 `$ make`
 
 The compiled binary will be created in the same **server** directory
