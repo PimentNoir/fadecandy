@@ -57,7 +57,10 @@
         }
 
         // Set Default Black Color.
-        var color = {r:0,b:0,g:0};
+        var defaultColor = {r:0,b:0,g:0};
+        
+        // Set Queue Speed, default is 3 seconds.
+        var speed = 3000;
        
         // Set all pixels to a given color
         function writeFrame(red, green, blue) {
@@ -91,7 +94,7 @@
             for (var led = 0; led < leds; led++) {
 
                 //protection against null from random color.
-                myObj === null ? myObj = {r:0,b:0,g:0} : myObj;
+                myObj === null ? myObj = defaultColor : myObj;
 
                 packet[dest++] = myObj.r;
                 packet[dest++] = myObj.g;
@@ -107,14 +110,12 @@
         // Animation loop
         var animate = function() {
 
-            // Get time delta 
-
             writeFrame(
-                color.r,
-                color.g,
-                color.b);
+                defaultColor.r,
+                defaultColor.g,
+                defaultColor.b);
 
-            setTimeout(animate, 3000);
+            setTimeout(animate, speed);
         }
 
         // Connect to a Fadecandy server running on the same computer, on the default port
