@@ -22,3 +22,18 @@ Build
 Pre-built binaries are included in the **bin** directory, but you can also build it yourself. All required libraries are included as git submodules.
 
 It can build on Windows, Mac OS, or Linux using Make and other command line tools. On Windows, the build uses MinGW and gcc.
+
+
+Getting Started
+-----
+
+In order to build the binary from source you need to run the following commands inside of the **server** directory:
+
+`$ make submodules`
+`$ make`
+
+The compiled binary will be created in the same **server** directory
+
+If you want to remove the compiled binary and source files run:
+
+`$ make clean`
