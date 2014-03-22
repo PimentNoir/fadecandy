@@ -94,10 +94,10 @@ public:
         // Is this pixel being used, or is it a placeholder?
         bool isMapped() const;
 
-	// Look up data from the JSON layout
-	const rapidjson::Value& get(const char *attribute);
-	double getNumber(const char *attribute);
-	double getArrayNumber(const char *attribute, int index);
+        // Look up data from the JSON layout
+        const rapidjson::Value& get(const char *attribute);
+        double getNumber(const char *attribute);
+        double getArrayNumber(const char *attribute, int index);
     };
 
     typedef std::vector<PixelInfo> PixelInfoVec;
