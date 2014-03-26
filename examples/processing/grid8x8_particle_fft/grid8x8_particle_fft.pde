@@ -28,7 +28,7 @@ boolean isDebug;
 boolean isPlayer;
 
 // Runtime booleans.
-// Try to inverse frequency displaying weight ... or not.
+// Try to inverse frequency weight ... or not.
 boolean isInversed;
 boolean useEMA;
 boolean isColorFile;
@@ -75,9 +75,10 @@ void setup()
   
   // Log FFT filter with decay, better on clean noise source such as properly mixed songs.
   decay = 0.97;
-  // Exponential Moving Average aka EMA FFT filter, better on unclean noise source or reduce the smooth factor on clean noise source to a visual rendering very smooth for human eyes.
+  // Exponential Moving Average aka EMA FFT filter, better on unclean noise source. 
+  // Adjust the smooth factor on clean noise source for a visual rendering very smooth for the human eyes.
   useEMA = true;
-  smooth_factor = 0.36;
+  smooth_factor = 0.97;
   
   // Zero NaN FFT values or not.
   isZeroNaN = true;
@@ -139,6 +140,7 @@ void setup()
   // Noise initialisation.
   simplexnoise = new SimplexNoise();
   noise_fft = 0;
+  noise_scale_fft = 0.5125;
   // High reactivity noise source by default. 0 mean Low, 1 mean Medium, 2 mean High.  
   reactivity_type = 2;
   // It's the default number of FBM octaves.  
@@ -170,6 +172,15 @@ void setup()
 }
 
 void keyPressed() {
+  float noise_scale_inc = 0.001;
+  if (key == 'k' && noise_scale_fft < 10-noise_scale_inc) {
+    noise_scale_fft += noise_scale_inc;
+    UndoPrinting();
+  }
+  if (key == 'j' && noise_scale_fft > noise_scale_inc) {
+    noise_scale_fft -= noise_scale_inc;
+    UndoPrinting();
+  }
   float inc = 0.01;
   if (keyCode == RIGHT && decay < 1-inc && !useEMA) {
     decay += inc;
@@ -270,10 +281,10 @@ void keyPressed() {
     UndoPrinting();
   }
   if (key == 'd') opc.setDithering(false);
-  if (key == ' ' && isPlayer && !isWebPlayer) { 
+  if (key == ' ' && isPlayer) { 
     sound[song].pause();
   }
-  if (key == 'p' && isPlayer && !isWebPlayer) {
+  if (key == 'p' && isPlayer) {
     sound[song].play();
   }
   if (key == 'n' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-4*AudioBufferSize && song < filename.length-1) {
@@ -385,14 +396,14 @@ void draw()
     background(0);
   }
    
-  if (Character.toString(key) != "") {
-    prStr("Key used = " + key);
-  } 
-   
+  prStr("Key used = " + key);
+     
   if (isPlayer && isWebPlayer) {
-    prStr("Player mode: Web player playing " +  filename[song]);
+    prStr("Mode: Web player playing " +  filename[song] + " with audio buffer size = " + AudioBufferSize);
+  } else if (isPlayer && !isWebPlayer) {
+    prStr("Mode: File player playing " +  filename[song] + " with audio buffer size = " + AudioBufferSize);
   } else {
-    prStr("Player mode: File player playing " +  filename[song]);
+    prStr("Mode: Line in" + " with audio buffer size = " + AudioBufferSize);
   }
         
   if (isPlayer && !isWebPlayer && sound[song].position() >= sound[song].length()-4*AudioBufferSize && song < filename.length-1 && song >= 0) {
@@ -400,6 +411,7 @@ void draw()
      song++;
      sound[song] = minim.loadFile(filename[song], AudioBufferSize);
      reinit_sound_fft();
+     // FIXME?: Should be conditional.
      UndoPrinting();    
   } 
   
@@ -413,15 +425,15 @@ void draw()
   }
   
   // All fftFilter have the same length.
-  int fftFilterLenght = fftFilter.length;
+  int fftFilterLength = fftFilter.length;
   
   if (useEMA) { 
-    prStr("FFT Filter: EMA with smooth factor = " + smooth_factor + " and lenght = " + fftFilterLenght);
+    prStr("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
   } else {
-    prStr("FFT Filter: Log with decay = " + decay + " and lenght = " + fftFilterLenght);
+    prStr("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
   }   
    
-  for (int i = 0; i < fftFilterLenght; i++) {
+  for (int i = 0; i < fftFilterLength; i++) {
     if (isPlayer) {
       // EMA
       if (useEMA) {  
@@ -450,7 +462,7 @@ void draw()
   // But bound them on the min and max on a same sound event? 
   float fftFiltermax = max(fftFilter);
   float fftFiltermin = min(fftFilter);
-  for (int i = 0; i < fftFilterLenght; i++) {
+  for (int i = 0; i < fftFilterLength; i++) {
     fftFilterNormPrev[i] = fftFilterNorm[i];
     fftFilterNorm[i] = map(fftFilter[i], fftFiltermin, fftFiltermax, 0 , 1);
     // Zero NaN values or not.
@@ -464,7 +476,7 @@ void draw()
     prStr("Weighting: No frequency weighting mode");   
   }
         
-  for (int i = 0; i < fftFilterLenght; i++) {
+  for (int i = 0; i < fftFilterLength; i++) {
     if (isInversed) { 
        fftFilterNorm[i] = fftFilterNormInv[i];
     }
@@ -510,19 +522,19 @@ void draw()
         prStr("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
         break;
       case 1:
-        noise_scale_fft = 0.5125;
+        //noise_scale_fft = 0.5125;
         float medium_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse_type * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = medium_noise_fft;
         prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
-        noise_scale_fft = 0.5125;
+        //noise_scale_fft = 0.5125;
         float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse_type * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = high_noise_fft;
         prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;
       default:
-        noise_scale_fft = 0.5125;
+        //noise_scale_fft = 0.5125;
         float noise_default = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse_type * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = noise_default;
         prStr("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
@@ -531,7 +543,7 @@ void draw()
     //float size_pulse_blink = fftFilterNorm[i] * abs(pulse_type);
     float size_pulse_noblink = fftFilterNorm[i] * abs(pulse_type) * noise_fft;
     float size = height * (minSize + sizeScale * size_pulse_noblink);
-    prStr("Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
+    prStr("Visualisation properties: \n Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
            
     // Do not loose some fftFilter values, use fftFilter normalized.
     float centerx = fftFilterNorm[i] * width * noise_fft; 
@@ -542,7 +554,7 @@ void draw()
                  
     if (isColorFile) {
       colorMode(RGB, 255);
-      color rgb = colors.get(int(map(i, 0, fftFilterLenght-1, 0, colors.width-1)), colors.height/2);
+      color rgb = colors.get(int(map(i, 0, fftFilterLength-1, 0, colors.width-1)), colors.height/2);
       tint(rgb, fftFilterNormInv[i] * noise_fft * opacity);
       prStr("Color: Use color file = " + ColorGradientImage + " with opacity = " + opacity + " modulated by a coherent noise (RGB mode)");
     } else {
@@ -552,7 +564,7 @@ void draw()
       // Saturation level is rather high with fftFilter array values normalization smoothed by a simplex noise FBM. 
       float saturation = fftFilterNormInv[i] * noise_fft * 100;
       // Small brightness variation around a minimum value smoothed by a simplex noise FBM.
-      float brightness = 9.25 + fftFilterNormInv[i] * noise_fft * 2.125;
+      float brightness = 9.125 + fftFilterNormInv[i] * noise_fft * 1.9725;
       color hsb = color( 
          hue % 100,
          saturation,
