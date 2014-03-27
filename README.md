@@ -4,6 +4,7 @@ Fadecandy is a project that makes LED art easier, tastier, and more creative. We
 
 * [Video Introduction](https://vimeo.com/79935649)
 * [Tutorial: LED Art with Fadecandy](http://learn.adafruit.com/led-art-with-fadecandy)
+* [Presentation slides: Easier and Tastier LED Art with Fadecandy](http://imgur.com/a/TaJBK)
 
 Buy a Fadecandy Controller board:
 
