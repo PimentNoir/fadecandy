@@ -180,6 +180,29 @@ noise2(Vec2 v)
   return noise2(v[0], v[1]);
 } 
 
+static inline float
+fbm_noise2(float x, float y, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
+    float freq = 1.0f;
+    float amp = 1.0f;
+    float max = 1.0f;
+    float total = noise2(x, y);
+    int i;
+
+    for (i = 1; i < octaves; ++i) {
+        freq *= lacunarity;
+        amp *= persistence;
+        max += amp;
+        total += noise2(x * freq, y * freq) * amp;
+    }
+    return total / max;
+}
+
+static inline float
+fbm_noise2(Vec2 v, int octaves, float persistence = 0.5, float lacunarity = 2.0) {
+  return fbm_noise2(v[0], v[1], octaves, persistence, lacunarity);
+}
+
+
 #define dot3(v1, v2) ((v1)[0]*(v2)[0] + (v1)[1]*(v2)[1] + (v1)[2]*(v2)[2])
 
 #define ASSIGN(a, v0, v1, v2) (a)[0] = v0; (a)[1] = v1; (a)[2] = v2;
