@@ -95,9 +95,11 @@ public:
         bool isMapped() const;
 
         // Look up data from the JSON layout
-        const rapidjson::Value& get(const char *attribute);
-        double getNumber(const char *attribute);
-        double getArrayNumber(const char *attribute, int index);
+        const rapidjson::Value& get(const char *attribute) const;
+        double getNumber(const char *attribute) const;
+        double getArrayNumber(const char *attribute, int index) const;
+        Vec2 getVec2(const char *attribute) const;
+        Vec3 getVec3(const char *attribute) const;
     };
 
     typedef std::vector<PixelInfo> PixelInfoVec;
@@ -114,6 +116,17 @@ public:
 
         // Info for every pixel
         PixelInfoVec pixels;
+
+        // Model axis-aligned bounding box
+        Vec3 modelMin, modelMax;
+
+        // Diameter measured from center
+        Real modelDiameter;
+
+        // Calculated model info
+        Vec3 modelCenter() const;
+        Vec3 modelSize() const;
+        Real distanceOutsideBoundingBox(Vec3 p) const;
     };
 
     // Information passed to debug() callbacks
@@ -135,9 +148,7 @@ inline Effect::PixelInfo::PixelInfo(unsigned index, const rapidjson::Value* layo
     : index(index), layout(layout)
 {
     if (isMapped()) {
-        for (unsigned i = 0; i < 3; i++) {
-            point[i] = getArrayNumber("point", i);
-        }
+        point = getVec3("point");
     }
 }
 
@@ -146,18 +157,18 @@ inline bool Effect::PixelInfo::isMapped() const
     return layout && layout->IsObject();
 }
 
-inline const rapidjson::Value& Effect::PixelInfo::get(const char *attribute)
+inline const rapidjson::Value& Effect::PixelInfo::get(const char *attribute) const
 {
     return (*layout)[attribute];
 }
 
-inline double Effect::PixelInfo::getNumber(const char *attribute)
+inline double Effect::PixelInfo::getNumber(const char *attribute) const
 {
     const rapidjson::Value& n = get(attribute);
     return n.IsNumber() ? n.GetDouble() : 0.0;
 }
 
-inline double Effect::PixelInfo::getArrayNumber(const char *attribute, int index)
+inline double Effect::PixelInfo::getArrayNumber(const char *attribute, int index) const
 {
     const rapidjson::Value& a = get(attribute);
     if (a.IsArray()) {
@@ -169,6 +180,19 @@ inline double Effect::PixelInfo::getArrayNumber(const char *attribute, int index
     return 0.0;
 }
 
+inline Vec2 Effect::PixelInfo::getVec2(const char *attribute) const
+{
+    return Vec2( getArrayNumber(attribute, 0),
+                 getArrayNumber(attribute, 1) );
+}
+
+inline Vec3 Effect::PixelInfo::getVec3(const char *attribute) const
+{
+    return Vec3( getArrayNumber(attribute, 0),
+                 getArrayNumber(attribute, 1),
+                 getArrayNumber(attribute, 2) );
+}
+
 inline Effect::FrameInfo::FrameInfo()
     : timeDelta(0) {}
 
@@ -177,12 +201,52 @@ inline void Effect::FrameInfo::init(const rapidjson::Value &layout)
     timeDelta = 0;
     pixels.clear();
 
+    // Create PixelInfo instances
+
     for (unsigned i = 0; i < layout.Size(); i++) {
         PixelInfo p(i, &layout[i]);
         pixels.push_back(p);
     }
+
+    // Calculate min/max
+
+    modelMin = modelMax = pixels[0].point;
+    for (unsigned i = 1; i < pixels.size(); i++) {
+        for (unsigned j = 0; j < 3; j++) {
+            modelMin[j] = std::min(modelMin[j], pixels[i].point[j]);
+            modelMax[j] = std::max(modelMax[j], pixels[i].point[j]);
+        }
+    }
+
+    // Calculate diameter
+
+    modelDiameter = 0;
+    for (unsigned i = 0; i < pixels.size(); i++) {
+        modelDiameter = std::max(modelDiameter, len(pixels[i].point - modelCenter()));
+    }
 }
 
+inline Vec3 Effect::FrameInfo::modelCenter() const
+{
+    return (modelMin + modelMax) * 0.5;
+}
+
+inline Vec3 Effect::FrameInfo::modelSize() const
+{
+    return modelMax - modelMin;
+}
+
+inline Real Effect::FrameInfo::distanceOutsideBoundingBox(Vec3 p) const
+{
+    Real d = 0;
+
+    for (unsigned j = 0; j < 3; j++) {
+        d = std::max(d, modelMin[j] - p[j]);
+        d = std::max(d, p[j] - modelMax[j]);
+    }
+
+    return d;
+}
 
 inline Effect::DebugInfo::DebugInfo(EffectRunner &runner)
     : runner(runner) {}
