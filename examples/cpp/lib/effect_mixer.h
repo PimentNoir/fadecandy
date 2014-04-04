@@ -48,6 +48,8 @@ public:
 
     // Managing channels
     int numChannels();
+    void clear();
+    void set(Effect *effect);
     int add(Effect *effect, float fader = 1.0);
     int find(Effect *effect);
     void remove(int index);
@@ -144,6 +146,17 @@ inline int EffectMixer::add(Effect *effect, float fader)
     int index = channels.size();
     channels.push_back(c);
     return index;
+}
+
+inline void EffectMixer::clear()
+{
+    channels.clear();
+}
+
+inline void EffectMixer::set(Effect *effect)
+{
+    clear();
+    add(effect);
 }
 
 inline int EffectMixer::find(Effect *effect)
