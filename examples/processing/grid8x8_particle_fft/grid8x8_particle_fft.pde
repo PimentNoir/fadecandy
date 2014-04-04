@@ -163,12 +163,12 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-  //opc = new OPC(this, "192.168.1.5", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.5", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
-  //opc.led(3 * 64, width * 1/4, height * 1/2);
+  opc.led(3 * 64, width * 1/4, height * 1/2);
   //opc.ledGrid(4 * 64, 11, 11, width * 1/2, height * 1/2, height/16, height/16, 0, true);
     
   // Make the status LED quiet
