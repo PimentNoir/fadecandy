@@ -83,7 +83,7 @@ void setup()
   useLog = false;
   decay = 0.97f;
   // Exponential Moving Average aka EMA FFT filter, better on unclean sound source in the time domain, it's a low pass filter.
-  // In the frequency domain, it's also a very simple visual smoother. 
+  // In the frequency domain, it's also a very simple and efficient visual smoother. 
   // Adjust the default smooth factor for a visual rendering very smooth for the human eyes.
   useEMA = true;
   smooth_factor = 0.97f;
