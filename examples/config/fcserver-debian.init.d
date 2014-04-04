@@ -14,8 +14,8 @@ umask 022
 
 . /lib/lsb/init-functions
 
-FADECANDY_DAEMON="/home/elecdev/src/fadecandy-git/server/fcserver"
-FADECANDY_OPTS="/home/elecdev/src/fadecandy-git/examples/config/piment-noir.json"
+FADECANDY_DAEMON="/usr/bin/fcserver"
+FADECANDY_OPTS="/etc/fcserver.json"
 
 case "$1" in
   start)
