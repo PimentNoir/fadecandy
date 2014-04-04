@@ -1,16 +1,10 @@
 {
     "listen": [ null, 7890 ],
     "verbose": true,
-    "color": { "gamma": 2.4, "whitepoint": [ 1.0, 1.0, 1.0 ] },
+    "color": { "gamma": 2.5, "whitepoint": [ 1.0, 1.0, 1.0 ] },
     "devices": [
         {
             "type": "fadecandy",
-	    "serial": "XPZRJDEQXNIRULAT",
-            "map": [ [ 0, 0, 0, 512 ] ]
-        },
-	{
-            "type": "fadecandy",
-            "serial": "IWYAVBQIXVAHSHYR",
             "map": [ [ 0, 0, 0, 512 ] ]
         }
     ]
