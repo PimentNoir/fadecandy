@@ -78,12 +78,12 @@ void setup()
   // Weighting mode.
   isInversed = true;
   
-  // Log decay FFT filter with decay, better on clean noise source such as properly mixed songs in the time domain.
+  // Log decay FFT filter with decay, better on clean sound source such as properly mixed songs in the time domain.
   // In the frequency domain, it's a visual smoother.
   useLog = false;
   decay = 0.97f;
-  // Exponential Moving Average aka EMA FFT filter, better on unclean noise source in the time domain, it's a low pass filter.
-  // In the frequency domain, it's also a visual smoother. 
+  // Exponential Moving Average aka EMA FFT filter, better on unclean sound source in the time domain, it's a low pass filter.
+  // In the frequency domain, it's also a very simple visual smoother. 
   // Adjust the default smooth factor for a visual rendering very smooth for the human eyes.
   useEMA = true;
   smooth_factor = 0.97f;
