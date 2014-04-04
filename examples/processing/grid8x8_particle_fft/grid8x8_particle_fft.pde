@@ -597,7 +597,7 @@ void draw()
       // Saturation level is rather high with fftFilter array values normalization smoothed by a simplex noise FBM. 
       float saturation = fftFilterNormInv[i] * noise_fft * 100;
       // Small brightness variation around a minimum value smoothed by a simplex noise FBM.
-      float brightness = 9.7125 + fftFilterNormInv[i] * noise_fft * 2.3125;
+      float brightness = 9.7125 + fftFilterNormInv[i] * noise_fft * 2.2125;
       color hsb = color( 
          hue % 100,
          saturation,
