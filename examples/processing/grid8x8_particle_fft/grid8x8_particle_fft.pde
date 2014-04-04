@@ -78,7 +78,7 @@ void setup()
   // Weighting mode.
   isInversed = true;
   
-  // Log decay FFT filter with decay, better on clean sound source such as properly mixed songs in the time domain.
+  // Log decay FFT filter, better on clean sound source such as properly mixed songs in the time domain.
   // In the frequency domain, it's a visual smoother.
   useLog = false;
   decay = 0.97f;
