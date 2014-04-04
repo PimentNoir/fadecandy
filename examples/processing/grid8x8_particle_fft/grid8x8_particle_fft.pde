@@ -77,15 +77,17 @@ void setup()
   // Weighting mode.
   isInversed = true;
   
-  // Log FFT filter with decay, better on clean noise source such as properly mixed songs.
+  // Log decay FFT filter with decay, better on clean noise source such as properly mixed songs in the time domain.
+  // In the frequency domain, it's a visual smoother.
   useLog = false;
   decay = 0.97f;
-  // Exponential Moving Average aka EMA FFT filter, better on unclean noise source. 
-  // Adjust the smooth factor on clean noise source for a visual rendering very smooth for the human eyes.
+  // Exponential Moving Average aka EMA FFT filter, better on unclean noise source in the time domain, it's a low pass filter.
+  // In the frequency domain, it's also a visual smoother. 
+  // Adjust the default smooth factor for a visual rendering very smooth for the human eyes.
   useEMA = true;
   smooth_factor = 0.97f;
     
-  // Zero NaN FFT values or not to avoid display glitch.
+  // Zero NaN FFT values to avoid display glitches.
   isZeroNaN = true;
   
   // Particules size.
@@ -149,7 +151,7 @@ void setup()
   
   // Noise initialisation.
   simplexnoise = new SimplexNoise();
-  noise_scale_fft = 0.5125;
+  noise_scale_fft = 0.5125f;
   // High reactivity noise source by default. 0 mean Low, 1 mean Medium, 2 mean High.  
   reactivity_type = 2;
   // It's the default number of FBM octaves.  
@@ -401,7 +403,7 @@ void reinit_sound_fft() {
 
 void draw()
 {
-  // TODO: Generate background color in function of the FFT values.
+  // TODO: Generate background gradient colors in function of the FFT values.
   if (isColorFile) {
     background(0);
   } else {
@@ -470,7 +472,6 @@ void draw()
         fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftin.getBand(i)));
         fftFilterFreq[i] = max(fftFilterFreq[i] * decay, log(1 + fftin.indexToFreq(i)));
         fftFilterAmpFreq[i] = max(fftFilterAmpFreq[i] * decay, log(1 + fftin.getFreq(fftin.indexToFreq(i))));
-        //fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftout.getBand(i)));
       }
     }
   }
@@ -482,7 +483,7 @@ void draw()
   }     
     
   // Normalize fftFilter array values between [0-1] float range for displaying and noise feeding purpose.
-  // But bound them on the min and max on a same sound event? 
+  // But bound them on the min and max on a same sound event if possible? 
   float fftFiltermax = max(fftFilter);
   float fftFiltermin = min(fftFilter);
   for (int i = 0; i < fftFilterLength; i++) {
@@ -624,7 +625,7 @@ void draw()
 
 void stop()
 {
-  // Always close Minim audio classes when you are done with them
+  // Always close Minim audio classes when you are done with them.
   out.close();
   if (isPlayer) {
     sound[song].close();
