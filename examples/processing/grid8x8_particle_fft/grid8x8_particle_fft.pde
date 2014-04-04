@@ -1,7 +1,8 @@
 // Some real-time FFT! This visualizes music in the frequency domain using a
 // polar-coordinate particle system altered by a coherent noise. Particle size, theta angle 
 // and radial distance are modulated using a filtered FFT and a simplex noise FBM. Color is sampled 
-// from an image or generated from a simplex noise FBM (the tunable is the boolean isColorFile).
+// from an image or generated from a simplex noise FBM and FFT filter normalized  
+// and inversed values (the tunable is the boolean isColorFile in setup()).
 
 import ddf.minim.analysis.*;
 import ddf.minim.*;
@@ -452,7 +453,7 @@ void draw()
   for (int i = 0; i < fftFilterLength; i++) {
     if (!Float.isNaN(fftFilterFreq[i]) && isZeroNaN) fftFilterFreqPrev[i] = fftFilterFreq[i];
     if (isPlayer) {
-      // EMA for display smoothing 
+      // EMA for display smoothing. 
       if (useEMA && !useLog) {
         fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftsong.getBand(i);
         fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftsong.indexToFreq(i);
@@ -463,7 +464,7 @@ void draw()
         fftFilterAmpFreq[i] = max(fftFilterAmpFreq[i] * decay, log(1 + fftsong.getFreq(fftsong.indexToFreq(i))));
       }
     } else {  
-      // EMA for display smoothing
+      // EMA for display smoothing.
       if (useEMA && !useLog) {
         fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftin.getBand(i);
         fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftin.indexToFreq(i);
