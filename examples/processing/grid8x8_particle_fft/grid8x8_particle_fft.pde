@@ -21,6 +21,7 @@ AudioInput in;
 AudioOutput out;
 AudioRecorder recorder;
 AudioPlayer[] sound;
+AudioMetaData metasound;
 AudioSignal signal;
 int AudioBufferSize;
 FFT fftout,fftin,fftsong;
@@ -43,7 +44,7 @@ boolean isWebPlayer;
 int song;
 int oldsong;
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live"};
+String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3"};
 //String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
 //"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
 //"02 - Plastic People.mp3" }; 
@@ -126,6 +127,7 @@ void setup()
     // Random sound array index startup.
     song = (int)random(0, filename.length);
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+    metasound = sound[song].getMetaData();
     init_sound_fft();
   } else {
      Mixer.Info[] mixerInfo;
@@ -301,6 +303,7 @@ void keyPressed() {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+    metasound = sound[song].getMetaData();
     reinit_sound_fft();
     UndoPrinting();
   }
@@ -308,6 +311,7 @@ void keyPressed() {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+    metasound = sound[song].getMetaData();
     reinit_sound_fft();
     UndoPrinting();
   }
@@ -315,6 +319,7 @@ void keyPressed() {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+    metasound = sound[song].getMetaData();
     reinit_sound_fft();
     UndoPrinting();
   }
@@ -322,6 +327,7 @@ void keyPressed() {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+    metasound = sound[song].getMetaData();
     reinit_sound_fft();
     UndoPrinting();
   }
@@ -414,9 +420,9 @@ void draw()
   prStr("Key used = " + key);
      
   if (isPlayer && isWebPlayer) {
-    prStr("Mode: Web player playing " +  filename[song] + " with audio buffer size = " + AudioBufferSize);
+    prStr("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size:  " + AudioBufferSize);
   } else if (isPlayer && !isWebPlayer) {
-    prStr("Mode: File player playing " +  filename[song] + " with audio buffer size = " + AudioBufferSize);
+    prStr("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
   } else {
     prStr("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
@@ -425,6 +431,7 @@ void draw()
      oldsong = song; 
      song++;
      sound[song] = minim.loadFile(filename[song], AudioBufferSize);
+     metasound = sound[song].getMetaData();
      reinit_sound_fft();
      // FIXME?: Should be conditional.
      UndoPrinting();    
