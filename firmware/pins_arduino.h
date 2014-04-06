@@ -47,6 +47,14 @@ const static uint8_t A10 = 34;
 const static uint8_t A11 = 35;
 const static uint8_t A12 = 36;
 const static uint8_t A13 = 37;
+const static uint8_t A14 = 40;
+
+const static uint8_t A15 = 26;
+const static uint8_t A16 = 27;
+const static uint8_t A17 = 28;
+const static uint8_t A18 = 29;
+const static uint8_t A19 = 30;
+const static uint8_t A20 = 31;
 
 const static uint8_t SS = 10;
 const static uint8_t MOSI = 11;
@@ -62,6 +70,9 @@ const static uint8_t SCL = 19;
 
 #define analogInputToDigitalPin(p) (((p) < 10) ? (p) + 14 : -1)
 #define digitalPinHasPWM(p) (((p) >= 3 && (p) <= 6) || (p) == 9 || (p) == 10 || ((p) >= 20 && (p) <= 23))
+
+#define NOT_AN_INTERRUPT -1
+#define digitalPinToInterrupt(p)  ((p) < NUM_DIGITAL_PINS ? (p) : -1)
 
 
 struct digital_pin_bitband_and_config_table_struct {
@@ -90,10 +101,10 @@ extern const struct digital_pin_bitband_and_config_table_struct digital_pin_to_i
 static inline uint8_t digitalPinToTimer(uint8_t) __attribute__((always_inline, unused));
 static inline uint8_t digitalPinToTimer(uint8_t pin)
 {
-    if (pin >= 3 && pin <= 6) return pin - 2;
-    if (pin >= 9 && pin <= 10) return pin - 4;
-    if (pin >= 20 && pin <= 23) return pin - 13;
-    return NOT_ON_TIMER;
+	if (pin >= 3 && pin <= 6) return pin - 2;
+	if (pin >= 9 && pin <= 10) return pin - 4;
+	if (pin >= 20 && pin <= 23) return pin - 13;
+	return NOT_ON_TIMER;
 }
 
 

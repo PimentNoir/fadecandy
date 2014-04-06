@@ -1,6 +1,14 @@
 #######################################################
 # Environment setup
 
+# Teensy 3.1
+#OPTIONS = -DF_CPU=96000000
+#OPTIONS += -D__MK20DX256__
+
+# Teensy 3.0
+OPTIONS = -DF_CPU=48000000
+OPTIONS += -D__MK20DX128__
+
 # toolchain
 DFU_SUFFIX = dfu-suffix
 DFU_UTIL = dfu-util
@@ -23,6 +31,7 @@ APP_HEX = app-image.hex
 
 # Sources
 C_FILES = \
+	yield.c \
 	startup.c \
 	pins_teensy.c \
 	usb_desc.c \

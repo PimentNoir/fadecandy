@@ -32,7 +32,7 @@
 #define DMA_BUFFER_SIZE		64 
 #define CHANNELS_TOTAL          (DMA_BUFFER_SIZE * 3 * NUM_OUTPUT)
 
-#define LEDS_PER_STRIP          74
+#define LEDS_PER_STRIP          64
 #define LEDS_TOTAL              (LEDS_PER_STRIP * NUM_OUTPUT)
 
 #define LUT_CH_SIZE             257
@@ -49,4 +49,4 @@
 #define VENDOR_ID               0x1d50    // OpenMoko
 #define PRODUCT_ID              0x607a    // Assigned to Fadecandy project
 #define DEVICE_VER              0x0108	  // BCD device version
-#define DEVICE_VER_STRING		"1.08-longstrip"
+#define DEVICE_VER_STRING	"1.09"
