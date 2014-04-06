@@ -110,7 +110,7 @@ void serial_phex(uint32_t n);
 void serial_phex16(uint32_t n);
 void serial_phex32(uint32_t n);
 
-void serial2_begin(uint32_t divisor);
+/*void serial2_begin(uint32_t divisor);
 void serial2_format(uint32_t format);
 void serial2_end(void);
 void serial2_putchar(uint32_t c);
@@ -130,7 +130,7 @@ void serial3_flush(void);
 int serial3_available(void);
 int serial3_getchar(void);
 int serial3_peek(void);
-void serial3_clear(void);
+void serial3_clear(void);*/
 
 #ifdef __cplusplus
 }
