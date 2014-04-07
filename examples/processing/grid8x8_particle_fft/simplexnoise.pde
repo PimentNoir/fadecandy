@@ -17,7 +17,7 @@
 
 public static final class SimplexNoise {  // Simplex noise in 1D, 2D, 3D and 4D
                                    
-  private static Grad grad2[] = {new Grad(1,1),new Grad(-1,1),new Grad(1,-1),new Grad(-1,-1)};
+  private static Grad grad2[] = {new Grad(1,0),new Grad(-1,0),new Grad(0,1),new Grad(0,-1)};
                                  
   private static Grad grad3[] = {new Grad(1,1,0),new Grad(-1,1,0),new Grad(1,-1,0),new Grad(-1,-1,0),
                                  new Grad(1,0,1),new Grad(-1,0,1),new Grad(1,0,-1),new Grad(-1,0,-1),
