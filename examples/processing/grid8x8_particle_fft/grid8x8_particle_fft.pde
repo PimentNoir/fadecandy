@@ -524,12 +524,21 @@ void draw()
         prStr("Pulse: " + pulse_type + " -> 1");
         break;
       case 1:
-        if (Float.isNaN(fftFilter[i]) && isZeroNaN) { 
-          fftFilter[i] = 0;
-        } 
-        pulse_one = sin(fftFilter[i]);
+        if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
+          fftFilterAmpFreq[i] = 0;          
+        }
+        if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
+          fftFilterFreq[i] = 0;          
+        }
+        // Very basic smooth linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = 0.
+        if (isPlayer) {
+          pulse_one = fftFilterAmpFreq[i] * sin(((fftFilterFreqPrev[i] + (((float)i / (float)fftFilterLength) * (fftFilterFreq[i] - fftFilterFreqPrev[i]))) * ((float)i / sound[song].sampleRate())) * TWO_PI);
+          prStr("Pulse: " + pulse_type + " -> fftFilterAmpFreq[i] * sin(((fftFilterFreqPrev[i] + (((float)i / (float)fftFilterLength) * (fftFilterFreq[i] - fftFilterFreqPrev[i]))) * ((float)i / sound[song].sampleRate())) * TWO_PI)");  
+        } else {
+          pulse_one = fftFilterAmpFreq[i] * sin(((fftFilterFreqPrev[i] + (((float)i / (float)fftFilterLength) * (fftFilterFreq[i] - fftFilterFreqPrev[i]))) * ((float)i / in.sampleRate())) * TWO_PI);
+          prStr("Pulse: " + pulse_type + " -> fftFilterAmpFreq[i] * sin(((fftFilterFreqPrev[i] + (((float)i / (float)fftFilterLength) * (fftFilterFreq[i] - fftFilterFreqPrev[i]))) * ((float)i / in.sampleRate())) * TWO_PI)");  
+        }       
         pulse = pulse_one;
-        prStr("Pulse: " + pulse_type + " -> sin(fftFilter[i])");
         break;
       case 2:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
