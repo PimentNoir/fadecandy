@@ -2,7 +2,7 @@
 # Environment setup
 
 # Teensy 3.1 or 3.0
-TEENSY31=true;
+#TEENSY31=true;
 
 ifdef TEENSY31
 OPTIONS = -DF_CPU=96000000

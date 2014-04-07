@@ -59,19 +59,20 @@ void _init_Teensyduino_internal_(void);
 
 void fault_isr(void)
 {
-	while (1) {
+	while (1); /*{
 		// keep polling some communication while in fault
 		// mode, so we don't completely die.
 		if (SIM_SCGC4 & SIM_SCGC4_USBOTG) usb_isr();
 		if (SIM_SCGC4 & SIM_SCGC4_UART0) uart0_status_isr();
 		if (SIM_SCGC4 & SIM_SCGC4_UART1) uart1_status_isr();
 		if (SIM_SCGC4 & SIM_SCGC4_UART2) uart2_status_isr();
-	}
+	}*/
 }
 
 void unused_isr(void)
 {
-	fault_isr();
+	while (1);
+	//fault_isr();
 }
 
 extern volatile uint32_t systick_millis_count;
@@ -340,11 +341,11 @@ void (* const gVectors[])(void) =
 #endif
 };
 
-__attribute__ ((section(".flashconfig"), used))
+/*__attribute__ ((section(".flashconfig"), used))
 const uint8_t flashconfigbytes[16] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF
-};
+};*/
 
 static unsigned ftfl_busy()
 {
@@ -499,8 +500,6 @@ void ResetHandler(void)
 	initFunc_t *p = &__init_array_start;
     	for (; p != &__init_array_end; p++)
         	p[0]();
-
-
 
 	startup_late_hook();
 	main();

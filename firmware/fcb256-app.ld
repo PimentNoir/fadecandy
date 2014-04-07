@@ -34,7 +34,7 @@
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x00001000, LENGTH = 254K
-    RAM  (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 16K
+    RAM  (rwx) : ORIGIN = 0x1FFFE000, LENGTH = 64K
     FLEXRAM (rwx) : ORIGIN = 0x14000000, LENGTH = 2K
 }
 
@@ -45,9 +45,6 @@ SECTIONS
         . = 0;
         KEEP(*(.vectors))
 	*(.startup*)
-        /* TODO: does linker detect startup overflow onto flashconfig? */
-        . = 0x400;
-        KEEP(*(.flashconfig*))
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);

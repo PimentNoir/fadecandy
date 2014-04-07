@@ -45,9 +45,6 @@ SECTIONS
         . = 0;
         KEEP(*(.vectors))
 	*(.startup*)
-        /* TODO: does linker detect startup overflow onto flashconfig? */
-        . = 0x400;
-        KEEP(*(.flashconfig*))
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);

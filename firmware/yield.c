@@ -28,5 +28,11 @@
  * SOFTWARE.
  */
 
+#include "mk20dx128.h"
+
 void yield(void) __attribute__ ((weak));
 void yield(void) {};
+//void yield()
+//{
+//      watchdog_refresh();
+//}

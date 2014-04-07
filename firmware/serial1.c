@@ -40,26 +40,15 @@
 #define RX_BUFFER_SIZE 8 // number of incoming bytes to buffer
 #define IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
 
-static volatile FLEXRAM_DATA uint8_t tx_buffer[TX_BUFFER_SIZE];
-static volatile FLEXRAM_DATA uint8_t tx_buffer_head = 0;
-static volatile FLEXRAM_DATA uint8_t tx_buffer_tail = 0;
-static volatile FLEXRAM_DATA uint8_t transmitting = 0;
-
-static volatile FLEXRAM_DATA uint8_t rx_buffer[RX_BUFFER_SIZE];
-static volatile FLEXRAM_DATA uint8_t rx_buffer_head = 0;
-static volatile FLEXRAM_DATA uint8_t rx_buffer_tail = 0;
-
 ////////////////////////////////////////////////////////////////
 // changes not recommended below this point....
 ////////////////////////////////////////////////////////////////
-static volatile uint8_t *transmit_pin=NULL;
-static uint8_t use9Bits = 0;
 static inline void yield()
 {
 	watchdog_refresh();
 }
 
-/*#ifdef SERIAL_9BIT_SUPPORT
+#ifdef SERIAL_9BIT_SUPPORT
 static uint8_t use9Bits = 0;
 #define BUFTYPE uint16_t
 #else
@@ -67,24 +56,24 @@ static uint8_t use9Bits = 0;
 #define use9Bits 0
 #endif
 
-static volatile BUFTYPE tx_buffer[TX_BUFFER_SIZE];
-static volatile BUFTYPE rx_buffer[RX_BUFFER_SIZE];
-static volatile uint8_t transmitting = 0;
-static volatile uint8_t *transmit_pin=NULL;
+static volatile FLEXRAM_DATA BUFTYPE tx_buffer[TX_BUFFER_SIZE];
+static volatile FLEXRAM_DATA BUFTYPE rx_buffer[RX_BUFFER_SIZE];
+static volatile FLEXRAM_DATA uint8_t transmitting = 0;
+static volatile FLEXRAM_DATA uint8_t *transmit_pin=NULL;
 #if TX_BUFFER_SIZE > 255
-static volatile uint16_t tx_buffer_head = 0;
-static volatile uint16_t tx_buffer_tail = 0;
+static volatile FLEXRAM_DATA uint16_t tx_buffer_head = 0;
+static volatile FLEXRAM_DATA uint16_t tx_buffer_tail = 0;
 #else
-static volatile uint8_t tx_buffer_head = 0;
-static volatile uint8_t tx_buffer_tail = 0;
+static volatile FLEXRAM_DATA uint8_t tx_buffer_head = 0;
+static volatile FLEXRAM_DATA uint8_t tx_buffer_tail = 0;
 #endif
 #if RX_BUFFER_SIZE > 255
-static volatile uint16_t rx_buffer_head = 0;
-static volatile uint16_t rx_buffer_tail = 0;
+static volatile FLEXRAM_DATA uint16_t rx_buffer_head = 0;
+static volatile FLEXRAM_DATA uint16_t rx_buffer_tail = 0;
 #else
-static volatile uint8_t rx_buffer_head = 0;
-static volatile uint8_t rx_buffer_tail = 0;
-#endif*/
+static volatile FLEXRAM_DATA uint8_t rx_buffer_head = 0;
+static volatile FLEXRAM_DATA uint8_t rx_buffer_tail = 0;
+#endif
 
 // UART0 and UART1 are clocked by F_CPU, UART2 is clocked by F_BUS
 // UART0 has 8 byte fifo, UART1 and UART2 have 1 byte buffer
