@@ -168,7 +168,7 @@ void setup()
   
   // Reactive pulse type by default.
   pulse_type = 3;
-  phiinc = 0;
+  phiinc = 36;
   
   //ColorGradientImage = "Chaud.png"; 
   ColorGradientImage = "colors.png";  
@@ -554,9 +554,9 @@ void draw()
         if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
           fftFilterFreq[i] = 0;          
         }
-        float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate));
+        float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
         pulse = pulse_zero;
-        prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i] and frequency = fftFilterFreq[i]");
+        prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = " + phiinc);
         break;
       case 1:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
