@@ -539,7 +539,13 @@ void draw()
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
     phi *= PI / 180;
-    j = i +1;    
+    j = i +1;
+    if (isPlayer) {
+      sampleRate = sound[song].sampleRate();
+    } else {
+      //FIXME: Should not work with Line in capture.
+      sampleRate = in.sampleRate();
+    }    
     switch(pulse_type) {
       case 0:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -548,12 +554,12 @@ void draw()
         if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
           fftFilterFreq[i] = 0;          
         }
-        if (isPlayer) {
-          sampleRate = sound[song].sampleRate();
-        } else {
-          //FIXME: Should not work with Line in capture.
-          sampleRate = in.sampleRate();
-        }
+//        if (isPlayer) {
+//          sampleRate = sound[song].sampleRate();
+//        } else {
+//          //FIXME: Should not work with Line in capture.
+//          sampleRate = in.sampleRate();
+//        }
 //        j = i + 1;
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate));
         pulse = pulse_zero;
@@ -578,12 +584,12 @@ void draw()
           isDivideZero = false;
         }  
 //        phi = phi * PI / 180;
-        if (isPlayer) {
-          sampleRate = sound[song].sampleRate();
-        } else {
-          //FIXME: Should not work with Line in capture.
-          sampleRate = in.sampleRate();
-        }  
+//        if (isPlayer) {
+//          sampleRate = sound[song].sampleRate();
+//        } else {
+//          //FIXME: Should not work with Line in capture.
+//          sampleRate = in.sampleRate();
+//        }  
         if (!isDivideZero) {
           if (f0[i] == f1[i]) { 
             phase =  2 * PI * f0[i] * ((float)j / sampleRate);
@@ -611,12 +617,12 @@ void draw()
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
 //        phi *= PI / 180;
-        if (isPlayer) {
-          sampleRate = sound[song].sampleRate();
-        } else {
-          //FIXME: Should not work with Line in capture.
-          sampleRate = in.sampleRate();
-        }
+//        if (isPlayer) {
+//          sampleRate = sound[song].sampleRate();
+//        } else {
+//          //FIXME: Should not work with Line in capture.
+//          sampleRate = in.sampleRate();
+//        }
 //        j = i + 1;   
         beta = (f1[i] - f0[i]) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate));
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
@@ -636,12 +642,12 @@ void draw()
         f1[i] = fftFilterFreq[i];
 //        j = i + 1;
 //        phi *= PI / 180;
-        if (isPlayer) {
-          sampleRate = sound[song].sampleRate();
-        } else {
-          //FIXME: Should not work with Line in capture.
-          sampleRate = in.sampleRate();
-        }  
+//        if (isPlayer) {
+//          sampleRate = sound[song].sampleRate();
+//        } else {
+//          //FIXME: Should not work with Line in capture.
+//          sampleRate = in.sampleRate();
+//        }  
         beta = (f1[i] - f0[i]) / pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 2);
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
         pulse_three =  fftFilterAmpFreq[i] * cos(phase + phi);
