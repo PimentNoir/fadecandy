@@ -59,7 +59,7 @@ float noise_scale_fft;
 float pulse, pulse_one, pulse_two, pulse_three, pulse_default;
 float smooth_factor;
 float decay;
-float phi, phase, beta, sampleRate; 
+float phi, phiinc, phase, beta, sampleRate; 
 float[] f0, f1;
 int j;
 
@@ -168,7 +168,7 @@ void setup()
   
   // Reactive pulse type by default.
   pulse_type = 3;
-  phi = 0;
+  phiinc = 0;
   
   //ColorGradientImage = "Chaud.png"; 
   ColorGradientImage = "colors.png";  
@@ -211,13 +211,13 @@ void keyPressed() {
     decay -= inc;
     UndoPrinting();
   }
-  float phi_inc = 0.1f;
-  if (key == '8' && phi < 1-phi_inc) {
-    phi += phi_inc;
+  int phi_inc = 1;
+  if (key == '8' && phiinc <= 360-phi_inc) {
+    phiinc += phi_inc;
     UndoPrinting();
   }
-  if (key == '7' && phi > 1-phi_inc) {
-    phi -= phi_inc;
+  if (key == '7' && phiinc >= phi_inc) {
+    phiinc -= phi_inc;
     UndoPrinting();
   }
   if (keyCode == UP && smooth_factor < 1-inc && useEMA) {
@@ -538,7 +538,7 @@ void draw()
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
-    phi *= PI / 180;
+    phi *= phiinc * PI / 180;
     j = i +1;
     if (isPlayer) {
       sampleRate = sound[song].sampleRate();
@@ -572,7 +572,7 @@ void draw()
         if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
           fftFilterFreq[i] = 0;          
         }
-        // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
+        // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phiinc.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
 //        j = i + 1; 
@@ -604,7 +604,7 @@ void draw()
           pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);
         }       
         pulse = pulse_one;
-        prStr("Pulse: " + pulse_type + " -> Log chirp with phase = " + phi);  
+        prStr("Pulse: " + pulse_type + " -> Log chirp with phase = " + phiinc);  
         break;
       case 2:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -613,7 +613,7 @@ void draw()
         if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
           fftFilterFreq[i] = 0;          
         }
-        // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
+        // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phiinc.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
 //        phi *= PI / 180;
@@ -628,7 +628,7 @@ void draw()
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
         pulse_two =  fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_two;
-        prStr("Pulse: " + pulse_type + " -> Linear chirp with phase " + phi);        
+        prStr("Pulse: " + pulse_type + " -> Linear chirp with phase " + phiinc);        
         break;
       case 3:       
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -637,7 +637,7 @@ void draw()
         if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
           fftFilterFreq[i] = 0;          
         }
-        // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
+        // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phiinc.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
 //        j = i + 1;
@@ -652,7 +652,7 @@ void draw()
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
         pulse_three =  fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_three;
-        prStr("Pulse: " + pulse_type + " -> Quadratic chirp with phase = " + phi);        
+        prStr("Pulse: " + pulse_type + " -> Quadratic chirp with phase = " + phiinc);        
         break;
       default:
         if (Float.isNaN(fftFilter[i]) && isZeroNaN) { 
