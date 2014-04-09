@@ -193,7 +193,7 @@ void setup()
 }
 
 void keyPressed() {
-  float noise_scale_inc = 0.001;
+  float noise_scale_inc = 0.001f;
   if (key == 'k' && noise_scale_fft < 15-noise_scale_inc) {
     noise_scale_fft += noise_scale_inc;
     UndoPrinting();
@@ -202,13 +202,22 @@ void keyPressed() {
     noise_scale_fft -= noise_scale_inc;
     UndoPrinting();
   }
-  float inc = 0.01;
+  float inc = 0.01f;
   if (keyCode == RIGHT && decay < 1-inc && !useEMA) {
     decay += inc;
     UndoPrinting();
   }
   if (keyCode == LEFT && decay > inc && !useEMA) {
     decay -= inc;
+    UndoPrinting();
+  }
+  float phi_inc = 0.1f;
+  if (key == '8' && phi < 1-phi_inc) {
+    phi += phi_inc;
+    UndoPrinting();
+  }
+  if (key == '7' && phi > 1-phi_inc) {
+    phi -= phi_inc;
     UndoPrinting();
   }
   if (keyCode == UP && smooth_factor < 1-inc && useEMA) {
@@ -433,7 +442,7 @@ void draw()
   prStr("Key used = " + key);
      
   if (isPlayer && isWebPlayer) {
-    prStr("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size:  " + AudioBufferSize);
+    prStr("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
   } else if (isPlayer && !isWebPlayer) {
     prStr("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
   } else {
@@ -528,7 +537,9 @@ void draw()
     }
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
-                    
+    
+    phi *= PI / 180;
+    j = i +1;    
     switch(pulse_type) {
       case 0:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -543,10 +554,10 @@ void draw()
           //FIXME: Should not work with Line in capture.
           sampleRate = in.sampleRate();
         }
-        j = i + 1;
+//        j = i + 1;
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate));
         pulse = pulse_zero;
-        prStr("Pulse: " + pulse_type + " ->  Sine wave with amplitude = fftFilterAmpFreq[i] and frequency = fftFilterFreq[i]");
+        prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i] and frequency = fftFilterFreq[i]");
         break;
       case 1:
         if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -558,7 +569,7 @@ void draw()
         // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
-        j = i + 1; 
+//        j = i + 1; 
         if (f0[i] == 0) {
           isDivideZero = true;
 //        } else if (f1[i] == 0) {
@@ -566,7 +577,7 @@ void draw()
         } else {
           isDivideZero = false;
         }  
-        phi *= PI / 180;
+//        phi = phi * PI / 180;
         if (isPlayer) {
           sampleRate = sound[song].sampleRate();
         } else {
@@ -599,14 +610,14 @@ void draw()
         // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
-        phi *= PI / 180;
+//        phi *= PI / 180;
         if (isPlayer) {
           sampleRate = sound[song].sampleRate();
         } else {
           //FIXME: Should not work with Line in capture.
           sampleRate = in.sampleRate();
         }
-        j = i + 1;   
+//        j = i + 1;   
         beta = (f1[i] - f0[i]) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate));
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
         pulse_two =  fftFilterAmpFreq[i] * cos(phase + phi);
@@ -623,8 +634,8 @@ void draw()
         // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phi.
         f0[i] = fftFilterFreqPrev[i];
         f1[i] = fftFilterFreq[i];
-        j = i + 1;
-        phi *= PI / 180;
+//        j = i + 1;
+//        phi *= PI / 180;
         if (isPlayer) {
           sampleRate = sound[song].sampleRate();
         } else {
