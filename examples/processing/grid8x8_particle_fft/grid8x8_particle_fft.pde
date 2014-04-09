@@ -626,7 +626,7 @@ void draw()
 //        j = i + 1;   
         beta = (f1[i] - f0[i]) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate));
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
-        pulse_two =  fftFilterAmpFreq[i] * cos(phase + phi);
+        pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_two;
         prStr("Pulse: " + pulse_type + " -> Linear chirp with phase " + phiinc);        
         break;
@@ -650,7 +650,7 @@ void draw()
 //        }  
         beta = (f1[i] - f0[i]) / pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 2);
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
-        pulse_three =  fftFilterAmpFreq[i] * cos(phase + phi);
+        pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_three;
         prStr("Pulse: " + pulse_type + " -> Quadratic chirp with phase = " + phiinc);        
         break;
