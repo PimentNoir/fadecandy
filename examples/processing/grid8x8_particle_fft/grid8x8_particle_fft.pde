@@ -551,7 +551,9 @@ void draw()
     }
     if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
       fftFilterFreq[i] = 0;          
-    }    
+    }
+    f0[i] = fftFilterFreqPrev[i];
+    f1[i] = fftFilterFreq[i];    
     switch(pulse_type) {
       case 0:
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
@@ -560,8 +562,6 @@ void draw()
         break;
       case 1:
         // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
-        f0[i] = fftFilterFreqPrev[i];
-        f1[i] = fftFilterFreq[i];
         if (f0[i] == 0) {
           isDivideZero = true;
         } else {
@@ -583,8 +583,6 @@ void draw()
         break;
       case 2:
         // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
-        f0[i] = fftFilterFreqPrev[i];
-        f1[i] = fftFilterFreq[i];
         beta = (f1[i] - f0[i]) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate));
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
         pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
@@ -593,8 +591,6 @@ void draw()
         break;
       case 3:       
         // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
-        f0[i] = fftFilterFreqPrev[i];
-        f1[i] = fftFilterFreq[i];
         beta = (f1[i] - f0[i]) / pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 2);
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
         pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
