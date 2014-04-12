@@ -363,7 +363,7 @@ void mousePressed()
 {
   // Choose a position to cue to based on where the user clicked.
   // the length() method returns the length of recording in milliseconds.
-  if (isPlayer && mouseY <=  height*0.03125) {
+  if (isPlayer && !isWebPlayer && mouseY <=  height*0.03125) {
     float mousex = mouseX;
     int position = int(map(mousex, 0, width, 0, sound[song].length()));
     sound[song].cue(position);
