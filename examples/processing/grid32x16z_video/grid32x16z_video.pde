@@ -12,7 +12,7 @@ int zoom = 2;
 
 float movie_speed = 1.0;
 
-int framerate = 1;
+int framerate = 72;
 
 OPC opc;
 Movie movie;
@@ -20,7 +20,7 @@ PGraphics[] pyramid;
 
 void setup()
 {
-  size(zoom*480, zoom*240, P3D);
+  size(480, 240, P3D);
   colorMode(HSB,100,100,100);
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
