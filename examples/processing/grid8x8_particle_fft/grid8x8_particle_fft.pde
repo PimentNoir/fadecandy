@@ -539,7 +539,7 @@ void draw()
     if (isPlayer) {
       sampleRate = sound[song].sampleRate();
     } else {
-      //FIXME: Should not work with Line in capture.
+      // FIXME: Should not work with Line in capture.
       sampleRate = in.sampleRate();
     }
     if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
@@ -574,6 +574,7 @@ void draw()
           }          
         }
         float pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);       
+        pulse = pulse_one;
         prStr("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
         break;
       case 2:
