@@ -36,7 +36,6 @@ boolean isPlayer;
 // Try to inverse frequency weight ... or not.
 boolean isInversed;
 boolean useEMA;
-boolean useLog;
 boolean isColorFile;
 boolean isZeroNaN;
 boolean isWebPlayer;
@@ -85,7 +84,6 @@ void setup()
   
   // Log decay FFT filter, better on clean sound source such as properly mixed songs in the time domain.
   // In the frequency domain, it's a visual smoother.
-  useLog = false;
   decay = 0.97f;
   // Exponential Moving Average aka EMA FFT filter, better on unclean sound source in the time domain, it's a low pass filter.
   // In the frequency domain, it's also a very simple and efficient visual smoother. 
@@ -168,7 +166,7 @@ void setup()
   
   // Reactive pulse type by default that do not destroy the human eyes.
   pulse_type = 1;
-  phideg = 36;
+  phideg = 0;
   
   //ColorGradientImage = "Chaud.png"; 
   ColorGradientImage = "colors.png";  
@@ -246,12 +244,6 @@ void keyPressed() {
   }
   if (key == 'e') {
     useEMA = !useEMA;
-    if (useLog) useLog = !useLog;
-    UndoPrinting();
-  }
-  if (key == 'l') {
-    useLog = !useLog;
-    if (useEMA) useEMA = !useEMA;
     UndoPrinting();
   }
   if (key == 'm' && isPlayer) {
@@ -472,7 +464,7 @@ void draw()
   // All fftFilters have the same length.
   int fftFilterLength = fftFilter.length;
   
-  if (useEMA && !useLog) { 
+  if (useEMA) { 
     prStr("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
   } else {
     prStr("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
@@ -482,7 +474,7 @@ void draw()
     if (!Float.isNaN(fftFilterFreq[i]) && isZeroNaN) fftFilterFreqPrev[i] = fftFilterFreq[i];
     if (isPlayer) {
       // EMA for display smoothing. 
-      if (useEMA && !useLog) {
+      if (useEMA) {
         fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftsong.getBand(i);
         fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftsong.indexToFreq(i);
         fftFilterAmpFreq[i] = smooth_factor * fftFilterAmpFreq[i] + (1 - smooth_factor) * fftsong.getFreq(fftsong.indexToFreq(i));
@@ -493,7 +485,7 @@ void draw()
       }
     } else {  
       // EMA for display smoothing.
-      if (useEMA && !useLog) {
+      if (useEMA) {
         fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftin.getBand(i);
         fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftin.indexToFreq(i);
         fftFilterAmpFreq[i] = smooth_factor * fftFilterAmpFreq[i] + (1 - smooth_factor) * fftin.getFreq(fftin.indexToFreq(i));
