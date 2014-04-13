@@ -55,7 +55,7 @@ int reactivity_type, pulse_type, printcount;
 int octaves;
 float noise_fft;
 float noise_scale_fft;
-float pulse, pulse_one, pulse_two, pulse_three, pulse_default;
+float pulse;
 float smooth_factor;
 float decay;
 float phi, phideg, phase, beta, sampleRate; 
@@ -165,7 +165,7 @@ void setup()
   octaves = 4;
   
   // Reactive pulse type by default that do not destroy the human eyes.
-  pulse_type = 1;
+  pulse_type = 4;
   phideg = 0;
   
   //ColorGradientImage = "Chaud.png"; 
@@ -281,6 +281,10 @@ void keyPressed() {
   }
   if (key == 'y') {
     pulse_type = 3;
+    UndoPrinting();
+  }
+  if (key == 't') {
+    pulse_type = 4;
     UndoPrinting();
   }
   if (key == '0') {
@@ -550,10 +554,10 @@ void draw()
       case 0:
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
         pulse = pulse_zero;
-        prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = " + phideg);
+        prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = " + phideg);
         break;
       case 1:
-        // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
+        // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
         if (f0[i] == 0) {
           isDivideZero = true;
         } else {
@@ -561,39 +565,59 @@ void draw()
         }  
         if (isDivideZero) {
           phase = 0;
-          pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);
         } else {
           if (f0[i] == f1[i]) { 
             phase =  2 * PI * f0[i] * ((float)j / sampleRate);
           } else {
             beta = ((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate) / log(1.00000000125 + f1[i] / f0[i]);
             phase = 2 * PI * beta * f0[i] * (pow(f1[i] / f0[i], ((float)j /sampleRate) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate)) - 1.0f));
-          }
-          pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);
-        }       
-        prStr("Pulse: " + pulse_type + " -> Log chirp with phase = " + phideg);  
+          }          
+        }
+        float pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);       
+        prStr("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
         break;
       case 2:
-        // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
+        // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
         beta = (f1[i] - f0[i]) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate));
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
-        pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
+        float pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_two;
-        prStr("Pulse: " + pulse_type + " -> Linear chirp with phase " + phideg);        
+        prStr("Pulse: " + pulse_type + " -> Linear chirp with initial phase = " + phideg);        
         break;
       case 3:       
-        // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and phase = phideg.
+        // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
         beta = (f1[i] - f0[i]) / pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 2);
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
-        pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
+        float pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_three;
-        prStr("Pulse: " + pulse_type + " -> Quadratic chirp with phase = " + phideg);        
+        prStr("Pulse: " + pulse_type + " -> Quadratic chirp with initial phase = " + phideg);        
+        break;
+      case 4:       
+        // Very basic hyperbolic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
+        if (f0[i] == 0 || f1[i] == 0) {
+          isDivideZero = true;
+        } else {
+          isDivideZero = false;
+        }
+        if (isDivideZero) {
+          phase = 0;
+        } else {
+          if (f0[i] == f1[i]) {
+            phase = 2 * PI * f0[i] * ((float)j / sampleRate); 
+          } else {
+            float sing = -f1[i] * ((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate) / (f0[i] - f1[i]);   
+            phase = 2 * PI * (-sing * f0[i]) * log(abs(1.0f - ((float)j / sampleRate) / sing));
+          }
+        } 
+        float pulse_four = fftFilterAmpFreq[i] * cos(phase + phi);
+        pulse = pulse_four;
+        prStr("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
         break;
       default:
         if (Float.isNaN(fftFilter[i]) && isZeroNaN) { 
           fftFilter[i] = 0;
         }
-        pulse_default = sin(fftFilter[i]);
+        float pulse_default = sin(fftFilter[i]);
         pulse=pulse_default;
         prStr("Pulse: default sin(fftFilter[i])");
     }   
