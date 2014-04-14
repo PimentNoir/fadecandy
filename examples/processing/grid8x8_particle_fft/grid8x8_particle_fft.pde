@@ -426,6 +426,14 @@ void reinit_sound_fft() {
      init_sound_fft();
 }
 
+float ZeroNaNValue(float Value) {
+  if ((Float.isNaN(Value)) && isZeroNaN) { 
+      return 0;          
+  } else {
+      return Value;
+  }    
+}  
+
 void draw()
 {
   // TODO: Generate background gradient colors in function of the FFT values.
@@ -475,7 +483,7 @@ void draw()
   }     
    
   for (int i = 0; i < fftFilterLength; i++) {
-    if (!Float.isNaN(fftFilterFreq[i]) && isZeroNaN) fftFilterFreqPrev[i] = fftFilterFreq[i];
+    fftFilterFreqPrev[i] = ZeroNaNValue(fftFilterFreq[i]);
     if (isPlayer) {
       // EMA for display smoothing. 
       if (useEMA) {
@@ -512,12 +520,10 @@ void draw()
   float fftFiltermax = max(fftFilter);
   float fftFiltermin = min(fftFilter);
   for (int i = 0; i < fftFilterLength; i++) {
-    if (!Float.isNaN(fftFilterNorm[i]) && isZeroNaN) fftFilterNormPrev[i] = fftFilterNorm[i];
+    fftFilterNormPrev[i] = ZeroNaNValue(fftFilterNorm[i]);
     fftFilterNorm[i] = map(fftFilter[i], fftFiltermin, fftFiltermax, 0 , 1);
     // Zero NaN values or not.
-    if (Float.isNaN(fftFilterNorm[i]) && isZeroNaN) {
-      fftFilterNorm[i] = 0;
-    }
+    fftFilterNorm[i] = ZeroNaNValue(fftFilterNorm[i]);
     fftFilterNormInv[i] = 1 - fftFilterNorm[i];
   }
     
@@ -542,14 +548,10 @@ void draw()
       // FIXME: Should not work with Line in capture.
       sampleRate = in.sampleRate();
     }
-    if ((Float.isNaN(fftFilterAmpFreq[i])) && isZeroNaN) { 
-      fftFilterAmpFreq[i] = 0;          
-    }
-    if ((Float.isNaN(fftFilterFreq[i])) && isZeroNaN) { 
-      fftFilterFreq[i] = 0;          
-    }
+    fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
+    fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
     f0[i] = fftFilterFreqPrev[i];
-    f1[i] = fftFilterFreq[i];    
+    f1[i] = fftFilterFreq[i]; 
     switch(pulse_type) {
       case 0:
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
