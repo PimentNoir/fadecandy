@@ -58,9 +58,8 @@ float noise_scale_fft;
 float pulse;
 float smooth_factor;
 float decay;
-float phi, phideg, phase, beta, sampleRate; 
+float phi, phideg, sampleRate; 
 float[] f0, f1;
-int j;
 
 float spin = 0.0001;
 float radiansPerBucket = radians(2);
@@ -541,7 +540,8 @@ void draw()
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
     phi *= phideg * PI / 180;
-    j = i + 1;
+    int j = i + 1;
+    float phase, beta;
     if (isPlayer) {
       sampleRate = sound[song].sampleRate();
     } else {
