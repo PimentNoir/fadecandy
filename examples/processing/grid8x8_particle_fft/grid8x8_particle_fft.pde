@@ -39,7 +39,6 @@ boolean useEMA;
 boolean isColorFile;
 boolean isZeroNaN;
 boolean isWebPlayer;
-boolean isDivideZero;
 
 int song;
 int oldsong;
@@ -63,7 +62,7 @@ float[] f0, f1;
 
 float spin = 0.0001;
 float radiansPerBucket = radians(2);
-float opacity = 50;
+float opacity = 40;
 float minSize;
 float sizeScale;
 
@@ -374,7 +373,7 @@ float simplexnoise_fbm(float x, float y, int octaves, float persistence, float l
   float r = ((float)simplexnoise.noise((double)(x), (double)(y)) + 1) / 2.0f;
   
   prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Frequency: " + frequency + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
-  for (int l = 1; l < octaves; l++) {
+  for (int i = 1; i < octaves; i++) {
     amp *= persistence;
     maxamp += amp;
     frequency *= lacunarity;
@@ -560,18 +559,20 @@ void draw()
         break;
       case 1:
         // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
-        if (f0[i] == 0) {
-          isDivideZero = true;
-        } else {
-          isDivideZero = false;
+        boolean isUndefined = false;
+        if (f0[i] * f1[i] <= 0.0f) {
+          isUndefined = true;
         }  
-        if (isDivideZero) {
-          phase = 0;
+        if (isUndefined) {
+          //phase = 0;
+          // Debug output
+          println("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
+          continue;
         } else {
           if (f0[i] == f1[i]) { 
             phase =  2 * PI * f0[i] * ((float)j / sampleRate);
           } else {
-            beta = ((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate) / log(1.00000000125 + f1[i] / f0[i]);
+            beta = ((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate) / log(f1[i] / f0[i]);
             phase = 2 * PI * beta * f0[i] * (pow(f1[i] / f0[i], ((float)j /sampleRate) / (((float)j / (float)(fftFilterLength)) * ((float)j / sampleRate)) - 1.0f));
           }          
         }
@@ -597,11 +598,8 @@ void draw()
         break;
       case 4:       
         // Very basic hyperbolic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
-        if (f0[i] == 0 || f1[i] == 0) {
-          isDivideZero = true;
-        } else {
-          isDivideZero = false;
-        }
+        boolean isDivideZero = false;
+        if (f0[i] == 0 || f1[i] == 0) isDivideZero = true;
         if (isDivideZero) {
           phase = 0;
         } else {
@@ -617,9 +615,7 @@ void draw()
         prStr("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
         break;
       default:
-        if (Float.isNaN(fftFilter[i]) && isZeroNaN) { 
-          fftFilter[i] = 0;
-        }
+        fftFilter[i] = ZeroNaNValue(fftFilter[i]);
         float pulse_default = sin(fftFilter[i]);
         pulse=pulse_default;
         prStr("Pulse: default sin(fftFilter[i])");
