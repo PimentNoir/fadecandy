@@ -47,9 +47,10 @@ void setup()
   colorMode(HSB, 100);
   texture = loadImage("ring.png");
 
-  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.5", 7890);
   // 11x11 grid
-  opc.ledGrid11x11(0, width/2, height/2, height / 16, 0, true);
+  opc.ledGrid11x11(0, width/2, height/2, height/16, 0, true);
 
   // We can have up to 100 rings. They all start out invisible.
   rings = new Ring[100];

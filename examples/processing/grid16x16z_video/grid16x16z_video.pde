@@ -6,16 +6,16 @@ import processing.video.*;
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
-String filename = "/home/frag/Videos/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
+String filename = "/home/elecdev/Vidéos/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
 //String filename = "/home/frag/Videos/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
-int zoom = 2;
+float zoom;
 
-float movie_speed = 1.0;
+float movie_speed;
 boolean isPlaying;
 boolean isLooping;
 
-int framerate = 72;
+int framerate;
 
 OPC opc;
 Movie movie;
@@ -25,11 +25,15 @@ PGraphics[] pyramid;
 void setup()
 {
   size(480, 240, P3D);
-  colorMode(HSB,100,100,100);
+  colorMode(HSB, 100);
+  
+  framerate = 72;
+  
+  zoom = 2;
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.4", 7890);
+  opc = new OPC(this, "192.168.1.5", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 3/8, height * 2/4, height/16, 0, true);
   //opc.ledGrid8x8(4 * 64, width * 3/8, height * 1/4, height/16, 0, false);
@@ -42,26 +46,10 @@ void setup()
   opc.setStatusLed(false);
   
   movie = new Movie(this, filename);
+  movie_speed = 1.0;
   movie.loop();
   isPlaying = true;
   isLooping = true;
-  
-  /* String[] cameras = capture.list();
-  
-  if (cameras.length == 0) {
-    println("There are no cameras available for capture.");
-    exit();
-  } else {
-    println("Available cameras:");
-    for (int i = 0; i < cameras.length; i++) {
-      println("[" + i +"] " + cameras[i]);
-    }
-    
-    // The camera can be initialized directly using an 
-    // element from the array returned by list():
-    capture = new Capture(this, 160, 120, cameras[112]);
-    capture.start();     
-  }  */    
   
   pyramid = new PGraphics[4];
   for (int i = 0; i < pyramid.length; i++) {
@@ -115,15 +103,6 @@ void draw()
   // Center location
   float x, y;
    
-  /* if (capture.available() == true) {
-    capture.read();
-    image(capture, 0, 0);
-  // The following does the same, and is faster when just drawing the image
-  // without any additional resizing, transformations, or tint.
-  //set(0, 0, capture); 
-  } */
-  
-   
   if (mousePressed) {
     // Pan horizontally and vertically with the mouse
     x = -mouseX * (mWidth - pyramid[0].width) / width;
@@ -146,19 +125,5 @@ void draw()
   }
 
   image(pyramid[pyramid.length - 1], 0, 0, width, height);
-  
-  /* loadPixels();
-  for (int i = 0; i < width*height/2; i++) {
-       //if ( i == 0 ) filter(INVERT);
-       //pixels[i+width*height/2] = pixels[i];
-       //pixels[i+width*height/4] = pixels[i];
-       pixels[i] = pixels[i+width/2];  
-  }
-  for (int i = 0; i < width*height/2; i++) {
-       pixels[i+height/2] = pixels[i];
-  }
-  updatePixels(); */
-  
-  filter(POSTERIZE, 6);
 }
 

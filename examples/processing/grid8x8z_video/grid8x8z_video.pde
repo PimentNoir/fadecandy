@@ -10,13 +10,13 @@ String filename = "/home/elecdev/Vidéos/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiN
 //String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 //String filename = "/home/frag/Videos/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
-int zoom = 2;
+float zoom;
 
-float movie_speed = 1.0;
+float movie_speed;
 boolean isPlaying;
 boolean isLooping;
 
-int framerate = 72;
+int framerate;
 
 OPC opc;
 Movie movie;
@@ -25,19 +25,23 @@ PGraphics[] pyramid;
 void setup()
 {
   size(480, 240, P3D);
-  colorMode(HSB,100,100,100);
+  colorMode(HSB, 100);
+  
+  framerate = 72;
+  
+  zoom = 2;
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   //opc = new OPC(this, "127.0.0.1", 7890);
   opc = new OPC(this, "192.168.1.5", 7890);
-
-
+  
   opc.ledGrid8x8(0 * 64, width/2, height/2, height/8, 0, false);
   
   // Make the status LED quiet
   opc.setStatusLed(false);
   
   movie = new Movie(this, filename);
+  movie_speed = 1.0;
   movie.loop();
   isPlaying = true;
   isLooping = true;
