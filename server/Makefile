@@ -159,8 +159,12 @@ OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
+<<<<<<< HEAD
 # FIXME: A race condition between objects regeneration and their source mtime in make ? 
 $(TARGET): $(SUBMODULES_TARGETS) $(OBJS)
+=======
+$(TARGET): $(submodules_target) $(OBJS)
+>>>>>>> parent of c7712a2... Oops ... fix a type in the git submodules previous patch.
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(STRIP_CMD)
 	$(PACK_CMD)
