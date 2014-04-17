@@ -57,6 +57,7 @@ public:
     bool hasLayout() const;
     const rapidjson::Document& getLayout() const;
     Effect* getEffect() const;
+    bool isVerbose() const;
     OPCClient& getClient();
 
     // Access to most recent framebuffer information
@@ -192,6 +193,11 @@ inline void EffectRunner::setEffect(Effect *effect)
 inline Effect* EffectRunner::getEffect() const
 {
     return effect;
+}
+
+inline bool EffectRunner::isVerbose() const
+{
+    return verbose;
 }
 
 inline float EffectRunner::getFrameRate() const
