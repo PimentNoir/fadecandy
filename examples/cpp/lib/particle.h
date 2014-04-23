@@ -50,6 +50,11 @@ public:
     virtual void shader(Vec3& rgb, const PixelInfo& p) const;
     virtual void debug(const DebugInfo& d);
 
+    // Sample the particle space in various ways
+    Vec3 sampleColor(Vec3 location) const;
+    float sampleIntensity(Vec3 location) const;
+    Vec3 sampleIntensityGradient(Vec3 location, float epsilon = 1e-3) const;
+
 protected:
     /*
      * List of appearances for particles we're drawing. Calculate this in beginFrame(),
@@ -57,6 +62,13 @@ protected:
      */
     typedef std::vector<ParticleAppearance> AppearanceVector;
     AppearanceVector appearance;
+
+    typedef std::vector<std::pair<size_t, Real> > ResultSet_t;
+
+    // Low-level sampling utilities, for use on an index search result set
+    Vec3 sampleColor(ResultSet_t &hits) const;
+    float sampleIntensity(ResultSet_t &hits) const;
+    float sampleIntensity(ResultSet_t &hits, Vec3 point) const;
 
     /*
      * KD-tree as a spatial index for finding particles quickly by location.
@@ -133,11 +145,11 @@ public:
  *****************************************************************************************/
 
 
-ParticleEffect::ParticleEffect()
+inline ParticleEffect::ParticleEffect()
     : index(*this)
 {}
 
-ParticleEffect::Index::Index(ParticleEffect &e)
+inline ParticleEffect::Index::Index(ParticleEffect &e)
     : aabbMin(0, 0, 0),
       aabbMax(0, 0, 0),
       radiusMax(0),
@@ -188,15 +200,23 @@ inline void ParticleEffect::beginFrame(const FrameInfo& f)
 
 inline void ParticleEffect::shader(Vec3& rgb, const PixelInfo& p) const
 {
-    Vec3 accumulator(0, 0, 0);
+    rgb = sampleColor(p.point);
+}
 
-    std::vector<std::pair<size_t, Real> > hits;
+inline Vec3 ParticleEffect::sampleColor(Vec3 location) const
+{
+    ResultSet_t hits;
     nanoflann::SearchParams params;
     params.sorted = false;
+    index.tree.radiusSearch(&location[0], sq(index.radiusMax), hits, params);
+    return sampleColor(hits);
+}
 
-    unsigned numHits = index.tree.radiusSearch(&p.point[0], sq(index.radiusMax), hits, params);
+inline Vec3 ParticleEffect::sampleColor(ResultSet_t &hits) const
+{
+    Vec3 accumulator(0, 0, 0);
 
-    for (unsigned i = 0; i < numHits; i++) {
+    for (unsigned i = 0; i < hits.size(); i++) {
         const ParticleAppearance &particle = appearance[hits[i].first];
         float dist2 = hits[i].second;
 
@@ -207,7 +227,75 @@ inline void ParticleEffect::shader(Vec3& rgb, const PixelInfo& p) const
         }
     }
 
-    rgb = accumulator;
+    return accumulator;
+}
+
+inline float ParticleEffect::sampleIntensity(Vec3 location) const
+{
+    ResultSet_t hits;
+    nanoflann::SearchParams params;
+    params.sorted = false;
+    index.tree.radiusSearch(&location[0], sq(index.radiusMax), hits, params);
+    return sampleIntensity(hits);
+}
+
+inline float ParticleEffect::sampleIntensity(ResultSet_t &hits) const
+{
+    float accumulator = 0;
+
+    for (unsigned i = 0; i < hits.size(); i++) {
+        const ParticleAppearance &particle = appearance[hits[i].first];
+        float dist2 = hits[i].second;
+
+        // Normalized distance
+        float q2 = dist2 / sq(particle.radius);
+        if (q2 < 1.0f) {
+            accumulator += particle.intensity * kernel2(q2);
+        }
+    }
+
+    return accumulator;
+}
+
+inline float ParticleEffect::sampleIntensity(ResultSet_t &hits, Vec3 point) const
+{
+    // Instead of using the distance computed during the search, use the
+    // distance computed to a specific test point. This is used during the
+    // gradient calculation.
+
+    float accumulator = 0;
+
+    for (unsigned i = 0; i < hits.size(); i++) {
+        const ParticleAppearance &particle = appearance[hits[i].first];
+        float dist2 = sqrlen(point - particle.point);
+
+        // Normalized distance
+        float q2 = dist2 / sq(particle.radius);
+        if (q2 < 1.0f) {
+            accumulator += particle.intensity * kernel2(q2);
+        }
+    }
+
+    return accumulator;
+}
+
+inline Vec3 ParticleEffect::sampleIntensityGradient(Vec3 location, float epsilon) const
+{
+    ResultSet_t hits;
+    nanoflann::SearchParams params;
+    params.sorted = false;
+    index.tree.radiusSearch(&location[0], sq(index.radiusMax + epsilon), hits, params);
+
+    Vec3 ex(epsilon, 0, 0);
+    Vec3 ey(0, epsilon, 0);
+    Vec3 ez(0, 0, epsilon);
+    float d = 0.5f / epsilon;
+
+    // Finite difference approximation
+    return d * Vec3(
+        sampleIntensity(hits, location + ex) - sampleIntensity(hits, location - ex),
+        sampleIntensity(hits, location + ey) - sampleIntensity(hits, location - ey),
+        sampleIntensity(hits, location + ez) - sampleIntensity(hits, location - ez));
 }
 
 inline void ParticleEffect::debug(const DebugInfo& d)
