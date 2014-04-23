@@ -36,6 +36,18 @@ The PCB design for this revision is tagged as **fc64x8-rev-a** in Git. This boar
 ![Fc64x8-a Photo](http://farm6.staticflickr.com/5513/10877817543_2f654c8699.jpg)
 
 
+Fc64x8 Revision B
+-----------------
+
+Electrically the same as Revision A, this is the version produced by Adafruit. It is slightly larger, at 0.8" by 1.25". It uses a mini-USB instead of a micro-USB connector, and includes two extra small holes at the top corners for mounting onto larger boards.
+
+
+RGB-123 Fadecandy Controller
+----------------------------
+
+This is a new board layout for Fadecandy which uses different component packages. It is produced and sold by Ryan O'Hara at RGB-123. The current version is Revision G.
+
+
 Test Jig
 --------
 
