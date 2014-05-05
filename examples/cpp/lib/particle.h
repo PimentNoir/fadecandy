@@ -65,6 +65,8 @@ protected:
 
     typedef std::vector<std::pair<size_t, Real> > ResultSet_t;
 
+    void buildIndex();
+
     // Low-level sampling utilities, for use on an index search result set
     Vec3 sampleColor(ResultSet_t &hits) const;
     float sampleIntensity(ResultSet_t &hits) const;
@@ -84,10 +86,14 @@ protected:
     struct Index {
         Index(ParticleEffect &e);
 
+        void radiusSearch(ResultSet_t& hits, Vec3 point, float radius) const;
+        void radiusSearch(ResultSet_t& hits, Vec3 point) const;
+
         Vec3 aabbMin;
         Vec3 aabbMax;
         float radiusMax;
         IndexTree tree;
+        bool treeIsValid;
     } index;
 
     /*
@@ -149,12 +155,29 @@ inline ParticleEffect::ParticleEffect()
     : index(*this)
 {}
 
-inline ParticleEffect::Index::Index(ParticleEffect &e)
+inline ParticleEffect::Index::Index(ParticleEffect& e)
     : aabbMin(0, 0, 0),
       aabbMax(0, 0, 0),
       radiusMax(0),
-      tree(3, e)
+      tree(3, e),
+      treeIsValid(false)
 {}
+
+inline void ParticleEffect::Index::radiusSearch(ResultSet_t& hits, Vec3 point, float radius) const
+{
+    if (treeIsValid) {
+        nanoflann::SearchParams params;
+        params.sorted = false;
+        tree.radiusSearch(&point[0], radius * radius, hits, params);
+    } else {
+        hits.clear();
+    }
+}
+
+inline void ParticleEffect::Index::radiusSearch(ResultSet_t& hits, Vec3 point) const
+{
+    radiusSearch(hits, point, radiusMax);
+}
 
 inline float ParticleEffect::kernel(float q)
 {
@@ -176,26 +199,41 @@ inline float ParticleEffect::kernelDerivative(float q)
 
 inline void ParticleEffect::beginFrame(const FrameInfo& f)
 {
-    // Measure bounding box and largest radius in 'particles'
-    index.aabbMin = appearance[0].point;
-    index.aabbMax = appearance[0].point;
-    index.radiusMax = appearance[0].radius;
-    for (unsigned i = 1; i < appearance.size(); ++i) {
-        const ParticleAppearance& particle = appearance[i];
-        
-        index.aabbMin[0] = std::min(index.aabbMin[0], particle.point[0]);
-        index.aabbMin[1] = std::min(index.aabbMin[1], particle.point[1]);
-        index.aabbMin[2] = std::min(index.aabbMin[2], particle.point[2]);
-        
-        index.aabbMax[0] = std::max(index.aabbMax[0], particle.point[0]);
-        index.aabbMax[1] = std::max(index.aabbMax[1], particle.point[1]);
-        index.aabbMax[2] = std::max(index.aabbMax[2], particle.point[2]);
-        
-        index.radiusMax = std::max(index.radiusMax, particle.radius);
-    }
+    buildIndex();
+}
 
-    // Rebuild KD-tree
-    index.tree.buildIndex();
+inline void ParticleEffect::buildIndex()
+{
+    if (appearance.empty()) {
+        // No particles
+        index.aabbMin = Vec3(0, 0, 0);
+        index.aabbMax = Vec3(0, 0, 0);
+        index.radiusMax = 0;
+        index.treeIsValid = false;
+
+    } else {
+        // Measure bounding box and largest radius in 'particles'
+        index.aabbMin = appearance[0].point;
+        index.aabbMax = appearance[0].point;
+        index.radiusMax = appearance[0].radius;
+        for (unsigned i = 1; i < appearance.size(); ++i) {
+            const ParticleAppearance& particle = appearance[i];
+            
+            index.aabbMin[0] = std::min(index.aabbMin[0], particle.point[0]);
+            index.aabbMin[1] = std::min(index.aabbMin[1], particle.point[1]);
+            index.aabbMin[2] = std::min(index.aabbMin[2], particle.point[2]);
+            
+            index.aabbMax[0] = std::max(index.aabbMax[0], particle.point[0]);
+            index.aabbMax[1] = std::max(index.aabbMax[1], particle.point[1]);
+            index.aabbMax[2] = std::max(index.aabbMax[2], particle.point[2]);
+            
+            index.radiusMax = std::max(index.radiusMax, particle.radius);
+        }
+
+        // Rebuild KD-tree. Fails if we have zero particles.
+        index.tree.buildIndex();
+        index.treeIsValid = true;
+    }
 }
 
 inline void ParticleEffect::shader(Vec3& rgb, const PixelInfo& p) const
@@ -206,9 +244,7 @@ inline void ParticleEffect::shader(Vec3& rgb, const PixelInfo& p) const
 inline Vec3 ParticleEffect::sampleColor(Vec3 location) const
 {
     ResultSet_t hits;
-    nanoflann::SearchParams params;
-    params.sorted = false;
-    index.tree.radiusSearch(&location[0], sq(index.radiusMax), hits, params);
+    index.radiusSearch(hits, location);
     return sampleColor(hits);
 }
 
@@ -233,9 +269,7 @@ inline Vec3 ParticleEffect::sampleColor(ResultSet_t &hits) const
 inline float ParticleEffect::sampleIntensity(Vec3 location) const
 {
     ResultSet_t hits;
-    nanoflann::SearchParams params;
-    params.sorted = false;
-    index.tree.radiusSearch(&location[0], sq(index.radiusMax), hits, params);
+    index.radiusSearch(hits, location);
     return sampleIntensity(hits);
 }
 
@@ -282,9 +316,7 @@ inline float ParticleEffect::sampleIntensity(ResultSet_t &hits, Vec3 point) cons
 inline Vec3 ParticleEffect::sampleIntensityGradient(Vec3 location, float epsilon) const
 {
     ResultSet_t hits;
-    nanoflann::SearchParams params;
-    params.sorted = false;
-    index.tree.radiusSearch(&location[0], sq(index.radiusMax + epsilon), hits, params);
+    index.radiusSearch(hits, location, index.radiusMax + epsilon);
 
     Vec3 ex(epsilon, 0, 0);
     Vec3 ey(0, epsilon, 0);
@@ -300,7 +332,7 @@ inline Vec3 ParticleEffect::sampleIntensityGradient(Vec3 location, float epsilon
 
 inline void ParticleEffect::debug(const DebugInfo& d)
 {
-    fprintf(stderr, "\t[particle] %.1f kB, radius=%.1f\n",
+    fprintf(stderr, "\t[particle] %.1f kB, radiusMax = %.1f\n",
         index.tree.usedMemory() / 1024.0f,
         index.radiusMax);
 }
