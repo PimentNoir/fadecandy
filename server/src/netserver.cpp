@@ -130,6 +130,7 @@ int NetServer::lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
     switch (reason) {
         case LWS_CALLBACK_CLOSED:
         case LWS_CALLBACK_CLOSED_HTTP:
+        case LWS_CALLBACK_DEL_POLL_FD:
             if (client && client->opcBuffer) {
                 free(client->opcBuffer);
                 client->opcBuffer = NULL;
