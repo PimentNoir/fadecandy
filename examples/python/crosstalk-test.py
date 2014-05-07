@@ -12,14 +12,14 @@ import opc, time
 
 client = opc.Client('localhost:7890')
 
-bits = ( (40,0,0), (0,255,0) )
+bits = ( (80,0,0), (0,255,0) )
 
 while True:
 	# Flash each strip in turn
 	for strip in range(8):
-		pixels = [ (40,40,40) ] * 512
+		pixels = [ (90,90,90) ] * 512
 		for i in range(32):
-			pixels[strip * 64 + i * 2] = (100,100,100)
+			pixels[strip * 64 + i * 2] = (200,200,200)
 
 		# Label all strips always
 		for s in range(8):
