@@ -625,8 +625,8 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
 
     // Still haven't found a match?
     if (mVerbose) {
-        rapidjson::GenericStringBuffer<rapidjson::UTF8<>> buffer;
-        rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
+        rapidjson::GenericStringBuffer<rapidjson::UTF8<> > buffer;
+        rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > > writer(buffer);
         inst.Accept(writer);
         std::clog << "Unsupported JSON mapping instruction: " << buffer.GetString() << "\n";
     }

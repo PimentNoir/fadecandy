@@ -436,7 +436,7 @@ void NetServer::jsonBufferPrepare(jsonBuffer_t &buffer, rapidjson::Value &value)
     rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_PRE_PADDING);
 
     // Write serialized message
-    rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
+    rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > > writer(buffer);
     value.Accept(writer);
 
     // Post-packet padding
