@@ -22,6 +22,8 @@
  */
 
 #include "fcdevice.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include "opc.h"
 #include <math.h>
 #include <iostream>
@@ -523,7 +525,8 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
      * into our framebuffer. This looks for any mapping instructions that we
      * recognize:
      *
-     *   [ OPC Channel, First OPC Pixel, First output pixel, pixel count ]
+     *   [ OPC Channel, First OPC Pixel, First output pixel, Pixel count ]
+     *   [ OPC Channel, First OPC Pixel, First output pixel, Color channels ]
      */
 
     unsigned msgPixelCount = msg.length() / 3;
@@ -568,9 +571,64 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
         }
     }
 
+    if (inst.IsArray() && inst.Size() == 5) {
+        // Map a range from an OPC channel to our framebuffer, with color channel swizzling
+
+        const Value &vChannel = inst[0u];
+        const Value &vFirstOPC = inst[1];
+        const Value &vFirstOut = inst[2];
+        const Value &vCount = inst[3];
+        const Value &vColorChannels = inst[4];
+
+        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsUint()
+            && vColorChannels.IsString() && vColorChannels.GetStringLength() == 3) {
+
+            unsigned channel = vChannel.GetUint();
+            unsigned firstOPC = vFirstOPC.GetUint();
+            unsigned firstOut = vFirstOut.GetUint();
+            unsigned count = vCount.GetUint();
+            const char *colorChannels = vColorChannels.GetString();
+
+            if (channel != msg.channel) {
+                return;
+            }
+
+            // Clamping, overflow-safe
+            firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
+            firstOut = std::min<unsigned>(firstOut, unsigned(NUM_PIXELS));
+            count = std::min<unsigned>(count, msgPixelCount - firstOPC);
+            count = std::min<unsigned>(count, NUM_PIXELS - firstOut);
+
+            // Copy pixels
+            const uint8_t *inPtr = msg.data + (firstOPC * 3);
+            unsigned outIndex = firstOut;
+            bool success = true;
+
+            while (count--) {
+                uint8_t *outPtr = fbPixel(outIndex++);
+
+                for (int channel = 0; channel < 3; channel++) {
+                    if (!OPC::pickColorChannel(outPtr[channel], colorChannels[channel], inPtr)) {
+                        success = false;
+                        break;
+                    }
+                }
+
+                inPtr += 3;
+            }
+
+            if (success) {
+                return;
+            }
+        }
+    }
+
     // Still haven't found a match?
     if (mVerbose) {
-        std::clog << "Unsupported JSON mapping instruction\n";
+        rapidjson::GenericStringBuffer<rapidjson::UTF8<>> buffer;
+        rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
+        inst.Accept(writer);
+        std::clog << "Unsupported JSON mapping instruction: " << buffer.GetString() << "\n";
     }
 }
 
