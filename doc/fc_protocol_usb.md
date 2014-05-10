@@ -20,6 +20,26 @@ Configurations  | 1
 Endpoints       | 1
 Endpoint 1      | Bulk OUT (Host to Device), 64-byte packets
 
+The Fadecandy device has one USB Configuration with two Interfaces:
+
+* **Interface #0** is a vendor-specific interface with one Bulk OUT endpoint for communicating control data and video keyframes.
+* **Interface #1** is compatible with the USB Device Firmware Update spec. It's used during firmware upgrade to ask the device to enter bootloader mode. During normal operation, it's safe to ignore this interface.
+
+Getting Started
+---------------
+
+To use the Fadecandy Controller's USB protocol directly, you'll need to:
+
+1. **Search** for the device you're interested in. You can look for all Fadecandy devices by looking at the Vendor and Product IDs. You can find a specific Fadecandy device by looking at its USB serial number string.
+3. **Open** the device, and set its configuration. Depending on the operating system, you may also need to claim interface #0 so your application has exclusive access to it.
+4. Set up a **Color Look-Up Table**. There is no default table, the firmware expects you to calculate one based on the gamma and whitepoint you'd like to use.
+5. Send **Video Frames** at any time. When you complete a frame, the firmware immediately begins interpolating to it.
+
+There's a [minimal example](https://github.com/scanlime/fadecandy/blob/master/examples/python/usb-lowlevel.py) written in Python using PyUSB. It calculates a simple Color LUT and sends random video frames.
+
+To compare with the Color LUT calculation used by `fcserver`, see the [FCDevice::writeColorCorrection](https://github.com/scanlime/fadecandy/blob/47a4e551a71444923a1e6754f29f424e28a62090/server/src/fcdevice.cpp#L233) function in the fcserver source code.
+
+
 Bulk Endpoint
 -------------
 
@@ -107,3 +127,60 @@ bmRequestType | bRequest | wValue | wIndex | wLength | Description
 0xC0          | 0x7E     | x      | 4      | x       | Read Microsoft WCID descriptor
 0xC0          | 0x7E     | x      | 5      | x       | Read Microsoft Extended Properties descriptor
 
+USB Descriptors
+---------------
+
+For reference, this is sample output from the Mac OS X [USB Prober](https://developer.apple.com/library/mac/qa/qa1370/_index.html) diagnostics tool:
+
+	Full Speed device @ 15 (0x14200000): Composite device: "Fadecandy"
+	    Port Information:   0x101a
+	           Not Captive
+	           Attached to Root Hub
+	           External Device
+	           Connected
+	           Enabled
+	           Connected to External Port
+	    Number Of Endpoints (includes EP0):   
+	        Total Endpoints for Configuration 1 (current):   2
+	    Device Descriptor   
+	        Descriptor Version Number:   0x0200
+	        Device Class:   0   (Composite)
+	        Device Subclass:   0
+	        Device Protocol:   0
+	        Device MaxPacketSize:   64
+	        Device VendorID/ProductID:   0x1D50/0x607A   (unknown vendor)
+	        Device Version Number:   0x0108
+	        Number of Configurations:   1
+	        Manufacturer String:   1 "scanlime"
+	        Product String:   2 "Fadecandy"
+	        Serial Number String:   3 "ENICCULVLDQJQDWD"
+	    Configuration Descriptor (current config)   
+	        Length (and contents):   43
+	            Raw Descriptor (hex)    0000: 09 02 2B 00 02 01 00 80  32 09 04 00 00 01 FF 00  
+	            Raw Descriptor (hex)    0010: 00 00 07 05 01 02 40 00  00 09 04 01 00 00 FE 01  
+	            Raw Descriptor (hex)    0020: 01 04 09 21 0D 10 27 00  04 01 01 
+	        Number of Interfaces:   2
+	        Configuration Value:   1
+	        Attributes:   0x80 (bus-powered)
+	        MaxPower:   100 mA
+	        Interface #0 - Vendor-specific   
+	            Alternate Setting   0
+	            Number of Endpoints   1
+	            Interface Class:   255   (Vendor-specific)
+	            Interface Subclass;   0   (Vendor-specific)
+	            Interface Protocol:   0
+	            Endpoint 0x01 - Bulk Output   
+	                Address:   0x01  (OUT)
+	                Attributes:   0x02  (Bulk)
+	                Max Packet Size:   64
+	                Polling Interval:   0 ms
+	        Interface #1 - Application Specific/Device Firmware Update "Fadecandy Bootloader"
+	            Alternate Setting   0
+	            Number of Endpoints   0
+	            Interface Class:   254   (Application Specific)
+	            Interface Subclass;   1   (Device Firmware Update)
+	            Interface Protocol:   1
+	            DFU Functional Descriptor   
+	                bmAttributes:   0x0d (Download, No Upload, Manifestation Tolerant, Reserved bits: 0x08)
+	                wDetachTimeout:   10000 ms
+	                wTransferSize:   1024 bytes
