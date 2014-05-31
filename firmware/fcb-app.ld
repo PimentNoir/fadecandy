@@ -44,6 +44,7 @@ SECTIONS
     .text : {
         . = 0;
         KEEP(*(.vectors))
+	*(.startup*)
         *(.text*)
         *(.rodata*)
         . = ALIGN(4);

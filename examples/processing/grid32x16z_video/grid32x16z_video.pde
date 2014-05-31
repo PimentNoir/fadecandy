@@ -8,11 +8,7 @@ import processing.video.*;
 //String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
 String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
-int zoom = 2;
-
-float movie_speed = 1.0;
-
-int framerate = 1;
+float zoom = 2;
 
 OPC opc;
 Movie movie;
@@ -20,7 +16,7 @@ PGraphics[] pyramid;
 
 void setup()
 {
-  size(zoom*480, zoom*240, P3D);
+  size(480, 240, P3D);
   colorMode(HSB,100,100,100);
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver

@@ -1,0 +1,9 @@
+*.dSYM
+*.exe
+simple
+rings
+rings_2d
+spokes
+dot
+mixer
+particle_trail

@@ -1,6 +1,17 @@
 #######################################################
 # Environment setup
 
+# Teensy 3.1 or 3.0
+#TEENSY31=true;
+
+ifdef TEENSY31
+OPTIONS = -DF_CPU=96000000
+OPTIONS += -D__MK20DX256__
+else
+OPTIONS = -DF_CPU=48000000
+OPTIONS += -D__MK20DX128__
+endif
+
 # toolchain
 DFU_SUFFIX = dfu-suffix
 DFU_UTIL = dfu-util
@@ -23,6 +34,8 @@ APP_HEX = app-image.hex
 
 # Sources
 C_FILES = \
+	yield.c \
+	analog.c \
 	startup.c \
 	pins_teensy.c \
 	usb_desc.c \
@@ -49,7 +62,11 @@ CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 CFLAGS =
 
 # linker script
+ifdef TEENSY31
+LDSCRIPT = fcb256-app.ld
+else
 LDSCRIPT = fcb-app.ld
+endif
 
 # linker options
 LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -nostdlib -T$(LDSCRIPT)

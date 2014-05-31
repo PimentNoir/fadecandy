@@ -1,0 +1,14 @@
+# Defaults for ps-watcher initscript
+# sourced by /etc/init.d/ps-watcher
+# installed at /etc/default/ps-watcher by the maintainer scripts
+
+# prevent startup without configuration file
+# set the below varible to 1 in order to allow ps-watcher to start
+startup=1
+
+# Specify your configfile here
+CONFIG="/etc/ps-watcher.conf"
+
+# Additional options that are passed to the Daemon.
+# here: check every 60 secs
+DAEMON_OPTS="--sleep 60 --ps-prog /bin/ps"

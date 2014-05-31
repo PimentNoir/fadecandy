@@ -8,12 +8,13 @@ float dx, dy, dz;
 void setup()
 {
   int zoom = 4;
-  size(16*zoom, 16*zoom);
+  size(8*zoom, 8*zoom);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-
-  opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, true);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.5", 7890);
+  
+  opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
   
   // Make the status LED quiet
   opc.setStatusLed(false);

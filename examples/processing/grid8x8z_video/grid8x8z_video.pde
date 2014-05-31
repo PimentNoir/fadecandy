@@ -6,8 +6,9 @@ import processing.video.*;
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
-//String filename = "/home/elecdev/Téléchargements/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
-String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
+String filename = "/home/elecdev/Vidéos/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
+//String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
+//String filename = "/home/frag/Videos/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
 int zoom = 2;
 
@@ -15,7 +16,7 @@ float movie_speed = 1.0;
 boolean isPlaying;
 boolean isLooping;
 
-int framerate = 1;
+int framerate = 72;
 
 OPC opc;
 Movie movie;
@@ -23,13 +24,15 @@ PGraphics[] pyramid;
 
 void setup()
 {
-  size(zoom*480, zoom*240, P3D);
+  size(480, 240, P3D);
   colorMode(HSB,100,100,100);
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.5", 7890);
 
-  opc.ledGrid8x8(0 * 64, width/2, height/2, height/8, 0, true);
+
+  opc.ledGrid8x8(0 * 64, width/2, height/2, height/8, 0, false);
   
   // Make the status LED quiet
   opc.setStatusLed(false);
@@ -39,15 +42,23 @@ void setup()
   isPlaying = true;
   isLooping = true;
 
-  pyramid = new PGraphics[2];
+  pyramid = new PGraphics[4];
   for (int i = 0; i < pyramid.length; i++) {
     pyramid[i] = createGraphics(width / (1 << i), height / (1 << i), P3D);
   }
+  smooth();
 }
 
 void keyPressed() {
   if (key == 'd') opc.setDithering(false);
-  if (key == ' ') movie.pause();
+  if (key == ' ') {
+    if (isPlaying) { 
+      movie.pause();
+    } else { 
+      movie.play();
+    }
+    isPlaying=!isPlaying;
+  }
   if (key == ']') zoom *= 1.1;
   if (key == '[') zoom *= 0.9;
   if (key == 'j') movie.jump(random(movie.duration()));
@@ -71,7 +82,6 @@ void keyPressed() {
 
 void keyReleased() {
   if (key == 'd') opc.setDithering(true);
-  if (key == ' ') movie.play();
 }  
 
 void movieEvent(Movie m)
@@ -82,7 +92,6 @@ void movieEvent(Movie m)
 void draw()
 {
   frameRate(framerate);
-  //movie.frameRate(framerate*24);
   movie.speed(movie_speed);
   // Scale to width, center height
   int mWidth = int(pyramid[0].width * zoom);

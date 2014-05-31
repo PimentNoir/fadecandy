@@ -15,20 +15,20 @@ Recommended use:
 
     # Test if it can connect (optional)
     if client.can_connect():
-        print 'connected to %s' % ADDRESS
+        print('connected to %s' % ADDRESS)
     else:
         # We could exit here, but instead let's just print a warning
         # and then keep trying to send pixels in case the server
         # appears later
-        print 'WARNING: could not connect to %s' % ADDRESS
+        print('WARNING: could not connect to %s' % ADDRESS)
 
     # Send pixels forever at 30 frames per second
     while True:
         my_pixels = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
         if client.put_pixels(my_pixels, channel=0):
-            print '...'
+            print('...')
         else:
-            print 'not connected'
+            print('not connected')
         time.sleep(1/30.0)
 
 """
@@ -70,7 +70,7 @@ class Client(object):
 
     def _debug(self, m):
         if self.verbose:
-            print '    %s' % str(m)
+            print('    %s' % str(m))
 
     def _ensure_connected(self):
         """Set up a connection if one doesn't already exist.
