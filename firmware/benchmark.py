@@ -41,6 +41,13 @@ def initLUT():
     dev.write(1, lutPackets)
     print "LUT programmed"
 
+def dummyFrame(byte):
+    buffer = ''
+    for i in range(25):
+        final = i == 24
+        buffer += chr( (final << 5) | i ) + chr(byte) * 63
+    return buffer
+
 def measureFrameRate():
     sys.stderr.write("Calculating frame rate average...\n")
     duration = 8.0
@@ -49,17 +56,10 @@ def measureFrameRate():
     k1 = readCounter(1)     # Received keyframes
 
     # Dummy frames
-    data = ((chr(0 << 5) + chr(0x00) * 63) +
-            (chr(0 << 5) + chr(0x00) * 63) +
-            (chr(0 << 5) + chr(0x00) * 63) +
-            (chr(1 << 5) + chr(0x00) * 63) +
-            (chr(0 << 5) + chr(0x00) * 63) +
-            (chr(0 << 5) + chr(0x00) * 63) +
-            (chr(0 << 5) + chr(0x00) * 63) +
-            (chr(1 << 5) + chr(0x40) * 63)) * 100
+    data = (dummyFrame(0) + dummyFrame(0x80)) * 200
 
     # Use number of keyframes handled per second to estimate USB bandwidth
-    megabitsPerFrame = 64 * 4 * (8.0 / 1e6)
+    megabitsPerFrame = len(dummyFrame(0)) * (8.0 / 1e6)
 
     # Average the frame rate for up to 'duration' seconds.
     try:
@@ -72,10 +72,11 @@ def measureFrameRate():
             k2 = readCounter(1)
 
             fps = counterDiff(c1, c2) / (t2 - t1)
-            mbps = counterDiff(k1, k2) * megabitsPerFrame / (t2 - t1)
+            kfps = counterDiff(k1, k2) / (t2 - t1)
+            mbps = kfps * megabitsPerFrame
 
             # Not sure how accurate this USB throughput is, the blocking write() is likely a problem.
-            sys.stderr.write("\r   %.2f FPS, %.2f Mbps  " % (fps, mbps))
+            sys.stderr.write("\r   %.2f FPS, %.2f KFPS, %.2f Mbps  " % (fps, kfps, mbps))
 
     except KeyboardInterrupt:
         pass

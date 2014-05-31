@@ -19,7 +19,7 @@ if not dev:
 
 dev.set_configuration()
 
-print "Serial number: %s" % usb.util.get_string(dev, 255, dev.iSerialNumber)
+print("Serial number: %s" % usb.util.get_string(dev, 255, dev.iSerialNumber))
 
 # Debug flags
 
@@ -38,13 +38,13 @@ for channel in range(3):
         i = channel * 257 + row
         packetNum = i / 31
         packetIndex = i % 31
-        #print "%d, %d = 0x%04x" % (channel, row, value)
+        #print("%d, %d = 0x%04x" % (channel, row, value))
         lut[packetNum*64 + 2 + packetIndex*2] = value & 0xFF
         lut[packetNum*64 + 3 + packetIndex*2] = value >> 8
 lutPackets = ''.join(map(chr, lut))
-#print binascii.b2a_hex(lutPackets)
+#print(binascii.b2a_hex(lutPackets))
 dev.write(1, lutPackets)
-print "LUT programmed"
+print("LUT programmed")
 
 # Slowly push random frames to the device
 
@@ -59,9 +59,9 @@ while True:
 
         data = chr(control) + ''.join(chr(random.choice([0, 255])) for i in range(63))
         dev.write(1, data)
-        #print binascii.b2a_hex(data)
+        #print(binascii.b2a_hex(data))
 
-    #print
+    #print('')
     raw_input()
     #time.sleep(0.1)
 

@@ -1,10 +1,11 @@
+#!/usr/bin/env node
+
 // Simple red/blue fade with Node and opc.js
 
 var OPC = new require('./opc')
 var client = new OPC('localhost', 7890);
 
-var draw = function()
-{
+function draw() {
     var millis = new Date().getTime();
 
     for (var pixel = 0; pixel < 512; pixel++)

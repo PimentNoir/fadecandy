@@ -9,15 +9,25 @@ This directory contains sample projects and configuration files for Fadecandy.
   * Browser-based examples, written in JavaScript with HTML5
 * `node`
   * JavaScript examples for Node.js
+* `cpp`
+  * Examples written in C++
+  * Includes a small header-only effects framework you can copy and reuse
+  * Suitable for resource-constrained systems or very CPU-intensive patterns
 * `python`
   * Some examples written in [Python](http://python.org/)
 * `config`
   * Sample JSON configuration files for `fcserver`
+* `layouts`
+  * JSON layout files and layout generators
+  * Compatible with the Open Pixel Control `gl_server`.
+  * Compatible with some of the Node.js examples.
 
 LED Layouts
 -----------
 
 Some examples are written for a specific LED layout or art project, some examples are general-purpose. For examples that use a specific LED layout, we indicate this with a naming convention. For example, if a project "potato" were written for a 48x24 grid, it would be named "grid48x24_potato".
+
+Some of the generic examples (Specifically, the C++ and Node.js ones) can load separate layout files. These are in the same JSON notation used by the [Open Pixel Control](http://openpixelcontrol.org) project, and we use the same naming scheme for those JSON files.
 
 Layout names we use so far:
 
@@ -26,6 +36,13 @@ Layout names we use so far:
 * grid24x8z - Three 8x8 zig-zag grids side by side
   * Channel 0 is the center, and may be used alone.
   * For example, three of the 8x8 grids from [RGB-123](http://www.kickstarter.com/projects/311408456/rgb-123-led-matrices)
+* grid32x8z - A 4x2 grid of 8x8 zig-zag grids
+  * Channel 0 is the top-left grid, channel 7 is the bottom-right
+  * For example, eight of the 8x8 grids from [RGB-123](http://www.kickstarter.com/projects/311408456/rgb-123-led-matrices)
+* strip64 - A single 64-pixel LED strip
+* triangle16 - A subdivided equilateral triangle with 16 pixels
+* window6x12 - A complex window display layout made from glass blocks
+  * This example shows how additional properties other than location may be stored in the JSON file.
 
 More Examples
 -------------
