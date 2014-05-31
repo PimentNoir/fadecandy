@@ -13,6 +13,7 @@ This directory contains sample projects and configuration files for Fadecandy.
   * Examples written in C++
   * Includes a small header-only effects framework you can copy and reuse
   * Suitable for resource-constrained systems or very CPU-intensive patterns
+  * Currently supports Linux and Mac OS X only.
 * `python`
   * Some examples written in [Python](http://python.org/)
 * `config`

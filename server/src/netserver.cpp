@@ -130,6 +130,7 @@ int NetServer::lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
     switch (reason) {
         case LWS_CALLBACK_CLOSED:
         case LWS_CALLBACK_CLOSED_HTTP:
+        case LWS_CALLBACK_DEL_POLL_FD:
             if (client && client->opcBuffer) {
                 free(client->opcBuffer);
                 client->opcBuffer = NULL;
@@ -435,7 +436,7 @@ void NetServer::jsonBufferPrepare(jsonBuffer_t &buffer, rapidjson::Value &value)
     rapidjson::PutN<>(buffer, 0, LWS_SEND_BUFFER_PRE_PADDING);
 
     // Write serialized message
-    rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<>>> writer(buffer);
+    rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > > writer(buffer);
     value.Accept(writer);
 
     // Post-packet padding

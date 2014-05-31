@@ -1,5 +1,6 @@
 /*
- * Effect that controls the total brightness of another effect
+ * Effect that controls the total brightness of another effect,
+ * and measures average brightness as well as brightness change rate.
  *
  * Copyright (c) 2014 Micah Elizabeth Scott <micah@scanlime.org>
  *
@@ -43,6 +44,12 @@ public:
     // linear-ish space.
     void setAssumedGamma(float gamma);
 
+    // Gets the last brightness average; will be roughly between lowerLimit and upperLimit.
+    float getAverageBrightness() const;
+
+    // Get the total squared brightness delta between the last two frames
+    float getTotalBrightnessDelta() const;
+
     virtual void beginFrame(const FrameInfo& f);
     virtual void endFrame(const FrameInfo& f);
     virtual void debug(const DebugInfo& f);
@@ -51,8 +58,18 @@ public:
 private:
     Effect &next;
     float lowerLimit, upperLimit;
-    std::vector<Vec3> colors;
     float currentScale;
+    float latestAverage;
+    float totalBrightnessDelta;
+    unsigned numIters;
+
+    std::vector<Vec3> *prevColors;
+    std::vector<Vec3> *nextColors;
+
+    std::vector<Vec3> colorBuffer[2];
+
+    static const unsigned gammaTableSize = 256;
+    float gammaTable[gammaTableSize];
     float gamma;
 };
 
@@ -64,11 +81,18 @@ private:
 
 inline Brightness::Brightness(Effect &next)
     : next(next),
-      lowerLimit(0), upperLimit(1),
-      currentScale(1)
+      lowerLimit(0),
+      upperLimit(1),
+      currentScale(1),
+      latestAverage(0),
+      totalBrightnessDelta(0),
+      numIters(0)
 {
     // Fadecandy default
     setAssumedGamma(2.5);
+
+    prevColors = &colorBuffer[0];
+    nextColors = &colorBuffer[1];
 }
 
 inline void Brightness::set(float averageBrightness)
@@ -85,14 +109,35 @@ inline void Brightness::set(float lowerLimit, float upperLimit)
 inline void Brightness::setAssumedGamma(float gamma)
 {
     this->gamma = gamma;
+    for (unsigned i = 0; i < gammaTableSize; i++) {
+        gammaTable[i] = powf(i / float(gammaTableSize + 1), gamma);
+    }
+}
+
+inline float Brightness::getAverageBrightness() const
+{
+    return latestAverage;
+}
+
+inline float Brightness::getTotalBrightnessDelta() const
+{
+    return totalBrightnessDelta;
 }
 
 inline void Brightness::beginFrame(const FrameInfo& f)
 {
     next.beginFrame(f);
-    colors.resize(f.pixels.size());
+    std::swap(nextColors, prevColors);
+
+    if (colorBuffer[0].size() != f.pixels.size()) {
+        for (unsigned i = 0; i < 2; i++) {
+           colorBuffer[i].resize(f.pixels.size());
+           std::fill(colorBuffer[i].begin(), colorBuffer[i].end(), Vec3(0,0,0));
+        }
+    }
 
     unsigned count = 0;
+    float deltaAccumulator = 0;
 
     // Calculate the next effect's pixels, storing them all. Also count the total number
     // of mapped pixels, ignoring any unmapped ones.
@@ -100,15 +145,28 @@ inline void Brightness::beginFrame(const FrameInfo& f)
     {
         PixelInfoIter pi = f.pixels.begin();
         PixelInfoIter pe = f.pixels.end();
-        std::vector<Vec3>::iterator ci = colors.begin();
+        std::vector<Vec3>::iterator nci = nextColors->begin();
+        std::vector<Vec3>::iterator pci = prevColors->begin();
 
-        for (;pi != pe; ++pi, ++ci) {
+        for (;pi != pe; ++pi, ++nci, ++pci) {
             if (pi->isMapped()) {
-                next.shader(*ci, *pi);
-                next.postProcess(*ci, *pi);
+                Vec3 rgb(0, 0, 0);
+                next.shader(rgb, *pi);
+                next.postProcess(rgb, *pi);
                 count++;
+
+                *nci = rgb;
+                deltaAccumulator += sqrlen(rgb - *pci);
             }
         }
+    }
+
+    const float deltaAccumulatorFilterRate = 0.05;
+    totalBrightnessDelta += (deltaAccumulator - totalBrightnessDelta) * deltaAccumulatorFilterRate;
+
+    if (!(totalBrightnessDelta >= 0)) {
+        // NaN or negative
+        totalBrightnessDelta = 0;
     }
 
     if (count == 0) {
@@ -127,39 +185,55 @@ inline void Brightness::beginFrame(const FrameInfo& f)
     const unsigned maxIters = 50;
     const float epsilon = 1e-3;
 
-    for (unsigned iter = 0; iter < maxIters; iter++) {
+    unsigned iter = 0;
+    float avg;
+    float scale = 1.0;
 
-        std::vector<Vec3>::iterator ci = colors.begin();
-        std::vector<Vec3>::iterator ce = colors.end();
-        float avg = 0;
+    for (; iter < maxIters; iter++) {
 
-        for (;ci != ce; ++ci) {
+        std::vector<Vec3>::iterator ci = nextColors->begin();
+        std::vector<Vec3>::iterator ce = nextColors->end();
+        PixelInfoIter pi = f.pixels.begin();
+        avg = 0;
+
+        for (;ci != ce; ++ci, ++pi) {
             Vec3& rgb = *ci;
 
             // Simulated linear brightness, using current scale
-            for (unsigned i = 0; i < 3; i++) {
-                avg += powf(std::max(0.0f, std::min(1.0f, rgb[i] * currentScale)), gamma);
+            if (pi->isMapped()) {
+                for (unsigned i = 0; i < 3; i++) {
+                    float c = rgb[i] * scale;
+                    avg += gammaTable[std::max<int>(0, std::min<int>(gammaTableSize - 1, c * float(gammaTableSize - 1)))];
+                }
             }
         }
 
         avg /= count;
 
-        // Make the best estimate we can for this iteration
         float adjustment;
         if (avg < lowerLimit) {
+            // Make brighter, operate against the lower limit
             adjustment = powf(lowerLimit / avg, 1.0f / gamma);
         } else if (avg > upperLimit) {
+            // Make dimmer, operate against the upper limit
             adjustment = powf(upperLimit / avg, 1.0f / gamma);
         } else {
-            adjustment = 1.0f;
+            // Not hitting any limits
+            break;
         }
-        currentScale = std::max(epsilon, currentScale * adjustment);
+
+        scale = std::max(epsilon, scale * adjustment);
 
         // Was this adjustment negligible? We can quit early.
         if (fabsf(adjustment - 1.0f) < epsilon) {
             break;
         }
+
     }
+
+    numIters = iter;
+    currentScale = scale;
+    latestAverage = avg;
 }
 
 inline void Brightness::endFrame(const FrameInfo& f)
@@ -170,9 +244,14 @@ inline void Brightness::endFrame(const FrameInfo& f)
 inline void Brightness::debug(const DebugInfo& d)
 {
     next.debug(d);
+    fprintf(stderr, "\t[brightness] limits = [%f, %f]\n", lowerLimit, upperLimit);
+    fprintf(stderr, "\t[brightness] currentScale = %f\n", currentScale);
+    fprintf(stderr, "\t[brightness] latestAverage = %f\n", latestAverage);
+    fprintf(stderr, "\t[brightness] totalBrightnessDelta = %f\n", totalBrightnessDelta);
+    fprintf(stderr, "\t[brightness] iterations = %d\n", numIters);
 }
 
 inline void Brightness::shader(Vec3& rgb, const PixelInfo& p) const
 {
-    rgb = colors[p.index] * currentScale;
+    rgb = (*nextColors)[p.index] * currentScale;
 }

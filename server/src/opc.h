@@ -58,4 +58,35 @@ namespace OPC {
     static const unsigned HEADER_BYTES = 4;
 
     typedef void (*callback_t)(Message &msg, void *context);
+
+    // Common idiom for choosing color channels based on a character string
+    inline bool pickColorChannel(uint8_t &output, char selector, const uint8_t *rgb)
+    {
+        switch (selector) {
+
+            case 'r':
+            case 'R':
+                output = rgb[0];
+                return true;
+
+            case 'g':
+            case 'G':
+                output = rgb[1];
+                return true;
+
+            case 'b':
+            case 'B':
+                output = rgb[2];
+                return true;
+
+            case 'l':
+            case 'L':
+                output = (unsigned(rgb[0]) + unsigned(rgb[1]) + unsigned(rgb[2])) / 3;
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
 }
