@@ -88,7 +88,7 @@ private:
     bool mVerbose;
     std::set<libwebsocket*> mClients;
 
-    typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<>> jsonBuffer_t;
+    typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<> > jsonBuffer_t;
     std::vector<jsonBuffer_t*> mBroadcastList;
     tthread::mutex mBroadcastMutex;
 

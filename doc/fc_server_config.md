@@ -90,9 +90,13 @@ Fadecandy Devices
 
 Supported mapping objects for Fadecandy devices:
 
-* [ *OPC Channel*, *First OPC Pixel*, *First output pixel*, *pixel count* ]
+* [ *OPC Channel*, *First OPC Pixel*, *First output pixel*, *Pixel count* ]
     * Map a contiguous range of pixels from the specified OPC channel to the current device
     * For Fadecandy devices, output pixels are numbered from 0 through 511. Strand 1 begins at index 0, strand 2 begins at index 64, etc.
+* [ *OPC Channel*, *First OPC Pixel*, *First output pixel*, *Pixel count*, *Color channels* ]
+    * As above, but the mapping between color channels and WS2811 output channels can be changed.
+    * The "Color channels" must be a 3-letter string, where each letter corresponds to one of the WS2811 outputs.
+    * Each letter can be "r", "g", or "b" to choose the red, green, or blue channel respectively, or "l" to use the average luminosity.
 
 Other settings for Fadecandy devices:
 
@@ -102,7 +106,7 @@ led          | true / false / null  | null    | Is the LED on, off, or under aut
 dither       | true / false         | true    | Is dithering enabled?
 interpolate  | true / false         | true    | Is inter-frame interpolation enabled?
 
-The following example config file supports two Fadecandy devices with distinct serial numbers. They both receive data from OPC channel #0. The first 512 pixels map to the first Fadecandy device. The next 64 pixels map to the entire first strand of the second Fadecandy device, and the next 32 pixels map to the beginning of the third strand.
+The following example config file supports two Fadecandy devices with distinct serial numbers. They both receive data from OPC channel #0. The first 512 pixels map to the first Fadecandy device. The next 64 pixels map to the entire first strand of the second Fadecandy device, and the next 32 pixels map to the beginning of the third strand with the color channels in Blue, Green, Red order.
 
     {
         "listen": ["127.0.0.1", 7890],
@@ -127,7 +131,7 @@ The following example config file supports two Fadecandy devices with distinct s
                 "serial": "FFFFFFFFFFFF0021003B200314134D44",
                 "map": [
                     [ 0, 512, 0, 64 ],
-                    [ 0, 576, 128, 32 ]
+                    [ 0, 576, 128, 32, "bgr" ]
                 ]
             }
         ]

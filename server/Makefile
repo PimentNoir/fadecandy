@@ -30,7 +30,19 @@ CXXFLAGS += -DFCSERVER_VERSION=$(VERSION)
 ifeq ($(UNAME), Darwin)
 	# Mac OS X (32-bit build)
 	LDFLAGS += -m32
-	CPPFLAGS += -m32 -Wno-tautological-constant-out-of-range-compare -DHAVE_POLL_H
+	CPPFLAGS += -m32 -DHAVE_POLL_H
+
+	ifeq ("$(shell which llvm-gcc)", "")
+		# We want to support all the way back to OS 10.6 (Snow Leopard), which used gcc
+		# instead of llvm. Omit some flags that this old gcc doesn't handle.
+	else
+		# Assume it's a new enough Mac OS version
+		CPPFLAGS += -Wno-tautological-constant-out-of-range-compare
+		CXXFLAGS += -std=gnu++0x
+	endif
+else
+	# Everyone except ancient versions of gcc on Mac OS likes this flag...
+	CXXFLAGS += -std=gnu++0x
 endif
 
 ifneq ("$(MINGW)", "")
@@ -153,7 +165,7 @@ CLEAN_FILES += \
 CPPFLAGS += -MMD $(INCLUDES)
 
 # Compiler options for C++ only
-CXXFLAGS += -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
+CXXFLAGS += -felide-constructors -fno-exceptions -fno-rtti
 
 OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 

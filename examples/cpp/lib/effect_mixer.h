@@ -161,7 +161,7 @@ inline void EffectMixer::set(Effect *effect)
 
 inline int EffectMixer::find(Effect *effect)
 {
-    for (int i = 0; i < channels.size(); i++) {
+    for (unsigned i = 0; i < channels.size(); i++) {
         if (channels[i].effect == effect) {
             return i;
         }
@@ -171,7 +171,7 @@ inline int EffectMixer::find(Effect *effect)
 
 inline void EffectMixer::remove(int index)
 {
-    if (index >= 0 && index < channels.size()) {
+    if (index >= 0 && index < (int)channels.size()) {
         channels.erase(channels.begin() + index);
     }
 }
@@ -183,7 +183,7 @@ inline void EffectMixer::remove(Effect *effect)
 
 inline void EffectMixer::setFader(int channel, float fader)
 {
-    if (channel >= 0 && channel < channels.size()) {
+    if (channel >= 0 && channel < (int)channels.size()) {
         channels[channel].fader = fader;
     }
 }

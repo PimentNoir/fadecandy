@@ -22,6 +22,9 @@
  */
 
 #include "enttecdmxdevice.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "opc.h"
 #include <sstream>
 #include <iostream>
 
@@ -305,32 +308,20 @@ void EnttecDMXDevice::opcMapPixelColors(const OPC::Message &msg, const Value &in
             }
 
             const uint8_t *pixel = msg.data + (pixelIndex * 3);
+            uint8_t value;
 
-            switch (pixelColor[0]) {
-
-                case 'r':
-                    setChannel(dmxChannel, pixel[0]);
-                    break;
-
-                case 'g':
-                    setChannel(dmxChannel, pixel[1]);
-                    break;
-
-                case 'b':
-                    setChannel(dmxChannel, pixel[2]);
-                    break;
-
-                case 'l':
-                    setChannel(dmxChannel, (unsigned(pixel[0]) + unsigned(pixel[1]) + unsigned(pixel[2])) / 3);
-                    break;
-
+            if (OPC::pickColorChannel(value, pixelColor[0], pixel)) {
+                setChannel(dmxChannel, value);
+                return;
             }
-            return;
         }
     }
 
     // Still haven't found a match?
     if (mVerbose) {
-        std::clog << "Unsupported JSON mapping instruction\n";
+        rapidjson::GenericStringBuffer<rapidjson::UTF8<> > buffer;
+        rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > > writer(buffer);
+        inst.Accept(writer);
+        std::clog << "Unsupported JSON mapping instruction: " << buffer.GetString() << "\n";
     }
 }

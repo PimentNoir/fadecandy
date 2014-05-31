@@ -29,14 +29,19 @@ int main(int argc, char **argv)
     float state = 0;
 
     while (true) {
-        float timeDelta = r.doFrame();
+        EffectRunner::FrameStatus frame = r.doFrame();
         const float speed = 0.1f;
 
         // Animate the mixer's fader controls
-        state = fmod(state + timeDelta * speed, 2 * M_PI);
+        state = fmod(state + frame.timeDelta * speed, 2 * M_PI);
         for (int i = 0; i < mixer.numChannels(); i++) {
             float theta = state + i * (2 * M_PI) / mixer.numChannels();
             mixer.setFader(i, std::max(0.0f, sinf(theta)));
+        }
+
+        // Main loops and Effects can both generate verbose debug output (-v command line option)
+        if (frame.debugOutput) {
+            fprintf(stderr, "\t[main] state = %f\n", state);
         }
     }
 }

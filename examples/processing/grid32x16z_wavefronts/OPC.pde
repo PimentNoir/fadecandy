@@ -58,6 +58,18 @@ public class OPC
     }
   }
 
+  // Set the locations of a ring of LEDs. The center of the ring is at (x, y),
+  // with "radius" pixels between the center and each LED. The first LED is at
+  // the indicated angle, in radians, measured clockwise from +X.
+  void ledRing(int index, int count, float x, float y, float radius, float angle)
+  {
+    for (int i = 0; i < count; i++) {
+      float a = angle + i * 2 * PI / count;
+      led(index + i, (int)(x - radius * cos(a) + 0.5),
+        (int)(y - radius * sin(a) + 0.5));
+    }
+  }
+
   // Set the location of several LEDs arranged in a grid. The first strip is
   // at 'angle', measured in radians clockwise from +X.
   // (x,y) is the center of the grid.

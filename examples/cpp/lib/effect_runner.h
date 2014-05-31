@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "effect.h"
 #include "opc_client.h"
@@ -57,6 +58,7 @@ public:
     bool hasLayout() const;
     const rapidjson::Document& getLayout() const;
     Effect* getEffect() const;
+    bool isVerbose() const;
     OPCClient& getClient();
 
     // Access to most recent framebuffer information
@@ -71,9 +73,14 @@ public:
     float getIdleTimePerFrame() const;
     float getPercentBusy() const;
 
+    struct FrameStatus {
+        float timeDelta;
+        bool debugOutput;
+    };
+
     // Main loop body
-    float doFrame();
-    void doFrame(float timeDelta);
+    FrameStatus doFrame();
+    FrameStatus doFrame(float timeDelta);
 
     // Minimal main loop
     void run();
@@ -102,6 +109,8 @@ private:
     float speed;
     bool verbose;
     struct timeval lastTime;
+    float jitterStatsMin;
+    float jitterStatsMax;
 
     void usage(const char *name);
     void debug();
@@ -120,7 +129,9 @@ inline EffectRunner::EffectRunner()
       filteredTimeDelta(0),
       debugTimer(0),
       speed(1.0),
-      verbose(false)
+      verbose(false),
+      jitterStatsMin(1),
+      jitterStatsMax(0)
 {
     lastTime.tv_sec = 0;
     lastTime.tv_usec = 0;
@@ -194,6 +205,11 @@ inline Effect* EffectRunner::getEffect() const
     return effect;
 }
 
+inline bool EffectRunner::isVerbose() const
+{
+    return verbose;
+}
+
 inline float EffectRunner::getFrameRate() const
 {
     return filteredTimeDelta > 0.0f ? 1.0f / filteredTimeDelta : 0.0f;
@@ -226,7 +242,7 @@ inline void EffectRunner::run()
     }
 }
    
-inline float EffectRunner::doFrame()
+inline EffectRunner::FrameStatus EffectRunner::doFrame()
 {
     struct timeval now;
 
@@ -241,16 +257,19 @@ inline float EffectRunner::doFrame()
         delta = maxStep;
     }
 
-    doFrame(delta);
-
-    // Caller gets the same modified view of time that effects get.
-    return delta * speed;
+    return doFrame(delta);
 }
 
-inline void EffectRunner::doFrame(float timeDelta)
+inline EffectRunner::FrameStatus EffectRunner::doFrame(float timeDelta)
 {
+    FrameStatus frameStatus;
+
     // Effects may get a modified view of time
-    frameInfo.timeDelta = timeDelta * speed;
+    frameStatus.timeDelta = frameInfo.timeDelta = timeDelta * speed;
+    frameStatus.debugOutput = false;
+
+    jitterStatsMin = std::min(jitterStatsMin, frameStatus.timeDelta);
+    jitterStatsMax = std::max(jitterStatsMax, frameStatus.timeDelta);
 
     if (getEffect() && hasLayout()) {
         effect->beginFrame(frameInfo);
@@ -298,6 +317,7 @@ inline void EffectRunner::doFrame(float timeDelta)
         const float debugInterval = 1.0f;
         if ((debugTimer += timeDelta) > debugInterval) {
             debugTimer = fmodf(debugTimer, debugInterval);
+            frameStatus.debugOutput = true;
             debug();
         }
     }
@@ -306,6 +326,8 @@ inline void EffectRunner::doFrame(float timeDelta)
     if (currentDelay > 0) {
         usleep(currentDelay * 1e6);
     }
+
+    return frameStatus;
 }
 
 inline OPCClient& EffectRunner::getClient()
@@ -367,11 +389,15 @@ inline void EffectRunner::usage(const char *name)
 
 inline void EffectRunner::debug()
 {
-    fprintf(stderr, " %7.2f FPS -- %6.2f%% CPU [%.2fms busy, %.2fms idle]\n",
+    fprintf(stderr, " %7.2f FPS -- %6.2f%% CPU [%.3fms busy, %.3fms idle, %.3fms jitter]\n",
         getFrameRate(),
         getPercentBusy(),
         1e3f * getBusyTimePerFrame(),
-        1e3f * getIdleTimePerFrame());
+        1e3f * getIdleTimePerFrame(),
+        1e3f * (jitterStatsMax - jitterStatsMin));
+
+    jitterStatsMax = 0;
+    jitterStatsMin = 1e10;
 
     if (effect) {
         Effect::DebugInfo d(*this);
