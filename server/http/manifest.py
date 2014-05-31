@@ -1,8 +1,6 @@
 # Manifest of files to include in the simple HTTP server.
 # Run this script to generate the httpdocs.cpp source file.
 
-# For Python 2.7. Not yet compatible with Python 3.
-
 manifest = [
     ('/', 'index.html', 'text/html'),
 
@@ -35,19 +33,21 @@ sys.stdout.write("""/*
 NetServer::HTTPDocument NetServer::httpDocumentList[] = {
 """)
 
-def quote(str):
+def quote(buf):
     # Encode a byte buffer as a C++ string, and octal-escape any funny characters
 
-    if str is None:
+    if buf is None:
         return 'NULL'
     output = ['"']
 
-    allowedChars = [chr(c) for c in range(ord(' '), ord('~') + 1) if chr(c) not in '"\\?']
-    for c in str:
-        if c in allowedChars:
-            output.append(c)
+    allowedBytes = [c for c in range(ord(' '), ord('~') + 1) if chr(c) not in '"\\?']
+    for c in buf:
+        byte = c
+        if isinstance(c, str):
+          byte = ord(c)
+        if byte in allowedBytes:
+            output.append(chr(byte))
         else:
-            byte = ord(c)
             output.append('\\%d%d%d' % (byte >> 6, (byte >> 3) & 7, byte & 7))
 
     output.append('"')
@@ -58,11 +58,10 @@ for path, filename, contentType in manifest:
         filename = '.' + path
 
     if contentType.startswith('text/'):
-        mode = 'r'
+        raw = open(filename, 'r').read().encode('UTF-8')
     else:
-        mode = 'rb'
-
-    data = zlib.compress(open(filename, mode).read())
+        raw = open(filename, 'rb').read()
+    data = zlib.compress(raw)
     sys.stdout.write("{ %s, %s, %s, %d },\n" %
         (quote(path), quote(data), quote(contentType), len(data)))
 

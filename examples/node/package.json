@@ -1,0 +1,13 @@
+{
+  "name": "fadecandy-examples-node",
+  "devDependencies": {
+    "coffee": "~0.0.1"
+  },
+  "dependencies": {
+    "flags": "~0.1.1",
+    "midi": "~0.8.1",
+    "minimist": "~0.0.8",
+    "simplex-noise": "~2.1.1"
+  },
+  "private": true
+}
