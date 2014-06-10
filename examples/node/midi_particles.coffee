@@ -48,6 +48,7 @@ client = new OPC argv.opchost, argv.opcport
 
 # Live particles
 particles = []
+maxParticles = 500
 
 # Notes for low frequency oscillators
 lfoNotes = {}
@@ -64,7 +65,7 @@ wobbleAmount = 24.0
 origin = [0, 0, 0]
 
 # Physics
-frameDelay = 5
+frameDelay = 10
 timestepSize = 0.010
 gain = 0.1
 
@@ -82,7 +83,7 @@ midiToAngle = (key) -> (2 * Math.PI / 24) * key
 
 # Musical Constants
 # Boundary between the left-hand and right-hand patterns.
-LIMINAL_KEY = 40
+LIMINAL_KEY = 46
 MAX_VELOCITY = 100
 SHARP_NAMES = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 FLAT_NAMES = ['A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab']
@@ -116,18 +117,18 @@ input.on 'message', (deltaTime, message) ->
             else
                 lfoNotes[key] = info
 
-        when 0xb  # Voice 0, Control Change
-            switch message[1]
-                when 7, 33   # "Data entry" / "C1" slider, brightness
-                    brightness = message[2] * 2.0 / 127
+        # when 0xb  # Voice 0, Control Change
+        #     switch message[1]
+        #         when 7, 33   # "Data entry" / "C1" slider, brightness
+        #             brightness = message[2] * 2.0 / 127
 
-                when 1, 34   # "Modulation" / "C2" slider, particle speed
-                    console.log message[2]
-                    particleLifetime = 0.1 + message[2] * 2.0 / 127
+        #         when 1, 34   # "Modulation" / "C2" slider, particle speed
+        #             console.log message[2]
+        #             particleLifetime = 0.1 + message[2] * 2.0 / 127
 
-        when 0xe  # Voice 0, Pitch Bend
-            # Default spin 1.0, but allow forward/backward
-            spinRate = (message[2] - 64) * 10.0 / 64
+        # when 0xe  # Voice 0, Pitch Bend
+        #     # Default spin 1.0, but allow forward/backward
+        #     spinRate = (message[2] - 64) * 10.0 / 64
     console.log logMsg
 
 draw = () ->
@@ -151,6 +152,10 @@ draw = () ->
             point: origin.slice 0
             velocity: [0, 0, 0]
             timestamp: note.timestamp
+
+    # Discard particles if necessary
+    if particles.length > maxParticles
+        particles = particles.slice particles.length - maxParticles
 
     # Update appearance of all particles
     for p in particles
@@ -180,7 +185,7 @@ draw = () ->
         p.intensity *= Math.max(0, 1 - (noteAge / noteSustain))
 
         # Falloff gets sharper as the note gets higher
-        p.falloff = 15 * Math.pow(2, (p.note.key - LIMINAL_KEY) / 6)
+        p.falloff = 12 * Math.pow(1.18, (p.note.key - LIMINAL_KEY) / 6)
 
         # Add influence of LFOs
         for key, note of lfoNotes
@@ -215,7 +220,7 @@ draw = () ->
         p.life -= timestepSize / particleLifetime
 
     # Filter out dead particles
-    particles = particles.filter (p) -> p.life > 0
+    particles = particles.filter (p) -> p.life > 0 && p.intensity > 0
 
     # Render particles to the LEDs
     client.mapParticles particles, model
