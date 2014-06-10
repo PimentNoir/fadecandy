@@ -677,7 +677,7 @@ void draw()
       // Choose hue values smoothly around the HSB spectrum to begin with.
       float hue = now * spin + fftFilterNormInv[i] * noise_fft * 100;
       // Saturation level is rather high with fftFilter array values normalization smoothed by a simplex noise FBM. 
-      float saturation = fftFilterNormInv[i] * noise_fft * 100;
+      float saturation = fftFilterNormInv[i] * noise_fft * 95;
       // Small brightness variation around a minimum value smoothed by a simplex noise FBM.
       float brightness = 9.7125 + fftFilterNormInv[i] * noise_fft * 2.2125;
       color hsb = color( 
