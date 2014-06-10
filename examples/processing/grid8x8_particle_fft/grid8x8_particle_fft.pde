@@ -24,6 +24,7 @@ AudioPlayer[] sound;
 AudioMetaData metasound;
 AudioSignal signal;
 int AudioBufferSize;
+int MultiEndBuffer=4;
 FFT fftout,fftin,fftsong;
 float[] fftFilter, fftFilterNorm, fftFilterNormInv, fftFilterNormPrev, fftFilterFreq, fftFilterFreqPrev, fftFilterAmpFreq;
 WindowFunction fftWindow;
@@ -43,10 +44,10 @@ boolean isWebPlayer;
 int song;
 int oldsong;
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3"};
-//String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-//"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-//"02 - Plastic People.mp3" }; 
+//String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3"};
+String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+"02 - Plastic People.mp3" }; 
 
 String ColorGradientImage;
 
@@ -285,6 +286,14 @@ void keyPressed() {
     pulse_type = 4;
     UndoPrinting();
   }
+  if (key == '6') {
+    MultiEndBuffer--;
+    UndoPrinting();
+  }
+  if (key == '7') {
+    MultiEndBuffer++;
+    UndoPrinting();
+  }
   if (key == '0') {
     reactivity_type = 0;
     UndoPrinting();
@@ -313,7 +322,7 @@ void keyPressed() {
   if (key == 'p' && isPlayer) {
     sound[song].play();
   }
-  if (key == 'n' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-4*AudioBufferSize && song < filename.length-1) {
+  if (key == 'n' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1) {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -321,7 +330,7 @@ void keyPressed() {
     reinit_sound_fft();
     UndoPrinting();
   }
-  if (key == 'b' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-4*AudioBufferSize && song > 0) {
+  if (key == 'b' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song > 0) {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -450,8 +459,10 @@ void draw()
   } else {
     prStr("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
+  
+  prStr("Mutiple end buffer = " + MultiEndBuffer);
         
-  if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-4*AudioBufferSize && song < filename.length-1 && song >= 0) {
+  if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1 && song >= 0) {
      oldsong = song; 
      song++;
      sound[song] = minim.loadFile(filename[song], AudioBufferSize);

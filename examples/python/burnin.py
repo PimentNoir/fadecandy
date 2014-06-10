@@ -6,7 +6,7 @@
 import opc, time, math
 
 numLEDs = 512
-client = opc.Client('localhost:7890')
+client = opc.Client('192.168.1.4:7890')
 
 t = 0
 

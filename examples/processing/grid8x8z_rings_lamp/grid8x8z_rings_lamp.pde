@@ -15,6 +15,7 @@ void setup()
   opc = new OPC(this, "192.168.1.5", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
+  opc.ledGrid(4 * 64, 11, 11, width * 1/2, height * 1/2, height/16, height/16, 0, true);
   
   // Make the status LED quiet
   opc.setStatusLed(false);
