@@ -51,7 +51,7 @@ String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These D
 
 String ColorGradientImage;
 
-int reactivity_type, pulse_type, printcount;
+int reactivity_type, pulse_type, printCount;
 int octaves;
 float noise_fft;
 float noise_scale_fft;
@@ -76,7 +76,7 @@ void setup()
   
   // Debug for now.
   isDebug = true;
-  printcount = 0;
+  printCount = 0;
   
   // Weighting mode.
   isInversed = true;
@@ -394,15 +394,15 @@ float simplexnoise_fbm(float x, float y, int octaves, float persistence, float l
 
 // Very basic debug infrastructure.
 void DonePrinting() {
-   printcount = 1;
+   printCount = 1;
 }
 
 void UndoPrinting() {
-   if (isDebug) printcount = 0; 
+   if (isDebug) printCount = 0; 
 }
   
 void prStr(String string) {
-  if (printcount == 0 && isDebug) { 
+  if (printCount == 0 && isDebug) { 
     println(string);
   }   
 }
@@ -435,7 +435,7 @@ void reinit_sound_fft() {
 
 float ZeroNaNValue(float Value) {
   if ((Float.isNaN(Value)) && isZeroNaN) { 
-      return 0;          
+      return 0.0f;          
   } else {
       return Value;
   }    
@@ -575,7 +575,7 @@ void draw()
           isUndefined = true;
         }  
         if (isUndefined) {
-          //phase = 0;
+          phase = 0;
           // Debug output
           println("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
           continue;
