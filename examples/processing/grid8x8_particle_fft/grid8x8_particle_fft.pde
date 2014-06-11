@@ -4,6 +4,13 @@
 // from an image or generated from a simplex noise FBM and FFT filter normalized  
 // and inversed values (the tunable is the boolean isColorFile in setup()).
 
+// TODO: 
+//   * Implement OSC support for remote parameters playing; 
+//   * Fix log chirp divide by zero bug;
+//   * Use chirp to also dress the particles;
+//   * Test differents particles type : lighty sphere, FFT bumpy sphere, etc.;   
+//   * Implement simplex noise reseeding;
+
 import ddf.minim.analysis.*;
 import ddf.minim.*;
 import ddf.minim.ugens.*;
