@@ -80,10 +80,10 @@ float beat_divisor = 0.5f;
 void setup()
 {
   // Switch between audio player or audio line in capture.
-  isPlayer = true;
-  //isPlayer = false;
-  //isWebPlayer = false;
-  isWebPlayer = true;
+  //isPlayer = true;
+  isPlayer = false;
+  isWebPlayer = false;
+  //isWebPlayer = true;
   
   // Debug for now.
   isDebug = true;
