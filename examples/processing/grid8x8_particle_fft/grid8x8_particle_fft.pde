@@ -10,6 +10,7 @@
 //   * Use chirp to also dress the particles;
 //   * Test differents particles type : lighty sphere, FFT bumpy sphere, etc.;   
 //   * Implement simplex noise reseeding;
+//   * Implement layers : beat, etc. 
 
 import ddf.minim.analysis.*;
 import ddf.minim.*;
@@ -74,10 +75,13 @@ float opacity = 40;
 float minSize;
 float sizeScale;
 
+float beat_divisor = 0.5f;
+
 void setup()
 {
   // Switch between audio player or audio line in capture.
   isPlayer = true;
+  //isPlayer = false;
   //isWebPlayer = false;
   isWebPlayer = true;
   
@@ -145,7 +149,7 @@ void setup()
       println(i + ": " + mixerInfo[i].getName());
     } 
     // 0 is pulseaudio mixer on GNU/Linux
-    Mixer mixer = AudioSystem.getMixer(mixerInfo[1]); 
+    Mixer mixer = AudioSystem.getMixer(mixerInfo[3]); 
     minim.setInputMixer(mixer); 
     in =  minim.getLineIn(Minim.STEREO, AudioBufferSize);  
     fftin = new FFT(in.bufferSize(), in.sampleRate());
@@ -179,8 +183,8 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.5", 7890);
+  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "192.168.1.5", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
@@ -467,7 +471,7 @@ void draw()
     prStr("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
   
-  prStr("Mutiple end buffer = " + MultiEndBuffer);
+  prStr("Multiple end buffer = " + MultiEndBuffer);
         
   if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1 && song >= 0) {
      oldsong = song; 
@@ -556,6 +560,8 @@ void draw()
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
+    float fftFilterNormVar_div = fftFilterNormVar * beat_divisor;
+    
     phi *= phideg * PI / 180;
     int j = i + 1;
     float phase, beta;
@@ -565,6 +571,9 @@ void draw()
       // FIXME: Should not work with Line in capture.
       sampleRate = in.sampleRate();
     }
+    
+    prStr("Sample Rate : " + sampleRate);
+    
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
     f0[i] = fftFilterFreqPrev[i];
@@ -652,7 +661,7 @@ void draw()
         prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
-        float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar_div, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar_div + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = high_noise_fft;
         prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;

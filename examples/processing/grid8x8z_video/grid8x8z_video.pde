@@ -6,7 +6,7 @@ import processing.video.*;
 //String filename = "/Users/micah/Dropbox/video/La Roux - Bulletproof-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/will.i.am - Scream & Shout ft. Britney Spears-360p.mp4";
 //String filename = "/Users/micah/Dropbox/video/The Glitch Mob - We Can Make The World Stop (Official Video)-720p.mp4";
-String filename = "/home/elecdev/Vidéos/Homeland.S03E07.FRENCH.LD.HDTV.XviD-MiND.avi";
+String filename = "/Users/mitch/Videos/Blanche Neige La Suite.FRENCH.DVDRiP.XViD-PROD-UnitY.(les-stefs79).avi";
 //String filename = "/home/elecdev/Téléchargements/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 //String filename = "/home/frag/Videos/Ahmad Jamal invite Yusef Lateef à l'Olympia_France Ô_2013_08_17_00_15.avi";
 
@@ -32,8 +32,8 @@ void setup()
   zoom = 2;
   
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
-  //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.5", 7890);
+  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "192.168.1.5", 7890);
   
   opc.ledGrid8x8(0 * 64, width/2, height/2, height/8, 0, false);
   
