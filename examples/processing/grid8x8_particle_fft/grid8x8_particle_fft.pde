@@ -80,10 +80,10 @@ float beat_divisor = 0.5f;
 void setup()
 {
   // Switch between audio player or audio line in capture.
-  //isPlayer = true;
-  isPlayer = false;
-  isWebPlayer = false;
-  //isWebPlayer = true;
+  isPlayer = true;
+  //isPlayer = false;
+  //isWebPlayer = false;
+  isWebPlayer = true;
   
   // Debug for now.
   isDebug = true;
@@ -183,8 +183,8 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-  //opc = new OPC(this, "192.168.1.5", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.6", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
@@ -572,7 +572,7 @@ void draw()
       sampleRate = in.sampleRate();
     }
     
-    prStr("Sample Rate : " + sampleRate);
+    prStr("Sample Rate : " + sampleRate + " Hz");
     
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
@@ -693,7 +693,7 @@ void draw()
       // Choose hue values smoothly around the HSB spectrum to begin with.
       float hue = now * spin + fftFilterNormInv[i] * noise_fft * 100;
       // Saturation level is rather high with fftFilter array values normalization smoothed by a simplex noise FBM. 
-      float saturation = fftFilterNormInv[i] * noise_fft * 95;
+      float saturation = fftFilterNormInv[i] * noise_fft * 100;
       // Small brightness variation around a minimum value smoothed by a simplex noise FBM.
       float brightness = 9.7125 + fftFilterNormInv[i] * noise_fft * 2.2125;
       color hsb = color( 
