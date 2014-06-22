@@ -16,6 +16,7 @@ Manufacturer    | "scanlime"
 Product         | "Fadecandy"
 Serial          | Unique ID string
 Device Class    | Vendor-specific
+Device Version  | See below
 Configurations  | 1
 Endpoints       | 1
 Endpoint 1      | Bulk OUT (Host to Device), 64-byte packets
@@ -24,6 +25,8 @@ The Fadecandy device has one USB Configuration with two Interfaces:
 
 * **Interface #0** is a vendor-specific interface with one Bulk OUT endpoint for communicating control data and video keyframes.
 * **Interface #1** is compatible with the USB Device Firmware Update spec. It's used during firmware upgrade to ask the device to enter bootloader mode. During normal operation, it's safe to ignore this interface.
+
+Some device version codes may be used to indicate experimental or unofficial firmware. Currently, versions in the range 0x0300 through 0x03FF are reserved for unofficial Fadecandy firmware forks.
 
 Getting Started
 ---------------
@@ -108,12 +111,15 @@ A type 2 packet sets optional device-wide configuration settings:
 Byte Offset | Bits   | Description
 ----------- | ------ | ------------
 0           | 7 … 0  | Control byte
-1           | 7 … 2  | (reserved)
+1           | 7 … 5  | (reserved)
+1           | 4      | 0 = Normal mode, 1 = Reserved operation mode
 1           | 3      | Manual LED control bit
 1           | 2      | 0 = LED shows USB activity, 1 = LED under manual control
 1           | 1      | Disable keyframe interpolation
 1           | 0      | Disable dithering
 2 … 63      | 7 … 0  | (reserved)
+
+The "reserved operation mode" may be used by unofficial Fadecandy firmware that includes experimental or application-specific effects. This reserved bit is guaranteed not to be used during normal operation by future versions of fcserver.
 
 Control Requests
 ----------------
