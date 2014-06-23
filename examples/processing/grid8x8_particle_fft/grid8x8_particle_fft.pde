@@ -301,7 +301,7 @@ void keyPressed() {
     MultiEndBuffer--;
     UndoPrinting();
   }
-  if (key == '7') {
+  if (key == '9') {
     MultiEndBuffer++;
     UndoPrinting();
   }
@@ -471,7 +471,7 @@ void draw()
     prStr("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
   
-  prStr("Multiple end buffer = " + MultiEndBuffer);
+  prStr("Multiple for end buffer size = " + MultiEndBuffer);
         
   if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1 && song >= 0) {
      oldsong = song; 
@@ -572,7 +572,7 @@ void draw()
       sampleRate = in.sampleRate();
     }
     
-    prStr("Sample Rate : " + sampleRate + " Hz");
+    prStr("Sample Rate : " + sampleRate + "Hz");
     
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
