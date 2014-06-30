@@ -1,3 +1,5 @@
+// Copyright(C) 2014, Jérôme Benoit <jerome.benoit@piment-noir.org> under GPLv3
+// Portion Copyright(C), Micah Elisabeth Scott
 // Some real-time FFT! This visualizes music in the frequency domain using a
 // polar-coordinate particle system altered by a coherent noise. Particle size, theta angle 
 // and radial distance are modulated using a filtered FFT and a simplex noise FBM. Color is sampled 
@@ -184,7 +186,7 @@ void setup()
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
   //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.6", 7890);
+  opc = new OPC(this, "192.168.1.8", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
@@ -572,7 +574,7 @@ void draw()
       sampleRate = in.sampleRate();
     }
     
-    prStr("Sample Rate : " + sampleRate + "Hz");
+    prStr("Sample Rate: " + sampleRate + "Hz");
     
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
