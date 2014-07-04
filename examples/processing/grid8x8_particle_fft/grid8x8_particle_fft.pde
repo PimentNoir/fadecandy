@@ -1,5 +1,5 @@
 // Copyright(C) 2014, Jérôme Benoit <jerome.benoit@piment-noir.org> under GPLv3
-// Portion Copyright(C), Micah Elisabeth Scott
+// Portion Copyright(C) 2013-2014, Micah Elisabeth Scott <micah@misc.name>
 // Some real-time FFT! This visualizes music in the frequency domain using a
 // polar-coordinate particle system altered by a coherent noise. Particle size, theta angle 
 // and radial distance are modulated using a filtered FFT and a simplex noise FBM. Color is sampled 
