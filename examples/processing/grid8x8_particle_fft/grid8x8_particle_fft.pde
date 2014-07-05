@@ -34,7 +34,7 @@ AudioPlayer[] sound;
 AudioMetaData metasound;
 AudioSignal signal;
 int AudioBufferSize;
-int MultiEndBuffer=4;
+int MultiEndBuffer = 4;
 FFT fftout,fftin,fftsong;
 float[] fftFilter, fftFilterNorm, fftFilterNormInv, fftFilterNormPrev, fftFilterFreq, fftFilterFreqPrev, fftFilterAmpFreq;
 WindowFunction fftWindow;
@@ -77,7 +77,7 @@ float opacity = 40;
 float minSize;
 float sizeScale;
 
-float beat_divisor = 0.5f;
+float beat_ratio = 1.0f;
 
 void setup()
 {
@@ -185,8 +185,8 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.8", 7890);
+  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "192.168.1.8", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
@@ -215,6 +215,15 @@ void keyPressed() {
   float inc = 0.01f;
   if (keyCode == RIGHT && decay < 1-inc && !useEMA) {
     decay += inc;
+    UndoPrinting();
+  }
+  float beat_inc = 0.5f;
+  if (key == ':' && beat_ratio > 0) {
+    beat_ratio -= beat_inc;
+    UndoPrinting();
+  }
+  if (key == '!' && beat_ratio < 64) {
+    beat_ratio += beat_inc;
     UndoPrinting();
   }
   if (keyCode == LEFT && decay > inc && !useEMA) {
@@ -562,7 +571,7 @@ void draw()
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
-    float fftFilterNormVar_div = fftFilterNormVar * beat_divisor;
+    prStr("Beat ratio = " + beat_ratio);
     
     phi *= phideg * PI / 180;
     int j = i + 1;
@@ -593,7 +602,7 @@ void draw()
           isUndefined = true;
         }  
         if (isUndefined) {
-          phase = 0;
+          phase = 0.0f;
           // Debug output
           println("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
           continue;
@@ -653,22 +662,22 @@ void draw()
     // TODO: Play with the FBM properties more precisely.
     switch(reactivity_type) {
       case 0:
-        float low_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse, octaves, (float)1/octaves, 0.5f);
+        float low_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, (float)1/octaves, 0.5f);
         noise_fft = low_noise_fft;
         prStr("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
         break;
       case 1:
-        float medium_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float medium_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = medium_noise_fft;
         prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
-        float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar_div, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar_div + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = high_noise_fft;
         prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;
       default:
-        float noise_default = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float noise_default = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = noise_default;
         prStr("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
     }
