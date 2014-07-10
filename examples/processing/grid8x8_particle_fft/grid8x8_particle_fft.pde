@@ -5,7 +5,11 @@
 // and radial distance are modulated using a filtered FFT and a simplex noise FBM. Color is sampled 
 // from an image or generated from a simplex noise FBM and FFT filter normalized  
 // and inversed values (the tunable is the boolean isColorFile in setup()).
-
+//
+// CREDITS: 
+//     * Toufik Medjamia for the relative help on the 3D shape of the light diffuser;
+//     * Frederic Renet for the suggestion on the brightness smoothing.
+//
 // TODO: 
 //   * Implement OSC support for remote parameters playing; 
 //   * Fix log chirp divide by zero bug;
