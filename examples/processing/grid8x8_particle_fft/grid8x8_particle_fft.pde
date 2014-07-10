@@ -1,7 +1,7 @@
 // Copyright(C) 2014, Jérôme Benoit <jerome.benoit@piment-noir.org> under GPLv3 
 // with the following exceptions : No permissions is granted to reuse, modify, distribute 
 // or make commercial use to the people listed below :
-// 	* Toofik Medjamia <toofik@toofik.com>
+// 	* Toufik Medjamia <toofik@toofik.com>
 //	* Frederic Renet 
 //	* Anwar Berri
 // Portion Copyright(C) 2013-2014, Micah Elisabeth Scott <micah@misc.name>
