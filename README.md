@@ -2,7 +2,8 @@
 
 Fadecandy is a project that makes LED art easier, tastier, and more creative. We're all about creating tools that remove the technical drudgery from making LED art, freeing you to do more interesting, nuanced, and creative things. We think LEDs are more than just trendy display devices, we think of them as programmable light for interactive art.
 
-* [Video Introduction](https://vimeo.com/79935649)
+* [Video Introduction to Fadecandy](https://vimeo.com/79935649)
+* [Introduction by Nick Poole from Spark Fun Electronics](https://www.youtube.com/watch?v=-4AUBjV7Y-w)
 * [Tutorial: LED Art with Fadecandy](http://learn.adafruit.com/led-art-with-fadecandy)
 * [Presentation slides: Easier and Tastier LED Art with Fadecandy](http://imgur.com/a/TaJBK)
 
@@ -164,6 +165,7 @@ When you run `fcserver`, it also gives you a simple browser-based UI for identif
 Where to?
 ---------
 
+* [Video introduction by Nick Poole from Spark Fun Electronics](https://www.youtube.com/watch?v=-4AUBjV7Y-w)
 * Tutorial: ["LED Art with Fadecandy"](https://learn.adafruit.com/led-art-with-fadecandy)
 * Sample projects are in [examples](https://github.com/scanlime/fadecandy/tree/master/examples)
 * Pre-compiled binaries are in [bin](https://github.com/scanlime/fadecandy/tree/master/bin)
