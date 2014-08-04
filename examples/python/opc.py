@@ -34,6 +34,7 @@ Recommended use:
 """
 
 import socket
+import struct
 
 class Client(object):
 
