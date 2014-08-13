@@ -183,7 +183,7 @@ Where to?
 Frequently Asked Questions
 --------------------------
 
-* Why can't you use more than 64 LEDs per strip?
+### Why can't you use more than 64 LEDs per strip?
 
 This limit comes from the data rate of the WS2811 LED controller's protocol (800 kbps) and the frame rate that seems to be needed to get the best results from our temporal dithering algorithm (about 400 FPS).
 
@@ -198,23 +198,23 @@ Equation (a) tells us that the theoretical maximum frame rate for 64 LEDs is 507
 
 It would be possible to drive LED strips of around 80 LEDs in length with the same quality using a slightly more powerful microcontroller, as long as we don't rely on the strip length to be a power of two.
 
-* Will Fadecandy work on the Teensy 3.1 board?
+### Will Fadecandy work on the Teensy 3.1 board?
 
 Currently, no. The Teensy 3.1 uses a different microcontroller with a slightly different memory layout which would make it impractical to have one firmware image that's binary-compatible with both the Teensy 3.1 and the Teensy 3.0 / Fadecandy Controller board. This is a thing that's certainly doable, but I haven't wanted to spend the extra maintenance effort to maintain and test a binary image for a second architecture.
 
 If anyone reading is passionate about supporting the Teensy 3.1 and would volunteer to maintain a port, I'd be happy to point you toward the modifications that would be necessary.
 
-* Would Fadecandy be able to take advantage of the additional processing power on the Teensy 3.1's microcontroller?
+### Would Fadecandy be able to take advantage of the additional processing power on the Teensy 3.1's microcontroller?
 
 A little bit, maybe! But it wouldn't be a dramatic improvement, if we wanted to keep the exact same quality of dithering.
 
 With some extra processing power and RAM, the strip length limit could be increased from 64 to around 80. This is hardly a dramatic increase, though. The intrinsic limits explained above are more of a factor in the design than the CPU or RAM limits.
 
-* Can you use multiple Fadecandy controllers at once?
+### Can you use multiple Fadecandy controllers at once?
 
 Yes! You can use USB hubs to connect many Fadecandy boards to one controller.
 
-* What are the limits? How big can Fadecandy go?
+### What are the limits? How big can Fadecandy go?
 
 Fadecandy limits include USB bus bandwidth, Open Pixel Control packet size, and CPU power. 
 
@@ -224,7 +224,7 @@ The [Open Pixel Control](http://openpixelcontrol.org/) protocol used by Fadecand
 
 And then there's CPU power... these limits will depend on the language and framework your code uses, and what kind of computer you're running from. A large installation with 10,000 LEDs will probably need to run off of a laptop or Mac Mini unless your code is quite efficient. Smaller installations with up to 1000 LEDs or so could run off of something as small as a Raspberry Pi. But these are very broad generalizations, and this all depends on how much processing you need to perform per-LED. Keep in mind the scalability levels of your particular framework when you plan to build a large installation.
 
-* The Raspberry Pi is kind of slow. What other small embedded Linux computers are available?
+### The Raspberry Pi is kind of slow. What other small embedded Linux computers are available?
 
 There are a lot of options to choose from, but my current favorite is the [ODROID-U3](http://hardkernel.com/main/products/prdt_info.php). It's about the same size as a Raspberry Pi, with a 1.7 GHz quad-core ARM. There's an optional fan add-on, but I haven't found it to be necessary yet.
 
