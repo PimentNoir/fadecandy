@@ -2,8 +2,7 @@
 // with the following exceptions : No permissions is granted to reuse, modify, distribute 
 // or make commercial use to the people listed below :
 // 	* Toufik Medjamia <toofik@toofik.com>
-//	* Frederic Renet 
-//	* Anwar Berri
+//	* Frederic Renet  <renet.f@gmail.com>
 // Portion Copyright(C) 2013-2014, Micah Elisabeth Scott <micah@misc.name>
 // Some real-time FFT! This visualizes music in the frequency domain using a
 // polar-coordinate particle system altered by a coherent noise. Particle size, theta angle 
