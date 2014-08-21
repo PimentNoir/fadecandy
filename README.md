@@ -229,6 +229,14 @@ And then there's CPU power... these limits will depend on the language and frame
 
 There are a lot of options to choose from, but my current favorite is the [ODROID-U3](http://hardkernel.com/main/products/prdt_info.php). It's about the same size as a Raspberry Pi, with a 1.7 GHz quad-core ARM. There's an optional fan add-on, but I haven't found it to be necessary yet.
 
+### I'm using Windows 7, and the driver for Fadecandy doesn't load. What can I do?
+
+Make sure you have all available Windows updates installed. Fadecandy uses a Windows feature ([WCID](https://github.com/pbatard/libwdi/wiki/WCID-Devices)) that wasn't present in the original retail version of Windows 7, but it was added in a subsequent update.
+
+For reference, this is a 
+[series of screenshots](http://imgur.com/a/0MAFR) showing a Fadecandy controller attached to a freshly installed Windows 7 Home Professional 32-bit virtual machine. At first it fails (no driver for "Fadecandy") but after updating Windows, it finds the correct device (WinUSB) and fcserver connects to it.
+
+If you're still having trouble, please ask for help on the [discussion group](https://groups.google.com/forum/#!forum/fadecandy) or [bug tracker](https://github.com/scanlime/fadecandy/issues) and we can get to the bottom of this problem together. Thanks for your patience!
 
 Contact
 -------
