@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width"/>
+		<title>Rooftop Lights - Color test</title>
+
+    <link rel="stylesheet" type="text/css" href="spectrum.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="spectrum.js"></script>
+    <script type="text/javascript" src="tinycolor.js"></script>
+    <script type="text/javascript" src="kinetic.js"></script>
+	
+<script type="text/javascript">
+
+    $(function() {
+
+		var leds = 40;
+		
+		var led = 0;
+		var r = 0;
+		var g = 0;
+		var b = 0;
+
+		var i;
+
+		var tc;
+		var nc = tinycolor({r: 255, g: 0, b: 0});
+		var hours;
+		var month;
+		var ddate;
+
+		var start = 0;
+
+		var circles = []
+		
+		var stage = new Kinetic.Stage({
+            container: 'light_canvas',
+            width: leds*22,
+            height: 100
+        });
+
+        var layer = new Kinetic.Layer();
+
+        for(led=0; led < leds; led++)
+        {
+            var c1 = new Kinetic.Circle({
+                x: 10+(led*20),
+                y: stage.height()/2,
+                radius: 8,
+                fill: "#000000",
+                stroke: 'black',
+                strokeWidth: 1,
+                });
+            
+            c1.setAttr('position', led);
+
+			circles[led] = c1;
+            layer.add(circles[led]);
+        }
+
+      layer.on('mouseover', function() {
+          	start = Math.floor(( stage.getPointerPosition().x-10) / 20);
+		    drawCircles();
+	    });
+      layer.on('touchstart', function() {
+              start = Math.floor(( stage.getPointerPosition().x-10) / 20);
+              drawCircles();
+        });
+      layer.on('touchmove', function() {
+              start = Math.floor(( stage.getPointerPosition().x-10) / 20);
+              drawCircles();
+		});
+
+      stage.add(layer);
+
+	  $(".basic").spectrum({
+			showButtons: false,
+			move: function(color)
+			{
+				rgb = color.toRgb();
+				nc = tinycolor({r: rgb.r, g: rgb.g, b: rgb.b});
+
+				r = nc.toRgb().r;
+				g = nc.toRgb().g;
+				b = nc.toRgb().b;
+			}			
+
+		});
+
+		function drawCircles()
+		{
+			//console.log("led: "+start);
+			layer.clear();
+			for(led = 0; led < leds; led++)
+			{
+				if(led < start-1 || led > start+1)
+				{
+					circles[led].fill("#000000");
+				}
+				else if(led == (start-1) || led == (start+1) )
+				{
+					var c = tinycolor(nc.toRgb());
+					circles[led].fill("#"+c.darken(10).toHex());
+				}
+				else if(led == start)
+				{
+					circles[led].fill("#"+nc.toHex());
+				}
+				layer.add(circles[led]);
+			}
+			layer.draw();
+
+			writeFrame(nc, start);
+		}
+
+		// Set 3 pixels to a given color
+		function writeFrame(tcolor, start) 
+		{
+			var packet = new Uint8ClampedArray(4 + leds * 3);
+
+			if (socket.readyState != 1 /* OPEN */) {
+				// The server connection isn't open. Nothing to do.
+				return;
+			}
+
+			if (socket.bufferedAmount > packet.length) {
+				// The network is lagging, and we still haven't sent the previous frame.
+				// Don't flood the network, it will just make us laggy.
+				// If fcserver is running on the same computer, it should always be able
+				// to keep up with the frames we send, so we shouldn't reach this point.
+				return;
+			}
+
+			// Dest position in our packet. Start right after the header.
+			var dest = 4;
+
+			// Sample the center pixel of each LED
+			for (led = 0; led < leds; led++) 
+			{
+				if(led < start-1 || led > start+1)
+				{
+					packet[dest++] = 0;
+					packet[dest++] = 0;
+					packet[dest++] = 0;
+				}
+				else if(led == (start-1) || led == (start+1) )
+				{
+					var c = tinycolor(nc.toRgb());
+					c = c.darken(5).toRgb();
+					packet[dest++] = c.r;
+					packet[dest++] = c.g;
+					packet[dest++] = c.b;
+				}
+				else if(led == start)
+				{	
+					packet[dest++] = tcolor.toRgb().r;
+					packet[dest++] = tcolor.toRgb().g;
+					packet[dest++] = tcolor.toRgb().b;
+				}
+			}
+			socket.send(packet.buffer);
+		}
+
+        // Connect to a Fadecandy server running on the same computer, on the default port
+        var socket = new WebSocket('ws://localhost:7890');
+
+        // Put some connection status text in the corner of the screen
+        $('#connectionStatus').text('Connecting to fcserver...');
+        socket.onclose = function(event) {
+            $('#connectionStatus').text('Not connected to fcserver');
+        }
+        socket.onopen = function(event) {
+            $('#connectionStatus').text('Connected');
+        }
+
+    })
+	</script>
+	</head>
+<body onmousedown="return false;">
+	<input type='text' class='basic' value='red' />
+    <div id="connectionStatus"></div>
+	<div id="light_canvas"></div>
+</body>
+</html>
