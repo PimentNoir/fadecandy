@@ -236,6 +236,8 @@ Make sure you have all available Windows updates installed. Fadecandy uses a Win
 For reference, this is a 
 [series of screenshots](http://imgur.com/a/0MAFR) showing a Fadecandy controller attached to a freshly installed Windows 7 Home Professional 32-bit virtual machine. At first it fails (no driver for "Fadecandy") but after updating Windows, it finds the correct device (WinUSB) and fcserver connects to it.
 
+If that doesn't fix it, you may have a version of Windows with an inexplicably broken `WinUSB` driver. The French version of Windows 7 SP1 seems to be afflicted by this bug, and possibly others. As a workaround, you can use the [Zadig](http://zadig.akeo.ie/) utility to manually install an alternative driver. Use the arrows to change the driver on the right side of the arrow from `WinUSB` to `libusbK`, then click "Install Driver". You can see a [series of screenshots](http://imgur.com/a/25V81) illustrating this.
+
 If you're still having trouble, please ask for help on the [discussion group](https://groups.google.com/forum/#!forum/fadecandy) or [bug tracker](https://github.com/scanlime/fadecandy/issues) and we can get to the bottom of this problem together. Thanks for your patience!
 
 Contact
