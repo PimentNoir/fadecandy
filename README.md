@@ -2,9 +2,11 @@
 
 Fadecandy is a project that makes LED art easier, tastier, and more creative. We're all about creating tools that remove the technical drudgery from making LED art, freeing you to do more interesting, nuanced, and creative things. We think LEDs are more than just trendy display devices, we think of them as programmable light for interactive art.
 
-* [Video Introduction](https://vimeo.com/79935649)
-* [Tutorial: LED Art with Fadecandy](http://learn.adafruit.com/led-art-with-fadecandy)
-* [Presentation slides: Easier and Tastier LED Art with Fadecandy](http://imgur.com/a/TaJBK)
+* [Video Introduction to Fadecandy](https://vimeo.com/79935649)
+* [Introduction by Nick Poole from Spark Fun Electronics](https://www.youtube.com/watch?v=-4AUBjV7Y-w)
+* [Tutorial: LED Art with Fadecandy](https://learn.adafruit.com/led-art-with-fadecandy)
+* [Tutorial: 1,500 NeoPixel LED Curtain with Raspberry Pi and Fadecandy](https://learn.adafruit.com/1500-neopixel-led-curtain-with-raspberry-pi-fadecandy/)
+* [Presentation slides: Easier and Tastier LED Art with Fadecandy](http://www.misc.name/easier-and-tastier-led-art-with-fadecandy/)
 
 Buy a Fadecandy Controller board:
 
@@ -164,6 +166,8 @@ When you run `fcserver`, it also gives you a simple browser-based UI for identif
 Where to?
 ---------
 
+* [Video introduction by Nick Poole from Spark Fun Electronics](https://www.youtube.com/watch?v=-4AUBjV7Y-w)
+* Tutorial: ["LED Art with Fadecandy"](https://learn.adafruit.com/led-art-with-fadecandy)
 * Sample projects are in [examples](https://github.com/scanlime/fadecandy/tree/master/examples)
 * Pre-compiled binaries are in [bin](https://github.com/scanlime/fadecandy/tree/master/bin)
 * More documentation is included in [doc](https://github.com/scanlime/fadecandy/tree/master/doc)
@@ -172,11 +176,71 @@ Where to?
   * [USB Protocol](https://github.com/scanlime/fadecandy/blob/master/doc/fc_protocol_usb.md)
   * [Processing OPC Client](https://github.com/scanlime/fadecandy/blob/master/doc/processing_opc_client.md)
   * [Server Configuration](https://github.com/scanlime/fadecandy/blob/master/doc/fc_server_config.md)
+  * ...or if you still have questions, ask the [discussion group](https://groups.google.com/forum/#!forum/fadecandy)
+* Buy a Fadecandy Controller board
+  * [Adafruit](http://www.adafruit.com/products/1689)
+  * [RGB-123](http://rgb-123.com/product/fadecandy/)
 
+Frequently Asked Questions
+--------------------------
+
+### Why can't you use more than 64 LEDs per strip?
+
+This limit comes from the data rate of the WS2811 LED controller's protocol (800 kbps) and the frame rate that seems to be needed to get the best results from our temporal dithering algorithm (about 400 FPS).
+
+With the WS2811 protocol, each bit takes 1.25 microseconds to transmit, and there's a 50 microsecond reset state that happens once per frame. Each LED has 24 bits of data. We can use this to relate number of LEDs to frames per second:
+
+```
+(a)   fps = 1 / ( 0.00000125 * 24 * numLEDs + 0.00005 )
+(b)   numLEDs = floor( (1 / fps - 0.00005) / 0.00000125 / 24 )
+```
+
+Equation (a) tells us that the theoretical maximum frame rate for 64 LEDs is 507.6 FPS. The Fadecandy Controller actually gets more like 425 FPS most of the time, since the CPU speed tends to be the limiting factor. With Equation (b), we can see that a theoretical strip length of 81 would still let us get 403 FPS. So why did I choose 64 instead of 81? Powers of two, mostly, and I honestly chose the limit of 64 before I knew exactly what frame rates would be necessary.
+
+It would be possible to drive LED strips of around 80 LEDs in length with the same quality using a slightly more powerful microcontroller, as long as we don't rely on the strip length to be a power of two.
+
+### Will Fadecandy work on the Teensy 3.1 board?
+
+Currently, no. The Teensy 3.1 uses a different microcontroller with a slightly different memory layout which would make it impractical to have one firmware image that's binary-compatible with both the Teensy 3.1 and the Teensy 3.0 / Fadecandy Controller board. This is a thing that's certainly doable, but I haven't wanted to spend the extra maintenance effort to maintain and test a binary image for a second architecture.
+
+If anyone reading is passionate about supporting the Teensy 3.1 and would volunteer to maintain a port, I'd be happy to point you toward the modifications that would be necessary.
+
+### Would Fadecandy be able to take advantage of the additional processing power on the Teensy 3.1's microcontroller?
+
+A little bit, maybe! But it wouldn't be a dramatic improvement, if we wanted to keep the exact same quality of dithering.
+
+With some extra processing power and RAM, the strip length limit could be increased from 64 to around 80. This is hardly a dramatic increase, though. The intrinsic limits explained above are more of a factor in the design than the CPU or RAM limits.
+
+### Can you use multiple Fadecandy controllers at once?
+
+Yes! You can use USB hubs to connect many Fadecandy boards to one controller.
+
+### What are the limits? How big can Fadecandy go?
+
+Fadecandy limits include USB bus bandwidth, Open Pixel Control packet size, and CPU power. 
+
+USB Bus bandwidth will start to be a problem around a dozen Fadecandy boards per USB host controller. This may start to depend on the details of the computer you're using. On a laptop, each USB port will usually have an independent allocation of bandwidth available. So, connect the first dozen Fadecandy boards to one USB port, then the second dozen to another USB port, etc. If you do connect more than the recommended number of Fadecandy controllers to one port they'll still work, but frame rate will start to decrease.
+
+The [Open Pixel Control](http://openpixelcontrol.org/) protocol used by Fadecandy has a packet size limit of 64 kilobytes, or 21845 LEDs. Any more than that will require workarounds, such as extending the OPC protocol or using multiple OPC channels.
+
+And then there's CPU power... these limits will depend on the language and framework your code uses, and what kind of computer you're running from. A large installation with 10,000 LEDs will probably need to run off of a laptop or Mac Mini unless your code is quite efficient. Smaller installations with up to 1000 LEDs or so could run off of something as small as a Raspberry Pi. But these are very broad generalizations, and this all depends on how much processing you need to perform per-LED. Keep in mind the scalability levels of your particular framework when you plan to build a large installation.
+
+### The Raspberry Pi is kind of slow. What other small embedded Linux computers are available?
+
+There are a lot of options to choose from, but my current favorite is the [ODROID-U3](http://hardkernel.com/main/products/prdt_info.php). It's about the same size as a Raspberry Pi, with a 1.7 GHz quad-core ARM. There's an optional fan add-on, but I haven't found it to be necessary yet.
+
+### I'm using Windows 7, and the driver for Fadecandy doesn't load. What can I do?
+
+Make sure you have all available Windows updates installed. Fadecandy uses a Windows feature ([WCID](https://github.com/pbatard/libwdi/wiki/WCID-Devices)) that wasn't present in the original retail version of Windows 7, but it was added in a subsequent update.
+
+For reference, this is a 
+[series of screenshots](http://imgur.com/a/0MAFR) showing a Fadecandy controller attached to a freshly installed Windows 7 Home Professional 32-bit virtual machine. At first it fails (no driver for "Fadecandy") but after updating Windows, it finds the correct device (WinUSB) and fcserver connects to it.
+
+If that doesn't fix it, you may have a version of Windows with an inexplicably broken `WinUSB` driver. The French version of Windows 7 SP1 seems to be afflicted by this bug, and possibly others. As a workaround, you can use the [Zadig](http://zadig.akeo.ie/) utility to manually install an alternative driver. Use the arrows to change the driver on the right side of the arrow from `WinUSB` to `libusbK`, then click "Install Driver". You can see a [series of screenshots](http://imgur.com/a/25V81) illustrating this.
+
+If you're still having trouble, please ask for help on the [discussion group](https://groups.google.com/forum/#!forum/fadecandy) or [bug tracker](https://github.com/scanlime/fadecandy/issues) and we can get to the bottom of this problem together. Thanks for your patience!
 
 Contact
 -------
 
-* [Discussion group](https://groups.google.com/forum/#!forum/fadecandy)
-* Micah Elizabeth Scott <<micah@scanlime.org>>
-
+Please direct questions to the [Discussion group](https://groups.google.com/forum/#!forum/fadecandy), it's full of smart and creative people who can help!

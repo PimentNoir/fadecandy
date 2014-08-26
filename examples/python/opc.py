@@ -34,6 +34,7 @@ Recommended use:
 """
 
 import socket
+import struct
 
 class Client(object):
 
@@ -147,12 +148,11 @@ class Client(object):
         len_hi_byte = int(len(pixels)*3 / 256)
         len_lo_byte = (len(pixels)*3) % 256
         header = chr(channel) + chr(0) + chr(len_hi_byte) + chr(len_lo_byte)
-        pieces = [header]
-        for r, g, b in pixels:
-            r = min(255, max(0, int(r)))
-            g = min(255, max(0, int(g)))
-            b = min(255, max(0, int(b)))
-            pieces.append(chr(r) + chr(g) + chr(b))
+        pieces = [header] + [ struct.pack( "BBB",
+                     min(255, max(0, int(r))),
+                     min(255, max(0, int(g))),
+                     min(255, max(0, int(b)))) for r, g, b in pixels ]
+
         message = ''.join(pieces)
 
         self._debug('put_pixels: sending pixels to server')
