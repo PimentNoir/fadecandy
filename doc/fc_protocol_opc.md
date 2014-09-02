@@ -71,7 +71,7 @@ Current firmwares support the following configuration options:
 
 Byte Offset | Bits   | Description
 ----------- | ------ | ------------
-0           | 7 … 2  | (reserved)
+0           | 7 … 4  | (reserved)
 0           | 3      | Manual LED control bit
 0           | 2      | 0 = LED shows USB activity, 1 = LED under manual control
 0           | 1      | Disable keyframe interpolation
