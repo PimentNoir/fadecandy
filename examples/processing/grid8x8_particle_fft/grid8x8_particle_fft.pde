@@ -193,8 +193,8 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-  //opc = new OPC(this, "192.168.1.8", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "192.168.1.131", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
@@ -402,25 +402,6 @@ void mousePressed()
     sound[song].cue(position);
   }
 }
-
-// It's a standard FBM with a coherent noise.
-float simplexnoise_fbm(float x, float y, int octaves, float persistence, float lacunarity) {
-  // One might argue that the initial frequency should always be 1.0f for the very first octave.
-  float frequency = 1.0f;
-  float amp = 1.0f;
-  float maxamp = 1.0f;
-  float r = ((float)simplexnoise.noise((double)(x), (double)(y)) + 1) / 2.0f;
-  
-  prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Frequency: " + frequency + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
-  for (int i = 1; i < octaves; i++) {
-    amp *= persistence;
-    maxamp += amp;
-    frequency *= lacunarity;
-    // Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
-    r += (((float)simplexnoise.noise((double)(frequency * x), (double)(frequency * y)) + 1) / 2.0f) * amp;
-  }
-  return r / maxamp;
-} 
 
 // Very basic debug infrastructure.
 void DonePrinting() {
@@ -667,25 +648,27 @@ void draw()
         prStr("Pulse: default sin(fftFilter[i])");
     }   
       
-    // TODO: Play with the FBM properties more precisely.
+    // TODO: * Play with the FBM properties more precisely.
+    //       * Re-add FBM debug.
+    // prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Frequency: " + frequency + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
     switch(reactivity_type) {
       case 0:
-        float low_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, (float)1/octaves, 0.5f);
+        float low_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, (float)1/octaves, 0.5f);
         noise_fft = low_noise_fft;
         prStr("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
         break;
       case 1:
-        float medium_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float medium_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = medium_noise_fft;
         prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
-        float high_noise_fft = simplexnoise_fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float high_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = high_noise_fft;
         prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;
       default:
-        float noise_default = simplexnoise_fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float noise_default = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
         noise_fft = noise_default;
         prStr("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
     }

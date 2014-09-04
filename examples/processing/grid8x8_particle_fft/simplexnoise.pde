@@ -82,6 +82,78 @@ public static final class SimplexNoise {  // Simplex noise in 1D, 2D, 3D and 4D
   private static double dot(Grad g, double x, double y, double z, double w) {
     return g.x*x + g.y*y + g.z*z + g.w*w; }
 
+  // It's a standard 1D FBM with a coherent noise.
+  public static float fbm(float x, int octaves, float persistence, float lacunarity) {
+  // One might argue that the initial frequency should always be 1.0f for the very first octave.
+  float frequency = 1.0f;
+  float amp = 1.0f;
+  float maxamp = 1.0f;
+  float r = ((float)noise((double)(x)) + 1) / 2.0f;
+  
+  for (int i = 1; i < octaves; i++) {
+    amp *= persistence;
+    maxamp += amp;
+    frequency *= lacunarity;
+    // Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
+    r += (((float)noise((double)(frequency * x)) + 1) / 2.0f) * amp;
+    }
+  return r / maxamp;
+  } 
+
+  // It's a standard 2D FBM with a coherent noise.
+  public static float fbm(float x, float y, int octaves, float persistence, float lacunarity) {
+  // One might argue that the initial frequency should always be 1.0f for the very first octave.
+  float frequency = 1.0f;
+  float amp = 1.0f;
+  float maxamp = 1.0f;
+  float r = ((float)noise((double)(x), (double)(y)) + 1) / 2.0f;
+  
+  for (int i = 1; i < octaves; i++) {
+    amp *= persistence;
+    maxamp += amp;
+    frequency *= lacunarity;
+    // Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
+    r += (((float)noise((double)(frequency * x), (double)(frequency * y)) + 1) / 2.0f) * amp;
+    }
+  return r / maxamp;
+  } 
+  
+  // It's a standard 3D FBM with a coherent noise.
+  public static float fbm(float x, float y, float z, int octaves, float persistence, float lacunarity) {
+  // One might argue that the initial frequency should always be 1.0f for the very first octave.
+  float frequency = 1.0f;
+  float amp = 1.0f;
+  float maxamp = 1.0f;
+  float r = ((float)noise((double)(x), (double)(y), (double)(z)) + 1) / 2.0f;
+  
+  for (int i = 1; i < octaves; i++) {
+    amp *= persistence;
+    maxamp += amp;
+    frequency *= lacunarity;
+    // Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
+    r += (((float)noise((double)(frequency * x), (double)(frequency * y), (double)(frequency * z)) + 1) / 2.0f) * amp;
+    }
+  return r / maxamp;
+  } 
+  
+  // It's a standard 4D FBM with a coherent noise.
+  public static float fbm(float x, float y, float z, float t, int octaves, float persistence, float lacunarity) {
+  // One might argue that the initial frequency should always be 1.0f for the very first octave.
+  float frequency = 1.0f;
+  float amp = 1.0f;
+  float maxamp = 1.0f;
+  float r = ((float)noise((double)(x), (double)(y), (double)(z), (double)(t)) + 1) / 2.0f;
+  
+  for (int i = 1; i < octaves; i++) {
+    amp *= persistence;
+    maxamp += amp;
+    frequency *= lacunarity;
+    // Keep the same behaviour as the processing perlin noise() function, return values in the [0,1] float range.
+    r += (((float)noise((double)(frequency * x), (double)(frequency * y), (double)(frequency * z), (double)(frequency * t)) + 1) / 2.0f) * amp;
+    }
+  return r / maxamp;
+  }
+
   // 1D simplex noise
   public static double noise(double xin) {
   double n0, n1; 
