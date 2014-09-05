@@ -63,7 +63,7 @@ boolean isWebPlayer;
 int song;
 int oldsong;
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3"};
+String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3", "http://mp3.live.tv-radio.com/francemusique/all/francemusiquehautdebit.mp3"};
 //String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
 //"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
 //"02 - Plastic People.mp3" }; 
@@ -71,7 +71,8 @@ String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogreno
 String ColorGradientImage;
 
 int reactivity_type, pulse_type;
-int octaves;
+int octaves; 
+float persistence, lacunarity;
 float noise_fft;
 float noise_scale_fft;
 float pulse;
@@ -184,6 +185,8 @@ void setup()
   reactivity_type = 2;
   // It's the default number of FBM octaves.  
   octaves = 4;
+  persistence = 0.25f;
+  lacunarity = 0.5f;
   
   // Reactive pulse type by default that do not destroy the human eyes.
   pulse_type = 4;
@@ -226,6 +229,26 @@ void keyPressed() {
     decay += inc;
     debug.UndoPrinting();
   }
+  if (keyCode == LEFT && decay > inc && !useEMA) {
+    decay -= inc;
+    debug.UndoPrinting();
+  }
+  if (key == '=') {
+    persistence += inc;
+    debug.UndoPrinting();
+  }
+  if (key == ')' && persistence > inc) {
+    persistence -= inc;
+    debug.UndoPrinting();
+  }
+  if (key == '$') {
+    lacunarity += inc;
+    debug.UndoPrinting();
+  }
+  if (key == '*' && lacunarity > inc) {
+    lacunarity -= inc;
+    debug.UndoPrinting();
+  }
   float beat_inc = 0.5f;
   if (key == ':' && beat_ratio > 0) {
     beat_ratio -= beat_inc;
@@ -233,10 +256,6 @@ void keyPressed() {
   }
   if (key == '!' && beat_ratio < 64) {
     beat_ratio += beat_inc;
-    debug.UndoPrinting();
-  }
-  if (keyCode == LEFT && decay > inc && !useEMA) {
-    decay -= inc;
     debug.UndoPrinting();
   }
   int phi_inc = 1;
@@ -634,26 +653,25 @@ void draw()
         debug.prStr("Pulse: default sin(fftFilter[i])");
     }   
       
-    // TODO: * Play with the FBM properties more precisely.
-    debug.prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Frequency: " + noise_scale_fft + "\n Persistence: " + (float)1/octaves + "\n Lacunarity: " + 0.5f);
+    debug.prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
     switch(reactivity_type) {
       case 0:
-        float low_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, (float)1/octaves, 0.5f);
+        float low_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, persistence, lacunarity);
         noise_fft = low_noise_fft;
         debug.prStr("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
         break;
       case 1:
-        float medium_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float medium_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = medium_noise_fft;
         debug.prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
-        float high_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float high_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = high_noise_fft;
         debug.prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;
       default:
-        float noise_default = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, (float)1/octaves, 0.5f);
+        float noise_default = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = noise_default;
         debug.prStr("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
     }
@@ -691,7 +709,7 @@ void draw()
       tint(hsb, fftFilterNormInv[i] * opacity);
       debug.prStr("Color: Use gradient autogenerated with a coherent noise and opacity = " + opacity + " (HSB mode)");
     }
-    // Last call to a debug.prStr function in the processing runtime.
+    // Last call to a debug.prStr() function in the processing runtime.
     debug.DonePrinting();
     blendMode(ADD);
             
