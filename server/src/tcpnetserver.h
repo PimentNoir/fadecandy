@@ -32,17 +32,17 @@
 #include "opc.h"
 
 
-class NetServer {
+class TcpNetServer {
 public:
     typedef void (*jsonCallback_t)(libwebsocket *wsi, rapidjson::Document &message, void *context);
 
-    NetServer(OPC::callback_t opcCallback, jsonCallback_t jsonCallback,
+    TcpNetServer(OPC::callback_t opcCallback, jsonCallback_t jsonCallback,
         void *context, bool verbose = false);
 
     // Start the event loop on a separate thread
     bool start(const char *host, int port);
 
-    // Reply callback, for use only on the NetServer thread. Call this inside jsonCallback.
+    // Reply callback, for use only on the TcpNetServer thread. Call this inside jsonCallback.
     int jsonReply(libwebsocket *wsi, rapidjson::Document &message);
 
     // Broadcast JSON to all clients, from any thread.

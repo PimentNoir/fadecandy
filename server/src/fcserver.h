@@ -24,7 +24,7 @@
 #pragma once
 #include "rapidjson/document.h"
 #include "opc.h"
-#include "netserver.h"
+#include "tcpnetserver.h"
 #include "usbdevice.h"
 #include <sstream>
 #include <vector>
@@ -56,7 +56,7 @@ private:
     bool mVerbose;
     bool mPollForDevicesOnce;
 
-    NetServer mNetServer;
+    TcpNetServer mTcpNetServer;
     tthread::recursive_mutex mEventMutex;
     tthread::thread *mUSBHotplugThread;    
 
