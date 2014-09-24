@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <math.h>
-#include <time.h>
-#include <stdlib.h>
+#include <cmath>
+#include <ctime>
+#include <cstdlib>
 #include "lib/color.h"
 #include "lib/effect.h"
 #include "lib/noise.h"
@@ -176,7 +176,7 @@ public:
         }
     }
 
-    virtual void endFrame(const FrameInfo &f)
+    virtual bool endFrame(const FrameInfo &f)
     {
         // Per-frame brightness calculations.
         // Adjust threshold in brightness-determining noise function, in order
@@ -205,6 +205,7 @@ public:
             if (step < -thresholdStepLimit) step = -thresholdStepLimit;
             threshold += step;
         }
+        return Effect::endFrame(f);
     }
 
     virtual void debug(const DebugInfo &di)

@@ -27,11 +27,11 @@
 
 #pragma once
 
-#include <math.h>
+#include <cmath>
 #include <unistd.h>
 #include <vector>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #include "nanoflann.h"  // Tiny KD-tree library
 #include "svl/SVL.h"
@@ -71,7 +71,7 @@ public:
 
     // Optional begin/end frame callbacks
     virtual void beginFrame(const FrameInfo& f);
-    virtual void endFrame(const FrameInfo& f);
+    virtual bool endFrame(const FrameInfo& f);
 
     // Optional callback, invoked once per second when verbose mode is enabled.
     // This can print parameters out to the console.
@@ -176,6 +176,10 @@ public:
 
         EffectRunner &runner;
     };
+
+    Effect(): number_frames(0), frame_count(0) {}
+    unsigned long number_frames;
+    unsigned long frame_count;
 };
 
 
@@ -302,10 +306,21 @@ inline Effect::DebugInfo::DebugInfo(EffectRunner &runner)
     : runner(runner) {}
 
 
-inline void Effect::beginFrame(const FrameInfo &f) {}
-inline void Effect::endFrame(const FrameInfo &f) {}
-inline void Effect::debug(const DebugInfo &f) {}
-inline void Effect::postProcess(const Vec3& rgb, const PixelInfo& p) {}
+inline void Effect::beginFrame( const FrameInfo & ) {}
+inline bool Effect::endFrame( const FrameInfo & )
+{
+   if( number_frames )
+   {
+      if( frame_count++ > number_frames )
+      {
+         frame_count = 0;
+         return true;
+      }
+   }
+   return false;
+}
+inline void Effect::debug( const DebugInfo & ) {}
+inline void Effect::postProcess( const Vec3&, const PixelInfo& ) {}
 
 
 static inline float sq(float a)

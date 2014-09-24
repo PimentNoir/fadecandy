@@ -1,23 +1,24 @@
-PROGRAMS = simple rings spokes dot particle_trail mixer
+PROGRAMS = simple rings spokes dot particle_trail mixer looper
 
 # Important optimization options
-CFLAGS = -O3 -ffast-math -fno-rtti
+CXXFLAGS = -O3 -ffast-math -fno-rtti
 
 # Standard libraries
-LFLAGS = -lm -lstdc++ -lpthread
+#LDFLAGS = -lm -lstdc++ -lpthread
+LDFLAGS = -lm -lpthread
 
 # Debugging
-CFLAGS += -g -Wall
-LFLAGS += -g
+CXXFLAGS += -g -Wall
+LDFLAGS += -g
 
 # Annoying warnings on by default on Mac OS
-CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
+CXXFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
 
 
 all: $(PROGRAMS)
 
 .cpp:
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS)
+	$(CXX) $(CXXFLAGS) $< -o $@ $(LDFLAGS)
 
 .PHONY: clean all
 
