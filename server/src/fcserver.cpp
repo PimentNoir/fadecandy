@@ -37,7 +37,7 @@ FCServer::FCServer(rapidjson::Document &config)
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
       mPollForDevicesOnce(false),
-      mNetServer(cbOpcMessage, cbJsonMessage, this, mVerbose),
+      mTcpNetServer(cbOpcMessage, cbJsonMessage, this, mVerbose),
       mUSBHotplugThread(0),
       mUSB(0)
 {
@@ -78,7 +78,7 @@ bool FCServer::start(libusb_context *usb)
     const Value &port = mListen[1];
     const char *hostStr = host.IsString() ? host.GetString() : NULL;
 
-    return mNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
+    return mTcpNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
 }
 
 bool FCServer::startUSB(libusb_context *usb)
@@ -371,7 +371,7 @@ void FCServer::cbJsonMessage(libwebsocket *wsi, rapidjson::Document &message, vo
 
     // All messages get a reply, and we leave any extra parameters on the message
     // so that clients can keep track of asynchronous completions.
-    self->mNetServer.jsonReply(wsi, message);
+    self->mTcpNetServer.jsonReply(wsi, message);
 }
 
 void FCServer::jsonDeviceMessage(rapidjson::Document &message)
@@ -433,5 +433,5 @@ void FCServer::jsonConnectedDevicesChanged()
 
     jsonListConnectedDevices(message);
 
-    mNetServer.jsonBroadcast(message);
+    mTcpNetServer.jsonBroadcast(message);
 }

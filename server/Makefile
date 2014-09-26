@@ -5,7 +5,7 @@ TARGET := fcserver
 
 CPP_FILES += \
 	src/main.cpp \
-	src/netserver.cpp \
+	src/tcpnetserver.cpp \
 	src/usbdevice.cpp \
 	src/fcdevice.cpp \
 	src/enttecdmxdevice.cpp \
