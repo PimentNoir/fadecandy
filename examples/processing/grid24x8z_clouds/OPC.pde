@@ -25,10 +25,10 @@ public class OPC implements Runnable
 
   OPC(PApplet parent, String host, int port)
   {
-    thread = new Thread(this);
-    thread.start();
     this.host = host;
     this.port = port;
+    thread = new Thread(this);
+    thread.start();
     this.enableShowLocations = true;
     parent.registerDraw(this);
   }
