@@ -9,8 +9,9 @@
 import java.net.*;
 import java.util.Arrays;
 
-public class OPC
+public class OPC implements Runnable
 {
+  Thread thread;
   Socket socket;
   OutputStream output;
   String host;
@@ -24,6 +25,8 @@ public class OPC
 
   OPC(PApplet parent, String host, int port)
   {
+    thread = new Thread(this);
+    thread.start();
     this.host = host;
     this.port = port;
     this.enableShowLocations = true;
@@ -228,11 +231,6 @@ public class OPC
       // No pixels defined yet
       return;
     }
- 
-    if (output == null) {
-      // Try to (re)connect
-      connect();
-    }
     if (output == null) {
       return;
     }
@@ -316,10 +314,6 @@ public class OPC
       return;
     }
     if (output == null) {
-      // Try to (re)connect
-      connect();
-    }
-    if (output == null) {
       return;
     }
 
@@ -333,6 +327,7 @@ public class OPC
   void dispose()
   {
     // Destroy the socket. Called internally when we've disconnected.
+    // (Thread continues to run)
     if (output != null) {
       println("Disconnected from OPC server");
     }
@@ -340,22 +335,35 @@ public class OPC
     output = null;
   }
 
-  void connect()
+  public void run()
   {
-    // Try to connect to the OPC server. This normally happens automatically in draw()
-    try {
-      socket = new Socket(host, port);
-      socket.setTcpNoDelay(true);
-      output = socket.getOutputStream();
-      println("Connected to OPC server");
-    } catch (ConnectException e) {
-      dispose();
-    } catch (IOException e) {
-      dispose();
+    // Thread tests server connection periodically, attempts reconnection.
+    // Important for OPC arrays; faster startup, client continues
+    // to run smoothly when mobile servers go in and out of range.
+    for(;;) {
+
+      if(output == null) { // No OPC connection?
+        try {              // Make one!
+          socket = new Socket(host, port);
+          socket.setTcpNoDelay(true);
+          output = socket.getOutputStream();
+          println("Connected to OPC server");
+          sendColorCorrectionPacket();
+          sendFirmwareConfigPacket();
+        } catch (ConnectException e) {
+          dispose();
+        } catch (IOException e) {
+          dispose();
+        }
+      }
+
+      // Pause thread to avoid massive CPU load
+      try {
+        thread.sleep(500);
+      }
+      catch(InterruptedException e) {
+      }
     }
-    
-    sendColorCorrectionPacket();
-    sendFirmwareConfigPacket();
   }
 }
 
