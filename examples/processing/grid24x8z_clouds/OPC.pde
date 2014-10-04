@@ -13,7 +13,7 @@ public class OPC implements Runnable
 {
   Thread thread;
   Socket socket;
-  OutputStream output;
+  OutputStream output, pending;
   String host;
   int port;
 
@@ -165,7 +165,7 @@ public class OPC implements Runnable
   // Send a packet with the current firmware configuration settings
   void sendFirmwareConfigPacket()
   {
-    if (output == null) {
+    if (pending == null) {
       // We'll do this when we reconnect
       return;
     }
@@ -182,7 +182,7 @@ public class OPC implements Runnable
     packet[8] = firmwareConfig;
 
     try {
-      output.write(packet);
+      pending.write(packet);
     } catch (Exception e) {
       dispose();
     }
@@ -195,7 +195,7 @@ public class OPC implements Runnable
       // No color correction defined
       return;
     }
-    if (output == null) {
+    if (pending == null) {
       // We'll do this when we reconnect
       return;
     }
@@ -213,8 +213,8 @@ public class OPC implements Runnable
     header[7] = 0x01;       // Command ID low byte
 
     try {
-      output.write(header);
-      output.write(content);
+      pending.write(header);
+      pending.write(content);
     } catch (Exception e) {
       dispose();
     }
@@ -332,7 +332,7 @@ public class OPC implements Runnable
       println("Disconnected from OPC server");
     }
     socket = null;
-    output = null;
+    output = pending = null;
   }
 
   public void run()
@@ -346,10 +346,12 @@ public class OPC implements Runnable
         try {              // Make one!
           socket = new Socket(host, port);
           socket.setTcpNoDelay(true);
-          output = socket.getOutputStream();
+          pending = socket.getOutputStream(); // Avoid race condition...
           println("Connected to OPC server");
-          sendColorCorrectionPacket();
-          sendFirmwareConfigPacket();
+          sendColorCorrectionPacket();        // These write to 'pending'
+          sendFirmwareConfigPacket();         // rather than 'output' before
+          output = pending;                   // rest of code given access.
+          // pending not set null, more config packets are OK!
         } catch (ConnectException e) {
           dispose();
         } catch (IOException e) {
