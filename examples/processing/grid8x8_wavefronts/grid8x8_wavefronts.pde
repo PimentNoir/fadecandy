@@ -47,8 +47,8 @@ void setup()
   colorMode(HSB, 100);
   texture = loadImage("ring.png");
 
-  //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "192.168.1.8", 7890);
+  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "192.168.1.8", 7890);
   
   opc.ledGrid8x8(0, width/2, height/2, height/16, 0, false);
 
