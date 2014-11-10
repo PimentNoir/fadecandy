@@ -197,8 +197,8 @@ void setup()
   dot = loadImage("dot.png");
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-  //opc = new OPC(this, "192.168.1.131", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "172.16.0.110", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
