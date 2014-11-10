@@ -158,7 +158,7 @@ void setup()
      mixerInfo = AudioSystem.getMixerInfo(); 
     
     for(int i = 0; i < mixerInfo.length; i++) {
-      println(i + ": " + mixerInfo[i].getName());
+      debug.prStr(i + ": " + mixerInfo[i].getName());
     } 
     // 0 is pulseaudio mixer on GNU/Linux
     Mixer mixer = AudioSystem.getMixer(mixerInfo[3]); 
@@ -466,17 +466,17 @@ void draw()
     background(0);
   }
    
-  debug.prStr("Key used = " + key);
+  debug.prStrOnce("Key used = " + key);
      
   if (isPlayer && isWebPlayer) {
-    debug.prStr("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
+    debug.prStrOnce("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
   } else if (isPlayer && !isWebPlayer) {
-    debug.prStr("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
+    debug.prStrOnce("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
   } else {
-    debug.prStr("Mode: Line in with audio buffer size = " + AudioBufferSize);
+    debug.prStrOnce("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
   
-  debug.prStr("Multiple for end buffer size = " + MultiEndBuffer);
+  debug.prStrOnce("Multiple for end buffer size = " + MultiEndBuffer);
         
   if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1 && song >= 0) {
      oldsong = song; 
@@ -496,15 +496,15 @@ void draw()
     //fftout.forward(out.mix);
   }
   
-  debug.prStr("Current FFT Window: " + fftWindow.toString());
+  debug.prStrOnce("Current FFT Window: " + fftWindow.toString());
   
   // All fftFilters have the same length.
   int fftFilterLength = fftFilter.length;
   
   if (useEMA) { 
-    debug.prStr("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
+    debug.prStrOnce("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
   } else {
-    debug.prStr("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
+    debug.prStrOnce("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
   }     
    
   for (int i = 0; i < fftFilterLength; i++) {
@@ -535,9 +535,9 @@ void draw()
   }
    
   if (isZeroNaN) {
-    debug.prStr("Zero NaN FFT values in fftFilters used for displaying");
+    debug.prStrOnce("Zero NaN FFT values in fftFilters used for displaying");
   } else {
-    debug.prStr("Let NaN FFT values go through the fftFilters used for displaying");
+    debug.prStrOnce("Let NaN FFT values go through the fftFilters used for displaying");
   }     
     
   // Normalize fftFilter array values between [0-1] float range for displaying and noise feeding purpose.
@@ -553,9 +553,9 @@ void draw()
   }
     
   if (isInversed) { 
-    debug.prStr("Weighting: Basic inversed frequency weighting mode");
+    debug.prStrOnce("Weighting: Basic inversed frequency weighting mode");
   } else {
-    debug.prStr("Weighting: No frequency weighting mode");   
+    debug.prStrOnce("Weighting: No frequency weighting mode");   
   }
    
   for (int i = 0; i < fftFilterLength; i++) {
@@ -565,7 +565,7 @@ void draw()
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
     
-    debug.prStr("Beat ratio = " + beat_ratio);
+    debug.prStrOnce("Beat ratio = " + beat_ratio);
     
     phi *= phideg * PI / 180;
     int j = i + 1;
@@ -577,7 +577,7 @@ void draw()
       sampleRate = in.sampleRate();
     }
     
-    debug.prStr("Sample Rate: " + sampleRate + "Hz");
+    debug.prStrOnce("Sample Rate: " + sampleRate + "Hz");
     
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
@@ -587,7 +587,7 @@ void draw()
       case 0:
         float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
         pulse = pulse_zero;
-        debug.prStr("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = " + phideg);
+        debug.prStrOnce("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = " + phideg);
         break;
       case 1:
         // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -598,7 +598,7 @@ void draw()
         if (isUndefined) {
           phase = 0.0f;
           // Debug output
-          println("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
+          debug.prStr("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
           continue;
         } else {
           if (f0[i] == f1[i]) { 
@@ -610,7 +610,7 @@ void draw()
         }
         float pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);       
         pulse = pulse_one;
-        debug.prStr("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
+        debug.prStrOnce("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
         break;
       case 2:
         // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -618,7 +618,7 @@ void draw()
         phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
         float pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_two;
-        debug.prStr("Pulse: " + pulse_type + " -> Linear chirp with initial phase = " + phideg);        
+        debug.prStrOnce("Pulse: " + pulse_type + " -> Linear chirp with initial phase = " + phideg);        
         break;
       case 3:       
         // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -626,7 +626,7 @@ void draw()
         phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
         float pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_three;
-        debug.prStr("Pulse: " + pulse_type + " -> Quadratic chirp with initial phase = " + phideg);        
+        debug.prStrOnce("Pulse: " + pulse_type + " -> Quadratic chirp with initial phase = " + phideg);        
         break;
       case 4:       
         // Very basic hyperbolic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -644,42 +644,42 @@ void draw()
         } 
         float pulse_four = fftFilterAmpFreq[i] * cos(phase + phi);
         pulse = pulse_four;
-        debug.prStr("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
+        debug.prStrOnce("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
         break;
       default:
         fftFilter[i] = ZeroNaNValue(fftFilter[i]);
         float pulse_default = sin(fftFilter[i]);
         pulse=pulse_default;
-        debug.prStr("Pulse: default sin(fftFilter[i])");
+        debug.prStrOnce("Pulse: default sin(fftFilter[i])");
     }   
       
-    debug.prStr("FBM Properties:\n Number of octaves: " + octaves + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
+    debug.prStrOnce("FBM Properties:\n Number of octaves: " + octaves + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
     switch(reactivity_type) {
       case 0:
         float low_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, persistence, lacunarity);
         noise_fft = low_noise_fft;
-        debug.prStr("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
+        debug.prStrOnce("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
         break;
       case 1:
         float medium_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = medium_noise_fft;
-        debug.prStr("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
+        debug.prStrOnce("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
         break;
       case 2:
         float high_noise_fft = simplexnoise.fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = high_noise_fft;
-        debug.prStr("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
+        debug.prStrOnce("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
         break;
       default:
         float noise_default = simplexnoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
         noise_fft = noise_default;
-        debug.prStr("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
+        debug.prStrOnce("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);        
     }
         
     //float size_pulse_blink = fftFilterNorm[i] * pulse;
     float size_pulse_noblink = fftFilterNorm[i] * pulse * noise_fft;
     float size = height * (minSize + sizeScale * size_pulse_noblink);
-    debug.prStr("Visualisation properties: \n Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
+    debug.prStrOnce("Visualisation properties: \n Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
            
     // Do not loose some fftFilter values, use fftFilter normalized.
     float centerx = fftFilterNorm[i] * width * noise_fft; 
@@ -692,7 +692,7 @@ void draw()
       colorMode(RGB, 255);
       color rgb = colors.get(int(map(i, 0, fftFilterLength-1, 0, colors.width-1)), colors.height/2);
       tint(rgb, fftFilterNormInv[i] * noise_fft * opacity);
-      debug.prStr("Color: Use color file = " + ColorGradientImage + " with opacity = " + opacity + " modulated by a coherent noise (RGB mode)");
+      debug.prStrOnce("Color: Use color file = " + ColorGradientImage + " with opacity = " + opacity + " modulated by a coherent noise (RGB mode)");
     } else {
       colorMode(HSB, 100);
       // Choose hue values smoothly around the HSB spectrum to begin with.
@@ -707,9 +707,9 @@ void draw()
          brightness 
       );
       tint(hsb, fftFilterNormInv[i] * opacity);
-      debug.prStr("Color: Use gradient autogenerated with a coherent noise and opacity = " + opacity + " (HSB mode)");
+      debug.prStrOnce("Color: Use gradient autogenerated with a coherent noise and opacity = " + opacity + " (HSB mode)");
     }
-    // Last call to a debug.prStr() function in the processing runtime.
+    // Last call to a debug.prStrOnce() function in the processing runtime.
     debug.DonePrinting();
     blendMode(ADD);
             
