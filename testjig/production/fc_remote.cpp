@@ -118,24 +118,29 @@ float FcRemote::measureFrameRate(float minDuration)
     bool inGap = false;
     uint32_t frames = 0;
     uint32_t duration;
+    bool anyData = false;
 
     while (1) {
-        long now = micros();
+        uint32_t now = micros();
         duration = now - startTime;
         if (duration >= minMicros)
             break;
 
         if (digitalRead(dataFeedbackPin)) {
             // Definitely not in a gap, found some data
+            // set anyData true indicating we saw data at least once
+            // anyData ensures we don't count frames if dataFeedbackPin
+            // is stuck low
             inGap = false;
             gapStart = now;
+            anyData = true;
 
         } else if (inGap) {
             // Already in a gap, wait for some data.
 
-        } else if (uint32_t(now - gapStart) >= 50) {
+        } else if (anyData && (uint32_t(now - gapStart) >= 50)) {
+            // We've seen data, and
             // We just found an inter-frame gap
-
             inGap = true;
             frames++;
         }
