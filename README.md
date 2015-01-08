@@ -7,6 +7,7 @@ Fadecandy is a project that makes LED art easier, tastier, and more creative. We
 * [Tutorial: LED Art with Fadecandy](https://learn.adafruit.com/led-art-with-fadecandy)
 * [Tutorial: 1,500 NeoPixel LED Curtain with Raspberry Pi and Fadecandy](https://learn.adafruit.com/1500-neopixel-led-curtain-with-raspberry-pi-fadecandy/)
 * [Presentation slides: Easier and Tastier LED Art with Fadecandy](http://www.misc.name/easier-and-tastier-led-art-with-fadecandy/)
+* [LED Interaction Research with Fadecandy at Stimulant labs](http://stimulant.com/led-interaction-research/)
 
 Buy a Fadecandy Controller board:
 
