@@ -601,7 +601,7 @@ void draw()
         if (isUndefined) {
           phase = 0.0f;
           // Debug output
-          debug.prStr("Chirp log undefined! i = " + i + " f0 = " + f0[i] + " f1 = " + f1[i]);
+          debug.prStr("Chirp log undefined! i = " + i + ", f0 = " + f0[i] + ", f1 = " + f1[i] + ", f0 * f1 = " +  f0[i] * f1[i]);
           continue;
         } else {
           if (f0[i] == f1[i]) { 
