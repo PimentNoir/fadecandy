@@ -11,11 +11,14 @@ void setup()
   size(8*zoom, 8*zoom);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
-  //opc = new OPC(this, "192.168.1.5", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "10.0.120.232", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/16, 0, false);
-  opc.ledGrid(4 * 64, 11, 11, width * 1/2, height * 1/2, height/16, height/16, 0, true);
+  opc.ledRing(1 * 64, 24, width * 1/4, height * 1/2, height * 1/4, 0);
+  opc.ledRing(3 * 64, 16, width * 1/2, height * 1/2, height * 1/6, 0);
+  opc.ledRing(2 * 64, 12, width * 3/4, height * 1/2, height * 1/8, 0);
+  //opc.ledGrid(4 * 64, 11, 11, width * 1/2, height * 1/2, height/16, height/16, 0, true);
   
   // Make the status LED quiet
   opc.setStatusLed(false);

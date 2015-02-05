@@ -9,10 +9,11 @@ void setup()
   dot = loadImage("dot.png");
 
   // Connect to the local instance of fcserver
-  opc = new OPC(this, "127.0.0.1", 7890);
+  //opc = new OPC(this, "127.0.0.1", 7890);
+  opc = new OPC(this, "10.0.120.232", 7890);
 
   // Map one 24-LED ring to the center of the window
-  opc.ledRing(0, 24, width/2, height/2, width*0.18, 0);
+  opc.ledRing(64, 24, width/2, height/2, width*0.18, 0);
 }
 
 
