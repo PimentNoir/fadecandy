@@ -228,7 +228,7 @@ And then there's CPU power... these limits will depend on the language and frame
 
 ### The Raspberry Pi is kind of slow. What other small embedded Linux computers are available?
 
-There are a lot of options to choose from, but my current favorite is the [ODROID-U3](http://hardkernel.com/main/products/prdt_info.php). It's about the same size as a Raspberry Pi, with a 1.7 GHz quad-core ARM. There's an optional fan add-on, but I haven't found it to be necessary yet.
+There are a lot of options to choose from, but my current favorite is the [ODROID-U3](http://www.hardkernel.com/main/products/prdt_info.php?g_code=G138745696275). It's about the same size as a Raspberry Pi, with a 1.7 GHz quad-core ARM. There's an optional fan add-on, but I haven't found it to be necessary yet.
 
 ### I'm using Windows 7, and the driver for Fadecandy doesn't load. What can I do?
 
