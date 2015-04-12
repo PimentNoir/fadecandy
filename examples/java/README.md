@@ -4,7 +4,7 @@ opc_client
 Simple Java OPC client for the [Fadecandy](http://www.misc.name/fadecandy/).
 This client doesn't take advantage of all the cool temporal dithering
 provided by the Processing client, but provides simpler interface similar 
-to Adafruit's NeoPixel library for Arduino.
+to Adafruit's [NeoPixel library for Arduino](https://github.com/adafruit/Adafruit_NeoPixel).
 
 # Writing simple pixel programs 
 
@@ -63,7 +63,7 @@ strip definitions:
 
 ```
 public static void main(String[] arg)  {
-    OpcClient server = new OpcClient("127.0.0.1", 7980);
+    OpcClient server = new OpcClient("raspberrypi.local", 7980);
     OpcDevice fadeCandy = server.addDevice();
         
     PixelStrip strip1 = fadeCandy.addPixelStrip(0, 64);  // 8 x 8 grid on pin 0
@@ -78,7 +78,7 @@ public static void main(String[] arg)  {
 }
 ```
 
-The configuration printed out for the above setup will be:
+For the above setup, the JSON server configuration should be:
 
 ```
 {
