@@ -2,11 +2,9 @@ opc_client
 ==========
 
 Simple Java OPC client for the [Fadecandy](http://www.misc.name/fadecandy/).
-This client doesn't take advantage of all the cool temporal dithering
-provided by the Processing client, but provides simpler interface similar 
-to Adafruit's [NeoPixel library for Arduino](https://github.com/adafruit/Adafruit_NeoPixel).
+This is an alternative to the Processing client, providing a simpler interface similar to Adafruit's [NeoPixel library for Arduino](https://github.com/adafruit/Adafruit_NeoPixel).
 
-# Writing simple pixel programs 
+# Writing simple pixel programs
 
 Here is a simple Java program that will color some of the lights:
 
@@ -55,8 +53,7 @@ public class RandomPixels extends Animation {
 # Server Configuration
 
 The Fadecandy has eight pins, each of which can control a strip of 64 pixels.
-If you have contiguous strips of pixels starting on pin zero, then your `fc_server` won't need 
-to map the output pixels numbers to configurable OPC numbers.  However, if you have
+If you have contiguous strips of pixels starting on pin zero, then your `fc_server` won't need to map the output pixels numbers to configurable OPC numbers.  However, if you have
 shorter strips connected to different pins, you may want to set up a [JSON configuration file](https://github.com/scanlime/fadecandy/blob/master/doc/fc_server_config.md)
 for the server.  The `OpcClient` class can print out a JSON configuration based on
 strip definitions:
@@ -87,8 +84,6 @@ For the above setup, the JSON server configuration should be:
     "devices": [
         {
             "type": "fadecandy",
-            "dither": true,
-            "interpolate": false,
             "map": [
 
                     [0, 0, 0, 64 ],
