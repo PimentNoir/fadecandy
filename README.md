@@ -14,10 +14,10 @@ Buy a Fadecandy Controller board:
 * [Adafruit](http://www.adafruit.com/products/1689)
 * [RGB-123](http://rgb-123.com/product/fadecandy/)
 
+[![Join the chat at https://gitter.im/scanlime/fadecandy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scanlime/fadecandy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Simple Example
 --------------
-
-[![Join the chat at https://gitter.im/scanlime/fadecandy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scanlime/fadecandy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Here's a simple project, a single LED strip controlled by a Processing sketch running on your laptop:
 
