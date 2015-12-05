@@ -33,6 +33,13 @@ OPC.prototype._reconnect = function()
         _this.connected = false;
     }
 
+    this.socket.on('error', function(e){
+        if(e.code == 'ECONNREFUSED' || e.code == 'ECONNRESET') {
+            _this.socket = null;
+            _this.connected = false;
+        }
+    });
+
     this.socket.connect(this.port, this.host, function() {
         console.log("Connected to " + _this.socket.remoteAddress);
         _this.connected = true;
