@@ -30,7 +30,7 @@ public class OPC implements Runnable
     thread = new Thread(this);
     thread.start();
     this.enableShowLocations = true;
-    parent.registerDraw(this);
+    parent.parent.registerMethod("draw", this);(this);
   }
 
   // Set the location of a single LED
