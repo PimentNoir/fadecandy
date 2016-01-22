@@ -9,10 +9,11 @@
 import java.net.*;
 import java.util.Arrays;
 
-public class OPC
+public class OPC implements Runnable
 {
+  Thread thread;
   Socket socket;
-  OutputStream output;
+  OutputStream output, pending;
   String host;
   int port;
 
@@ -26,8 +27,10 @@ public class OPC
   {
     this.host = host;
     this.port = port;
+    thread = new Thread(this);
+    thread.start();
     this.enableShowLocations = true;
-    parent.registerDraw(this);
+    parent.registerMethod("draw", this);
   }
 
   // Set the location of a single LED
@@ -162,24 +165,24 @@ public class OPC
   // Send a packet with the current firmware configuration settings
   void sendFirmwareConfigPacket()
   {
-    if (output == null) {
+    if (pending == null) {
       // We'll do this when we reconnect
       return;
     }
  
     byte[] packet = new byte[9];
-    packet[0] = 0;          // Channel (reserved)
+    packet[0] = (byte)0x00; // Channel (reserved)
     packet[1] = (byte)0xFF; // Command (System Exclusive)
-    packet[2] = 0;          // Length high byte
-    packet[3] = 5;          // Length low byte
-    packet[4] = 0x00;       // System ID high byte
-    packet[5] = 0x01;       // System ID low byte
-    packet[6] = 0x00;       // Command ID high byte
-    packet[7] = 0x02;       // Command ID low byte
-    packet[8] = firmwareConfig;
+    packet[2] = (byte)0x00; // Length high byte
+    packet[3] = (byte)0x05; // Length low byte
+    packet[4] = (byte)0x00; // System ID high byte
+    packet[5] = (byte)0x01; // System ID low byte
+    packet[6] = (byte)0x00; // Command ID high byte
+    packet[7] = (byte)0x02; // Command ID low byte
+    packet[8] = (byte)firmwareConfig;
 
     try {
-      output.write(packet);
+      pending.write(packet);
     } catch (Exception e) {
       dispose();
     }
@@ -192,7 +195,7 @@ public class OPC
       // No color correction defined
       return;
     }
-    if (output == null) {
+    if (pending == null) {
       // We'll do this when we reconnect
       return;
     }
@@ -200,18 +203,18 @@ public class OPC
     byte[] content = colorCorrection.getBytes();
     int packetLen = content.length + 4;
     byte[] header = new byte[8];
-    header[0] = 0;          // Channel (reserved)
-    header[1] = (byte)0xFF; // Command (System Exclusive)
-    header[2] = (byte)(packetLen >> 8);
-    header[3] = (byte)(packetLen & 0xFF);
-    header[4] = 0x00;       // System ID high byte
-    header[5] = 0x01;       // System ID low byte
-    header[6] = 0x00;       // Command ID high byte
-    header[7] = 0x01;       // Command ID low byte
+    header[0] = (byte)0x00;               // Channel (reserved)
+    header[1] = (byte)0xFF;               // Command (System Exclusive)
+    header[2] = (byte)(packetLen >> 8);   // Length high byte
+    header[3] = (byte)(packetLen & 0xFF); // Length low byte
+    header[4] = (byte)0x00;               // System ID high byte
+    header[5] = (byte)0x01;               // System ID low byte
+    header[6] = (byte)0x00;               // Command ID high byte
+    header[7] = (byte)0x01;               // Command ID low byte
 
     try {
-      output.write(header);
-      output.write(content);
+      pending.write(header);
+      pending.write(content);
     } catch (Exception e) {
       dispose();
     }
@@ -227,11 +230,6 @@ public class OPC
     if (pixelLocations == null) {
       // No pixels defined yet
       return;
-    }
- 
-    if (output == null) {
-      // Try to (re)connect
-      connect();
     }
     if (output == null) {
       return;
@@ -274,10 +272,10 @@ public class OPC
     if (packetData == null || packetData.length != packetLen) {
       // Set up our packet buffer
       packetData = new byte[packetLen];
-      packetData[0] = 0;  // Channel
-      packetData[1] = 0;  // Command (Set pixel colors)
-      packetData[2] = (byte)(numBytes >> 8);
-      packetData[3] = (byte)(numBytes & 0xFF);
+      packetData[0] = (byte)0x00;              // Channel
+      packetData[1] = (byte)0x00;              // Command (Set pixel colors)
+      packetData[2] = (byte)(numBytes >> 8);   // Length high byte
+      packetData[3] = (byte)(numBytes & 0xFF); // Length low byte
     }
   }
   
@@ -316,10 +314,6 @@ public class OPC
       return;
     }
     if (output == null) {
-      // Try to (re)connect
-      connect();
-    }
-    if (output == null) {
       return;
     }
 
@@ -333,29 +327,44 @@ public class OPC
   void dispose()
   {
     // Destroy the socket. Called internally when we've disconnected.
+    // (Thread continues to run)
     if (output != null) {
       println("Disconnected from OPC server");
     }
     socket = null;
-    output = null;
+    output = pending = null;
   }
 
-  void connect()
+  public void run()
   {
-    // Try to connect to the OPC server. This normally happens automatically in draw()
-    try {
-      socket = new Socket(host, port);
-      socket.setTcpNoDelay(true);
-      output = socket.getOutputStream();
-      println("Connected to OPC server");
-    } catch (ConnectException e) {
-      dispose();
-    } catch (IOException e) {
-      dispose();
+    // Thread tests server connection periodically, attempts reconnection.
+    // Important for OPC arrays; faster startup, client continues
+    // to run smoothly when mobile servers go in and out of range.
+    for(;;) {
+
+      if(output == null) { // No OPC connection?
+        try {              // Make one!
+          socket = new Socket(host, port);
+          socket.setTcpNoDelay(true);
+          pending = socket.getOutputStream(); // Avoid race condition...
+          println("Connected to OPC server");
+          sendColorCorrectionPacket();        // These write to 'pending'
+          sendFirmwareConfigPacket();         // rather than 'output' before
+          output = pending;                   // rest of code given access.
+          // pending not set null, more config packets are OK!
+        } catch (ConnectException e) {
+          dispose();
+        } catch (IOException e) {
+          dispose();
+        }
+      }
+
+      // Pause thread to avoid massive CPU load
+      try {
+        Thread.sleep(500);
+      }
+      catch(InterruptedException e) {
+      }
     }
-    
-    sendColorCorrectionPacket();
-    sendFirmwareConfigPacket();
   }
 }
-
