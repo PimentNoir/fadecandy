@@ -107,7 +107,7 @@ This section lists all public methods available on the OPC object:
 
 ----
 
-* **opc.ledGrid**(*index*, *stripLength*, *numStrips*, *x*, *y*, *ledSpacing*, *stripSpacing*, *angle*, *zigzag*)
+* **opc.ledGrid**(*index*, *stripLength*, *numStrips*, *x*, *y*, *ledSpacing*, *stripSpacing*, *angle*, *zigzag*, *flip*)
   * Place a rigid grid of LEDs on the screen
   * *index*: Number for the first LED in the grid, starting with zero
   * *stripLength*: How long is each strip in the grid?
@@ -117,16 +117,18 @@ This section lists all public methods available on the OPC object:
   * *stripSpacing*: Spacing between strips, in pixels
   * *angle*: Angle, in radians. Positive is clockwise. 0 has pixels in a strip going left-to-right and strips going top-to-bottom.
   * *zigzag*: true = Every other strip is reversed, false = All strips are non-reversed
+  * *flip*: true = All strips are reversed, false = All strips are non-reversed
  
 ----
 
-* **opc.ledGrid8x8**(*index*, *x*, *y*, *spacing*, *angle*, *zigzag*)
+* **opc.ledGrid8x8**(*index*, *x*, *y*, *spacing*, *angle*, *zigzag*, *flip*)
   * Convenience method for placing an 8x8 grid of LEDs on the screen
   * *index*: Number for the first LED in the grid, starting with zero
   * *x*, *y*: Center location, in pixels
   * *spacing*: Spacing between LEDs and strips, in pixels
   * *angle*: Angle, in radians. Positive is clockwise. 0 has pixels in a strip going left-to-right and strips going top-to-bottom.
   * *zigzag*: true = Every other strip is reversed, false = All strips are non-reversed
+  * *flip*: true = All strips are reversed, false = All strips are non-reversed
   
 ----
 

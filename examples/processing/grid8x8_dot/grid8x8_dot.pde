@@ -12,7 +12,7 @@ void setup()
   opc = new OPC(this, "127.0.0.1", 7890);
 
   // Map an 8x8 grid of LEDs to the center of the window
-  opc.ledGrid8x8(0, width/2, height/2, height / 12.0, 0, false);
+  opc.ledGrid8x8(0, width/2, height/2, height / 12.0, 0, false, false);
 }
 
 void draw()

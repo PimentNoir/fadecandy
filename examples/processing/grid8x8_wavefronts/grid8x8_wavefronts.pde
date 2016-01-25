@@ -48,7 +48,7 @@ void setup()
   texture = loadImage("ring.png");
 
   opc = new OPC(this, "127.0.0.1", 7890);
-  opc.ledGrid8x8(0, width/2, height/2, height / 16.0, 0, false);
+  opc.ledGrid8x8(0, width/2, height/2, height / 16.0, 0, false, false);
 
   // We can have up to 100 rings. They all start out invisible.
   rings = new Ring[100];

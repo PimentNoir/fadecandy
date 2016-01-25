@@ -12,11 +12,11 @@ void setup()
 
   // Map an 8x8 grid of LEDs to the center of the window, scaled to take up most of the space
   float spacing = height / 16.0;
-  opc.ledGrid8x8(0, width/2, height/2, spacing, 0, true);
+  opc.ledGrid8x8(0, width/2, height/2, spacing, 0, true, false);
 
   // Put two more 8x8 grids to the left and to the right of that one.
-  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true);
-  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true);
+  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true, false);
+  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true, false);
 }
 
 void draw()

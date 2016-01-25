@@ -77,7 +77,8 @@ public class OPC implements Runnable
   // at 'angle', measured in radians clockwise from +X.
   // (x,y) is the center of the grid.
   void ledGrid(int index, int stripLength, int numStrips, float x, float y,
-               float ledSpacing, float stripSpacing, float angle, boolean zigzag)
+               float ledSpacing, float stripSpacing, float angle, boolean zigzag,
+               boolean flip)
   {
     float s = sin(angle + HALF_PI);
     float c = cos(angle + HALF_PI);
@@ -85,15 +86,16 @@ public class OPC implements Runnable
       ledStrip(index + stripLength * i, stripLength,
         x + (i - (numStrips-1)/2.0) * stripSpacing * c,
         y + (i - (numStrips-1)/2.0) * stripSpacing * s, ledSpacing,
-        angle, zigzag && (i % 2) == 1);
+        angle, zigzag && ((i % 2) == 1) != flip);
     }
   }
 
   // Set the location of 64 LEDs arranged in a uniform 8x8 grid.
   // (x,y) is the center of the grid.
-  void ledGrid8x8(int index, float x, float y, float spacing, float angle, boolean zigzag)
+  void ledGrid8x8(int index, float x, float y, float spacing, float angle, boolean zigzag,
+                  boolean flip)
   {
-    ledGrid(index, 8, 8, x, y, spacing, spacing, angle, zigzag);
+    ledGrid(index, 8, 8, x, y, spacing, spacing, angle, zigzag, flip);
   }
 
   // Should the pixel sampling locations be visible? This helps with debugging.
