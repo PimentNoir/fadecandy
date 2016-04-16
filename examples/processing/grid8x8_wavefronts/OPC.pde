@@ -95,7 +95,7 @@ public class OPC implements Runnable
   {
     ledGrid(index, 8, 8, x, y, spacing, spacing, angle, zigzag);
   }
-  
+
   // Should the pixel sampling locations be visible? This helps with debugging.
   // Showing locations is enabled by default. You might need to disable it if our drawing
   // is interfering with your processing sketch, or if you'd simply like the screen to be

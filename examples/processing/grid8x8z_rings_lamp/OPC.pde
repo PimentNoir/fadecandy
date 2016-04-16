@@ -30,7 +30,7 @@ public class OPC implements Runnable
     thread = new Thread(this);
     thread.start();
     this.enableShowLocations = true;
-    parent.registerDraw(this);
+    parent.registerMethod("draw", this);
   }
 
   // Set the location of a single LED
@@ -171,15 +171,15 @@ public class OPC implements Runnable
     }
  
     byte[] packet = new byte[9];
-    packet[0] = 0;          // Channel (reserved)
+    packet[0] = (byte)0x00; // Channel (reserved)
     packet[1] = (byte)0xFF; // Command (System Exclusive)
-    packet[2] = 0;          // Length high byte
-    packet[3] = 5;          // Length low byte
-    packet[4] = 0x00;       // System ID high byte
-    packet[5] = 0x01;       // System ID low byte
-    packet[6] = 0x00;       // Command ID high byte
-    packet[7] = 0x02;       // Command ID low byte
-    packet[8] = firmwareConfig;
+    packet[2] = (byte)0x00; // Length high byte
+    packet[3] = (byte)0x05; // Length low byte
+    packet[4] = (byte)0x00; // System ID high byte
+    packet[5] = (byte)0x01; // System ID low byte
+    packet[6] = (byte)0x00; // Command ID high byte
+    packet[7] = (byte)0x02; // Command ID low byte
+    packet[8] = (byte)firmwareConfig;
 
     try {
       pending.write(packet);
@@ -203,14 +203,14 @@ public class OPC implements Runnable
     byte[] content = colorCorrection.getBytes();
     int packetLen = content.length + 4;
     byte[] header = new byte[8];
-    header[0] = 0;          // Channel (reserved)
-    header[1] = (byte)0xFF; // Command (System Exclusive)
-    header[2] = (byte)(packetLen >> 8);
-    header[3] = (byte)(packetLen & 0xFF);
-    header[4] = 0x00;       // System ID high byte
-    header[5] = 0x01;       // System ID low byte
-    header[6] = 0x00;       // Command ID high byte
-    header[7] = 0x01;       // Command ID low byte
+    header[0] = (byte)0x00;               // Channel (reserved)
+    header[1] = (byte)0xFF;               // Command (System Exclusive)
+    header[2] = (byte)(packetLen >> 8);   // Length high byte
+    header[3] = (byte)(packetLen & 0xFF); // Length low byte
+    header[4] = (byte)0x00;               // System ID high byte
+    header[5] = (byte)0x01;               // System ID low byte
+    header[6] = (byte)0x00;               // Command ID high byte
+    header[7] = (byte)0x01;               // Command ID low byte
 
     try {
       pending.write(header);
@@ -272,10 +272,10 @@ public class OPC implements Runnable
     if (packetData == null || packetData.length != packetLen) {
       // Set up our packet buffer
       packetData = new byte[packetLen];
-      packetData[0] = 0;  // Channel
-      packetData[1] = 0;  // Command (Set pixel colors)
-      packetData[2] = (byte)(numBytes >> 8);
-      packetData[3] = (byte)(numBytes & 0xFF);
+      packetData[0] = (byte)0x00;              // Channel
+      packetData[1] = (byte)0x00;              // Command (Set pixel colors)
+      packetData[2] = (byte)(numBytes >> 8);   // Length high byte
+      packetData[3] = (byte)(numBytes & 0xFF); // Length low byte
     }
   }
   
@@ -361,11 +361,10 @@ public class OPC implements Runnable
 
       // Pause thread to avoid massive CPU load
       try {
-        thread.sleep(500);
+        Thread.sleep(500);
       }
       catch(InterruptedException e) {
       }
     }
   }
 }
-
