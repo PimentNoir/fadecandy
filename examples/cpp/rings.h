@@ -29,23 +29,23 @@ public:
         reseed();
     }
 
-    static const float xyzSpeed = 0.6;
-    static const float xyzScale = 0.08;
-    static const float wSpeed = 0.2;
-    static const float wRate = 0.015;
-    static const float ringScale = 1.5;
-    static const float ringScaleRate = 0.01;
-    static const float ringDepth = 0.2;
-    static const float wanderSpeed = 0.04;
-    static const float wanderSize = 1.2;
-    static const float brightnessContrast = 8.0;
-    static const float colorContrast = 4.0;
-    static const float targetBrightness = 0.1;
-    static const float thresholdGain = 0.1;
-    static const float thresholdStepLimit = 0.02;
-    static const float initialThreshold = -1.0f;
-    static const unsigned brightnessOctaves = 4;
-    static const unsigned colorOctaves = 2;
+    static constexpr float xyzSpeed = 0.6;
+    static constexpr float xyzScale = 0.08;
+    static constexpr float wSpeed = 0.2;
+    static constexpr float wRate = 0.015;
+    static constexpr float ringScale = 1.5;
+    static constexpr float ringScaleRate = 0.01;
+    static constexpr float ringDepth = 0.2;
+    static constexpr float wanderSpeed = 0.04;
+    static constexpr float wanderSize = 1.2;
+    static constexpr float brightnessContrast = 8.0;
+    static constexpr float colorContrast = 4.0;
+    static constexpr float targetBrightness = 0.1;
+    static constexpr float thresholdGain = 0.1;
+    static constexpr float thresholdStepLimit = 0.02;
+    static constexpr float initialThreshold = -1.0f;
+    static constexpr unsigned brightnessOctaves = 4;
+    static constexpr unsigned colorOctaves = 2;
 
     // Sample colors along a curved path through a texture
     Texture palette;
