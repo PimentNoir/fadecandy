@@ -3,7 +3,11 @@ Fadecandy: Server Configuration
 
 The Fadecandy Server is configured with a JSON object. There is a default configuration built-in, which you can see by running `fcserver -h`. A copy of this configuration is also included as [examples/config/default.json](https://github.com/scanlime/fadecandy/blob/master/examples/config/default.json).
 
-A new configuration file can be given to `fcserver` on the command line. You can use one of the examples as a starting point. Typically the default configuration will work for any single-controller setup. If you're using multiple controllers or there are other options you want to tweak, you'll want to create an fcserver configuration file for your project.
+A new configuration file can be given to `fcserver` on the command line in the following manner:
+
+` $ <path to fcserver> <path to config.json file> `
+
+You can use one of the examples as a starting point. Typically the default configuration will work for any single-controller setup. If you're using multiple controllers or there are other options you want to tweak, you'll want to create an fcserver configuration file for your project.
 
 Parts of the JSON config format are shared with the network protocols. For example, color correction data and device information are stored in a common format. Some parts of the JSON configuration file can be modified at runtime.
 

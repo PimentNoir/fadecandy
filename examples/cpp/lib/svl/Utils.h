@@ -37,7 +37,8 @@ inline Double vl_rand()
 { return(rand() / (RAND_MAX + 1.0)); }
 #endif
 
-#ifndef __CMATH__
+#if !defined __CMATH__ && !defined _GLIBCXX_CMATH
+
 // GNU's complex.h defines its own abs(double)
 #ifdef VL_HAS_ABSF
 inline Float abs(Float x)

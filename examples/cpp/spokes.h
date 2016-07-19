@@ -18,18 +18,18 @@ public:
     SpokesEffect()
         : spin(0) {}
 
-    static const float cycleRate = 0.001;
-    static const float wanderSpeed = 40.0;
-    static const float wanderSize = 1.8;
-    static const float hueScale = 5.0;
-    static const float hueRate = 1.0;
-    static const float satRate = 10.0;
-    static const float hueShift = 0.02;
-    static const float spinSpeed = 3.0;
-    static const float spinRate = 100.0;
-    static const float noiseDepth = 3.0;
-    static const float noiseScale = 0.2;
-    static const float noiseSpeed = 1000.0;
+    static constexpr float cycleRate = 0.001;
+    static constexpr float wanderSpeed = 40.0;
+    static constexpr float wanderSize = 1.8;
+    static constexpr float hueScale = 5.0;
+    static constexpr float hueRate = 1.0;
+    static constexpr float satRate = 10.0;
+    static constexpr float hueShift = 0.02;
+    static constexpr float spinSpeed = 3.0;
+    static constexpr float spinRate = 100.0;
+    static constexpr float noiseDepth = 3.0;
+    static constexpr float noiseScale = 0.2;
+    static constexpr float noiseSpeed = 1000.0;
 
     // State variables
     float spin;
