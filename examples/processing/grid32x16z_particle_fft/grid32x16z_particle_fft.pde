@@ -13,7 +13,7 @@ AudioPlayer sound;
 FFT fft;
 float[] fftFilter;
 
-String filename = "/Users/micah/Dropbox/music/Mark Farina - Mushroom Jazz Vol 5.mp3";
+String filename = "083_trippy-ringysnarebeat-3bars.mp3";
 
 float spin = 0.001;
 float radiansPerBucket = radians(2);
@@ -72,4 +72,3 @@ void draw()
     image(dot, center.x - size/2, center.y - size/2, size, size);
   }
 }
-
