@@ -62,8 +62,8 @@ boolean isWebPlayer;
 
 int song;
 int oldsong;
-//String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};
-String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://stream.divergence-fm.org:8000/divergence.mp3", "http://mp3.live.tv-radio.com/lemouv/all/lemouvhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3", "http://mp3.live.tv-radio.com/franceinfo/all/franceinfo.mp3", "http://mp3.live.tv-radio.com/francemusique/all/francemusiquehautdebit.mp3"};
+//String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};n
+String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://audio.scdn.arkena.com/11014/mouv-midfi128.mp3nn", "http://audio.scdn.arkena.com/11008/franceinter-midfi128.mp3", "http://audio.scdn.arkena.com/11012/francemusique-midfi128.mp3"};
 //String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
 //"05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
 //"02 - Plastic People.mp3" }; 
@@ -127,9 +127,10 @@ void setup()
   } else {
     colorMode(HSB, 100);
   }
-      
+  
+  // FIXME: Handle zooming integer with a switch construct. 
   int zoom = 2;
-  size(zoom * 100, zoom * 100, P3D);
+  size(200, 200, P3D);
    
   // TODO: make framerate depend on beat detection.
   int framerate = 72;
@@ -161,7 +162,7 @@ void setup()
       debug.prStr(i + ": " + mixerInfo[i].getName());
     } 
     // 0 is pulseaudio mixer on GNU/Linux
-    Mixer mixer = AudioSystem.getMixer(mixerInfo[3]); 
+    Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
     minim.setInputMixer(mixer); 
     in =  minim.getLineIn(Minim.STEREO, AudioBufferSize);  
     fftin = new FFT(in.bufferSize(), in.sampleRate());
@@ -198,12 +199,12 @@ void setup()
   colors = loadImage(ColorGradientImage);
   // Connect to the local instance of fcserver
   //opc = new OPC(this, "127.0.0.1", 7890);
-  opc = new OPC(this, "10.0.120.232", 7890);
+  opc = new OPC(this, "rpi-fc-one", 7890);
   
   opc.ledGrid8x8(0 * 64, width * 1/2, height * 1/2, height/8, 0, false);
-  opc.ledRing(1 * 64, 24, width * 1/3, height * 1/2, height * 1/3, 0);
-  opc.ledRing(3 * 64, 16, width * 1/2, height * 1/2, height * 1/4, 0);
-  opc.ledRing(2 * 64, 12, width * 2/3, height * 1/2, height * 1/6, 0);
+  //opc.ledRing(1 * 64, 24, width * 1/3, height * 1/2, height * 1/3, 0);
+  //opc.ledRing(3 * 64, 16, width * 1/2, height * 1/2, height * 1/4, 0);
+  //opc.ledRing(2 * 64, 12, width * 2/3, height * 1/2, height * 1/6, 0);
   //opc.ledGrid8x8(512, width * 1/2, height * 1/2, height/8, 0, false);
   //opc.led(3 * 64, width * 1/4, height * 1/2);
   //opc.ledGrid(4 * 64, 11, 11, width * 1/2, height * 1/2, height/16, height/16, 0, true);
@@ -745,4 +746,3 @@ void stop()
 
   super.stop();
 }
-
