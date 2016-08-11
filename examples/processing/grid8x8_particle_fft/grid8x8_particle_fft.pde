@@ -655,9 +655,9 @@ void draw()
     // Do not loose some fftFilter values, use fftFilter normalized.
     float centerx = fftFilterNorm[i] * width * noise_fft; 
     float centery = fftFilterNorm[i] * height * -noise_fft;
-    PVector center = new PVector(centerx * 1/2, centery * 1/2);
+    PVector center = new PVector(centerx * 0.5, centery * 0.5);
     center.rotate(now * spin + i * radiansPerBucket);
-    center.add(new PVector(width * 1/2, height * 1/2));
+    center.add(new PVector(width * 0.5, height * 0.5));
 
     if (isColorFile) {
       colorMode(RGB, 255);
