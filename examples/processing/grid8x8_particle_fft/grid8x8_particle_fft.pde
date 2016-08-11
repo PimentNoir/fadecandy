@@ -36,16 +36,14 @@ PImage colors;
 
 Minim minim;
 AudioInput in;
-//AudioOutput out;
-//AudioRecorder recorder;
 AudioPlayer[] sound;
 AudioMetaData metasound;
 
 int AudioBufferSize;
 int MultiEndBuffer = 4;
-FFT fftout, fftin, fftsong;
-float[] fftFilter, fftFilterNorm, fftFilterNormInv, fftFilterNormPrev, fftFilterFreq, fftFilterFreqPrev, fftFilterAmpFreq;
+FFT fft;
 WindowFunction fftWindow;
+float[] fftFilter, fftFilterNorm, fftFilterNormInv, fftFilterNormPrev, fftFilterFreq, fftFilterFreqPrev, fftFilterAmpFreq;
 
 // Non runtime booleans.
 boolean isDebug;
@@ -62,10 +60,10 @@ boolean isWebPlayer;
 int song;
 int oldsong;
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};n
-//String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://audio.scdn.arkena.com/11014/mouv-midfi128.mp3", "http://audio.scdn.arkena.com/11008/franceinter-midfi128.mp3", "http://audio.scdn.arkena.com/11012/francemusique-midfi128.mp3"};
-String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-  "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-  "02 - Plastic People.mp3", "07. Stir It Up.mp3" }; 
+String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://audio.scdn.arkena.com/11014/mouv-midfi128.mp3", "http://audio.scdn.arkena.com/11008/franceinter-midfi128.mp3", "http://audio.scdn.arkena.com/11012/francemusique-midfi128.mp3"};
+//String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+//  "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+//  "02 - Plastic People.mp3", "07. Stir It Up.mp3" }; 
 
 String ColorGradientImage;
 
@@ -91,8 +89,8 @@ float beat_ratio = 1.0f;
 void setup()
 {
   // Switch between audio player or audio line in capture.
-  isPlayer = true;
-  //isPlayer = false;
+  //isPlayer = true;
+  isPlayer = false;
   isWebPlayer = false;
   //isWebPlayer = true;
 
@@ -148,7 +146,7 @@ void setup()
     song = (int)random(0, filename.length);
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    init_sound_fft();
+    init_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
   } else {
     Mixer.Info[] mixerInfo;
     mixerInfo = AudioSystem.getMixerInfo(); 
@@ -159,19 +157,8 @@ void setup()
     // 0 is pulseaudio mixer on GNU/Linux
     Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
     minim.setInputMixer(mixer); 
-    in =  minim.getLineIn(Minim.STEREO, AudioBufferSize);  
-    fftin = new FFT(in.bufferSize(), in.sampleRate());
-    fftWindow = FFT.HAMMING;
-    fftin.window(fftWindow);
-    fftFilter = new float[fftin.specSize()];
-    fftFilterFreq = new float[fftin.specSize()];
-    fftFilterFreqPrev = new float[fftin.specSize()];
-    fftFilterAmpFreq = new float[fftin.specSize()];
-    fftFilterNorm = new float[fftin.specSize()];
-    fftFilterNormInv = new float[fftin.specSize()];
-    fftFilterNormPrev = new float[fftin.specSize()];
-    f0 = new float[fftin.specSize()];
-    f1 = new float[fftin.specSize()];
+    in = minim.getLineIn(Minim.STEREO, AudioBufferSize);  
+    init_fft(in.bufferSize(), in.sampleRate());
   }
 
   // Noise initialisation.
@@ -376,7 +363,7 @@ void keyPressed() {
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    reinit_sound_fft();
+    reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
   if (key == 'b' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song > 0) {
@@ -384,7 +371,7 @@ void keyPressed() {
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    reinit_sound_fft();
+    reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
   if (key == 'n' && isPlayer && isWebPlayer && song < filename.length-1) {
@@ -392,7 +379,7 @@ void keyPressed() {
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    reinit_sound_fft();
+    reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
   if (key == 'b' && isPlayer && isWebPlayer && song > 0) {
@@ -400,7 +387,7 @@ void keyPressed() {
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    reinit_sound_fft();
+    reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
   if (key == 'f' && isPlayer && !isWebPlayer) sound[song].skip(100);
@@ -422,30 +409,29 @@ void mousePressed()
   }
 }
 
-// TODO: pass an FFT type argument to init differently the FFT filter.
-void init_fft() {
-  fftsong = new FFT(sound[song].bufferSize(), sound[song].sampleRate());
+void init_fft(int bufferSize, float sampleRate) {
+  fft = new FFT(bufferSize, sampleRate);
   fftWindow = FFT.HAMMING;
-  fftsong.window(fftWindow);
-  fftFilter = new float[fftsong.specSize()];
-  fftFilterFreq = new float[fftsong.specSize()];
-  fftFilterFreqPrev = new float[fftsong.specSize()];
-  fftFilterAmpFreq = new float[fftsong.specSize()];  
-  fftFilterNorm = new float[fftsong.specSize()];
-  fftFilterNormInv = new float[fftsong.specSize()];
-  fftFilterNormPrev = new float[fftsong.specSize()];
-  f0 = new float[fftsong.specSize()];
-  f1 = new float[fftsong.specSize()];
+  fft.window(fftWindow);
+  fftFilter = new float[fft.specSize()];
+  fftFilterFreq = new float[fft.specSize()];
+  fftFilterFreqPrev = new float[fft.specSize()];
+  fftFilterAmpFreq = new float[fft.specSize()];  
+  fftFilterNorm = new float[fft.specSize()];
+  fftFilterNormInv = new float[fft.specSize()];
+  fftFilterNormPrev = new float[fft.specSize()];
+  f0 = new float[fft.specSize()];
+  f1 = new float[fft.specSize()];
 }  
 
-void init_sound_fft() {
+void init_player_fft(int bufferSize, float sampleRate) {
   sound[song].play();
-  init_fft();
+  init_fft(bufferSize, sampleRate);
 }
 
-void reinit_sound_fft() {
+void reinit_player_fft(int bufferSize, float sampleRate) {
   sound[oldsong].close();
-  init_sound_fft();
+  init_player_fft(bufferSize, sampleRate);
 }
 
 float ZeroNaNValue(float Value) {
@@ -482,16 +468,16 @@ void draw()
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
-    reinit_sound_fft();
+    reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   } 
 
   float now = millis(); 
 
   if (isPlayer) {
-    fftsong.forward(sound[song].mix);
+    fft.forward(sound[song].mix);
   } else {
-    fftin.forward(in.mix);
+    fft.forward(in.mix);
   }
 
   debug.prStrOnce("Current FFT Window: " + fftWindow.toString());
@@ -507,28 +493,15 @@ void draw()
 
   for (int i = 0; i < fftFilterLength; i++) {
     fftFilterFreqPrev[i] = ZeroNaNValue(fftFilterFreq[i]);
-    if (isPlayer) {
-      // EMA for display smoothing. 
-      if (useEMA) {
-        fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftsong.getBand(i);
-        fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftsong.indexToFreq(i);
-        fftFilterAmpFreq[i] = smooth_factor * fftFilterAmpFreq[i] + (1 - smooth_factor) * fftsong.getFreq(fftsong.indexToFreq(i));
-      } else {  
-        fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftsong.getBand(i)));
-        fftFilterFreq[i] = max(fftFilterFreq[i] * decay, log(1 + fftsong.indexToFreq(i)));
-        fftFilterAmpFreq[i] = max(fftFilterAmpFreq[i] * decay, log(1 + fftsong.getFreq(fftsong.indexToFreq(i))));
-      }
+    // EMA for display smoothing. 
+    if (useEMA) {
+      fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fft.getBand(i);
+      fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fft.indexToFreq(i);
+      fftFilterAmpFreq[i] = smooth_factor * fftFilterAmpFreq[i] + (1 - smooth_factor) * fft.getFreq(fft.indexToFreq(i));
     } else {  
-      // EMA for display smoothing.
-      if (useEMA) {
-        fftFilter[i] = smooth_factor * fftFilter[i] + (1 - smooth_factor) * fftin.getBand(i);
-        fftFilterFreq[i] = smooth_factor * fftFilterFreq[i] + (1 - smooth_factor) * fftin.indexToFreq(i);
-        fftFilterAmpFreq[i] = smooth_factor * fftFilterAmpFreq[i] + (1 - smooth_factor) * fftin.getFreq(fftin.indexToFreq(i));
-      } else {
-        fftFilter[i] = max(fftFilter[i] * decay, log(1 + fftin.getBand(i)));
-        fftFilterFreq[i] = max(fftFilterFreq[i] * decay, log(1 + fftin.indexToFreq(i)));
-        fftFilterAmpFreq[i] = max(fftFilterAmpFreq[i] * decay, log(1 + fftin.getFreq(fftin.indexToFreq(i))));
-      }
+      fftFilter[i] = max(fftFilter[i] * decay, log(1 + fft.getBand(i)));
+      fftFilterFreq[i] = max(fftFilterFreq[i] * decay, log(1 + fft.indexToFreq(i)));
+      fftFilterAmpFreq[i] = max(fftFilterAmpFreq[i] * decay, log(1 + fft.getFreq(fft.indexToFreq(i))));
     }
   }
 
@@ -728,7 +701,6 @@ void draw()
 void stop()
 {
   // Always close Minim audio classes when you are done with them.
-  //out.close();
   if (isPlayer) {
     sound[song].close();
   } else {
