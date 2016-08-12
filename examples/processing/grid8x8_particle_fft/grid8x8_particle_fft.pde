@@ -134,8 +134,9 @@ void setup()
   frameRate(framerate);
 
   minim = new Minim(this);
-  // FIXME: Make this depend on a boolean. 
-  //minim.debugOn();
+  if (isDebug) {
+    minim.debugOn();
+  }
 
   // Small buffer size! 
   AudioBufferSize = 512;
