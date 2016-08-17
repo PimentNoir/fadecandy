@@ -412,6 +412,7 @@ void mousePressed()
 
 void init_fft(int bufferSize, float sampleRate) {
   fft = new FFT(bufferSize, sampleRate);
+  fft.noAverages();
   fftWindow = FFT.HAMMING;
   fft.window(fftWindow);
   fftFilter = new float[fft.specSize()];
