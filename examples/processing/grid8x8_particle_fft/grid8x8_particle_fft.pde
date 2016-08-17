@@ -545,7 +545,6 @@ void draw()
     if (isPlayer) {
       sampleRate = sound[song].sampleRate();
     } else {
-      // FIXME: Should not work with Line in capture.
       sampleRate = in.sampleRate();
     }
 
