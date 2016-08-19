@@ -155,7 +155,7 @@ void setup()
     for (int i = 0; i < mixerInfo.length; i++) {
       debug.prStr(i + ": " + mixerInfo[i].getName());
     } 
-    // 0 is pulseaudio mixer on GNU/Linux
+    // index = 0 is pulseaudio mixer on GNU/Linux
     Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
     minim.setInputMixer(mixer); 
     in = minim.getLineIn(Minim.STEREO, AudioBufferSize);  
