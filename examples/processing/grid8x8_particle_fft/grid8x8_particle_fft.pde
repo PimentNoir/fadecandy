@@ -56,6 +56,7 @@ boolean useEMA;
 boolean isColorFile;
 boolean isZeroNaN;
 boolean isWebPlayer;
+boolean[] keys;
 
 int song;
 int oldsong;
@@ -73,8 +74,7 @@ float persistence, lacunarity;
 float noise_fft;
 float noise_scale_fft;
 float pulse;
-float smooth_factor;
-float decay;
+float smooth_factor, decay;
 float phi, phideg, sampleRate; 
 float[] f0, f1;
 
@@ -88,6 +88,12 @@ float beat_ratio = 1.0f;
 
 void setup()
 {
+  keys = new boolean[24]; // Number of keys state to track
+  for (int i = 0; i < keys.length; i++ )
+  {
+    keys[i] = false;
+  }
+
   // Switch between audio player or audio line in capture.
   //isPlayer = true;
   isPlayer = false;
@@ -202,87 +208,159 @@ void setup()
 }
 
 void keyPressed() {
+  if (key == '0') {
+    keys[0] = true;
+  }
+  if (key == '1') {
+    keys[1] = true;
+  }
+  if (key == '2') {
+    keys[2] = true;
+  }
+  if (key == '3') {
+    keys[3] = true;
+  }
+  if (key == '4') {
+    keys[4] = true;
+  }
+  if (key == '5') {
+    keys[5] = true;
+  }
+  if (key == '6') {
+    keys[6] = true;
+  }
+  if (key == '7') {
+    keys[7] = true;
+  }
+  if (key == '8') {
+    keys[8] = true;
+  }
+  if (key == '9') {
+    keys[9] = true;
+  }
+  if (key == '-') {
+    keys[10] = true;
+  }
+  if (key == '+') {
+    keys[11] = true;
+  }
+  if (key == 't') {
+    keys[12] = true;
+  }
+  if (key == 'n') {
+    keys[13] = true;
+  }
+  if (key == 'd') {
+    keys[14] = true;
+  }
+  if (key == 'p') {
+    keys[15] = true;
+  }
+  if (key == 'l') {
+    keys[16] = true;
+  }
+  if (key == 'b') {
+    keys[17] = true;
+  }
+  if (key == 'a') {
+    keys[18] = true;
+  }
+  if (key == 's') {
+    keys[19] = true;
+  }
+  if (key == 'q') {
+    keys[20] = true;
+  }
+  if (key == 'h') {
+    keys[21] = true;
+  }
+  if (key == 'e') {
+    keys[22] = true;
+  }
+  if (key == 'w') {
+    keys[23] = true;
+  }
   float noise_scale_inc = 0.001f;
-  if (key == 'k' && noise_scale_fft < 15-noise_scale_inc) {
+  if (keys[13] && keys[11] && noise_scale_fft < 15-noise_scale_inc) {
     noise_scale_fft += noise_scale_inc;
     debug.UndoPrinting();
   }
-  if (key == 'j' && noise_scale_fft > noise_scale_inc) {
+  if (keys[13] && keys[10] && noise_scale_fft > noise_scale_inc) {
     noise_scale_fft -= noise_scale_inc;
     debug.UndoPrinting();
   }
   float inc = 0.01f;
-  if (keyCode == RIGHT && decay < 1-inc && !useEMA) {
+  if (keys[14] && keys[11] && decay < 1-inc && !useEMA) {
     decay += inc;
     debug.UndoPrinting();
   }
-  if (keyCode == LEFT && decay > inc && !useEMA) {
+  if (keys[14] && keys[10] && decay > inc && !useEMA) {
     decay -= inc;
     debug.UndoPrinting();
   }
-  if (key == '=') {
+  if (keys[15] && keys[11]) {
     persistence += inc;
     debug.UndoPrinting();
   }
-  if (key == ')' && persistence > inc) {
+  if (keys[15] && keys[10] && persistence > inc) {
     persistence -= inc;
     debug.UndoPrinting();
   }
-  if (key == '$') {
+  if (keys[16] && keys[11]) {
     lacunarity += inc;
     debug.UndoPrinting();
   }
-  if (key == '*' && lacunarity > inc) {
+  if (keys[16] && keys[10] && lacunarity > inc) {
     lacunarity -= inc;
     debug.UndoPrinting();
   }
   float beat_inc = 0.5f;
-  if (key == ':' && beat_ratio > 0) {
-    beat_ratio -= beat_inc;
-    debug.UndoPrinting();
-  }
-  if (key == '!' && beat_ratio < 64) {
+  if (keys[17] && keys[11] && beat_ratio < 64) {
     beat_ratio += beat_inc;
     debug.UndoPrinting();
   }
+  if (keys[17] && keys[10] && beat_ratio > 0) {
+    beat_ratio -= beat_inc;
+    debug.UndoPrinting();
+  }
   int phi_inc = 1;
-  if (key == '8' && phideg < 360) {
+  if (keys[18] && keys[11] && phideg < 360) {
     phideg += phi_inc;
     debug.UndoPrinting();
   }
-  if (key == '7' && phideg > 0) {
+  if (keys[18] && keys[10] && phideg > 0) {
     phideg -= phi_inc;
     debug.UndoPrinting();
   }
-  if (keyCode == UP && smooth_factor < 1-inc && useEMA) {
+  if (keys[19] && keys[11] && smooth_factor < 1-inc && useEMA) {
     smooth_factor += inc;
     debug.UndoPrinting();
   }
-  if (keyCode == DOWN && smooth_factor > inc && useEMA) { 
+  if (keys[19] && keys[10] && smooth_factor > inc && useEMA) { 
     smooth_factor -= inc;
     debug.UndoPrinting();
   }
-  if (key == 'q' && minSize > inc) { 
-    minSize -= inc;
-    debug.UndoPrinting();
-  }
-  if (key == 's' && minSize < 1-inc) { 
+  if (keys[20] && keys[11] && minSize < 1-inc) { 
     minSize += inc;
     debug.UndoPrinting();
   }
-  if (key == 'g' && sizeScale > inc) { 
-    sizeScale -= inc;
+  if (keys[20] && keys[10] && minSize > inc) { 
+    minSize -= inc;
     debug.UndoPrinting();
   }
-  if (key == 'h' && sizeScale < 1-inc) { 
+  if (keys[21] && keys[11] && sizeScale < 1-inc) { 
     sizeScale += inc;
     debug.UndoPrinting();
   }
-  if (key == 'e') {
+  if (keys[21] && keys[10] && sizeScale > inc) { 
+    sizeScale -= inc;
+    debug.UndoPrinting();
+  }
+  if (keys[22] && keys[12]) {
     useEMA = !useEMA;
     debug.UndoPrinting();
   }
-  if (key == 'm' && isPlayer) {
+  if (keys[23] && keys[12] && isPlayer) {
     isWebPlayer = !isWebPlayer;
     debug.UndoPrinting();
   }
@@ -352,7 +430,7 @@ void keyPressed() {
     octaves--;
     debug.UndoPrinting();
   }
-  if (key == 'd') opc.setDithering(false);
+  //if (key == 'd') opc.setDithering(false);
   if (key == ' ' && isPlayer) { 
     sound[song].pause();
   }
@@ -396,7 +474,55 @@ void keyPressed() {
 }
 
 void keyReleased() {
-  if (key == 'd') opc.setDithering(true);
+  if (key == '0')
+    keys[0] = false;
+  if (key == '1')
+    keys[1] = false;
+  if (key == '2')
+    keys[2] = false;
+  if (key == '3')
+    keys[3] = false;
+  if (key == '4')
+    keys[4] = false;
+  if (key == '5')
+    keys[5] = false;
+  if (key == '6')
+    keys[6] = false;
+  if (key == '7')
+    keys[7] = false;
+  if (key == '8')
+    keys[8] = false;
+  if (key == '9')
+    keys[9] = false;
+  if (key == '-')
+    keys[10] = false;
+  if (key == '+')
+    keys[11] = false;
+  if (key == 't')
+    keys[12] = false;
+  if (key == 'n')
+    keys[13] = false;
+  if (key == 'd')
+    keys[14] = false;
+  if (key == 'p')
+    keys[15] = false;
+  if (key == 'l')
+    keys[16] = false;
+  if (key == 'b')
+    keys[17] = false;
+  if (key == 'a')
+    keys[18] = false;
+  if (key == 's')
+    keys[19] = false;
+  if (key == 'q')
+    keys[20] = false;
+  if (key == 'q')
+    keys[21] = false;
+  if (key == 'e')
+    keys[22] = false;
+  if (key == 'w')
+    keys[23] = false;
+  //if (key == 'd') opc.setDithering(true);
 }
 
 void mousePressed()
@@ -453,7 +579,8 @@ void draw()
     background(0);
   }
 
-  debug.prStrOnce("Key used = " + key);
+  // FIXME: print the whole keys[] array content
+  //debug.prStrOnce("Key used = " + key);
 
   if (isPlayer && isWebPlayer) {
     debug.prStrOnce("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
