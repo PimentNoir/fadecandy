@@ -1,0 +1,35 @@
+n + {-,+} = Increase or decrease noise scale. 
+o + {-,+} = Increase or decrease the FBM number of octaves. 
+p + {-,+} = Increase or decrease the FBM persistence.
+l + {-,+} = Increase or decrease the FBM lacunarity.
+
+b + {-,+} = Increase or decrease the ratio of the beat detector. 
+
+a + {-,+} = Increase or decrease the chirp initial phase.   
+
+d + {-,+} = Increase or decrease the decay with the log decay filter.
+s + {-,+} = Increase or decrease the smooth factor with the EMA filter.   
+
+q + {-,+} = Increase or decrease the minimum particles size. 
+h + {-,+} = Increase or decrease the particles size scale.
+
+m + {-,+} = Increase or decrease the size of the audio file end buffer. 
+
+t + e = Toggle between log decay or EMA FFT filter.
+t + w = Toggle between web streaming and audio files player mode.  
+t + c = Toggle between auto-generated colors gradient and file gradient. 
+t + i = Toggle between inversed frequencies weighting and default one. 
+t + z = Toggle between zeroing NaN FFT values or not.
+t + d = Deactivate dithering (releasing the two keys reactivate it). 
+
+p + [0-4] = Switch between different chirp pulsation. 
+r + [0-2] = Switch between different reactivity level. 
+
+Space key = Pause the player in player mode. 
+v = Play in player mode.
+u = Play next stream or audio file in player mode.
+y = Play previous stream or audio file in player mode.
+k = Forward in audio files player mode. 
+j = Rewind in audio files player mode.
+
+

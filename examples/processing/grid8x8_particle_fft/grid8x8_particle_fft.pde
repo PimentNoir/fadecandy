@@ -88,7 +88,7 @@ float beat_ratio = 1.0f;
 
 void setup()
 {
-  keys = new boolean[24]; // Number of keys state to track
+  keys = new boolean[30]; // Number of keys state to track
   for (int i = 0; i < keys.length; i++ )
   {
     keys[i] = false;
@@ -280,6 +280,31 @@ void keyPressed() {
   if (key == 'w') {
     keys[23] = true;
   }
+  if (key == 'r') {
+    keys[24] = true;
+  }
+  if (key == 'c') {
+    keys[25] = true;
+  }
+  if (key == 'i') {
+    keys[26] = true;
+  }
+  if (key == 'z') {
+    keys[27] = true;
+  }
+  if (key == 'm') {
+    keys[28] = true;
+  }
+  if (key == 'o') {
+    keys[29] = true;
+  }
+  // Count number of keys pressed
+  int nrKeys = 0;
+  for (int i = 0; i < keys.length; i++) {
+    if (keys[i]) {
+      nrKeys++;
+    }
+  }
   float noise_scale_inc = 0.001f;
   if (keys[13] && keys[11] && noise_scale_fft < 15-noise_scale_inc) {
     noise_scale_fft += noise_scale_inc;
@@ -364,80 +389,81 @@ void keyPressed() {
     isWebPlayer = !isWebPlayer;
     debug.UndoPrinting();
   }
-  if (key == 'a') {
+  if (key == 'g') {
     debug.UndoPrinting();
   }
-  if (key == 'c') {
+  if (keys[25] && keys[12]) {
     isColorFile = !isColorFile;
     debug.UndoPrinting();
   } 
-  if (key == 'w') {
-    // Toggle key
+  if (keys[26] && keys[12]) {
+    // Toggle keys
     isInversed = !isInversed;
     debug.UndoPrinting();
   }
-  if (key == 'z') {
-    // Toggle key
+  if (keys[27] && keys[12]) {
+    // Toggle keys
     isZeroNaN = !isZeroNaN;
     debug.UndoPrinting();
   }
-  if (key == 'o') {
+  if (keys[15] && keys[0]) {
     pulse_type = 0;
     debug.UndoPrinting();
   }
-  if (key == 'i') {
+  if (keys[15] && keys[1]) {
     pulse_type = 1;
     debug.UndoPrinting();
   }
-  if (key == 'u') {
+  if (keys[15] && keys[2]) {
     pulse_type = 2;
     debug.UndoPrinting();
   }
-  if (key == 'y') {
+  if (keys[15] && keys[3]) {
     pulse_type = 3;
     debug.UndoPrinting();
   }
-  if (key == 't') {
+  if (keys[15] && keys[4]) {
     pulse_type = 4;
     debug.UndoPrinting();
   }
-  if (key == '6') {
-    MultiEndBuffer--;
-    debug.UndoPrinting();
-  }
-  if (key == '9') {
+  if (keys[28] && keys[11]) {
     MultiEndBuffer++;
     debug.UndoPrinting();
   }
-  if (key == '0') {
+  if (keys[28] && keys[10]) {
+    MultiEndBuffer--;
+    debug.UndoPrinting();
+  }
+  if (keys[24] && keys[0]) {
     reactivity_type = 0;
     debug.UndoPrinting();
   }
-  if (key == '1') {
+  if (keys[24] && keys[1]) {
     reactivity_type = 1;
     debug.UndoPrinting();
   }
-  if (key == '2') {
+  if (keys[24] && keys[2]) {
     reactivity_type = 2;
     debug.UndoPrinting();
   }
   // Limit the number of FBM octaves to the int range [1-64].
-  if (key == '+' && octaves < 64) {
+  if (keys[29] && keys[11] && octaves < 64) {
     octaves++;
     debug.UndoPrinting();
   }
-  if (key == '-' && octaves > 1) {
+  if (keys[29] && keys[10] && octaves > 1) {
     octaves--;
     debug.UndoPrinting();
   }
-  //if (key == 'd') opc.setDithering(false);
+  // FIXME: it's not a good usage of keys to toggle
+  if (keys[14] && keys[12]) opc.setDithering(false);
   if (key == ' ' && isPlayer) { 
     sound[song].pause();
   }
-  if (key == 'p' && isPlayer) {
+  if (key == 'v' && isPlayer) {
     sound[song].play();
   }
-  if (key == 'n' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1) {
+  if (key == 'u' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1) {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -445,7 +471,7 @@ void keyPressed() {
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
-  if (key == 'b' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song > 0) {
+  if (key == 'y' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song > 0) {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -453,7 +479,7 @@ void keyPressed() {
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
-  if (key == 'n' && isPlayer && isWebPlayer && song < filename.length-1) {
+  if (key == 'u' && isPlayer && isWebPlayer && song < filename.length-1) {
     oldsong = song;
     song++;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -461,7 +487,7 @@ void keyPressed() {
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
-  if (key == 'b' && isPlayer && isWebPlayer && song > 0) {
+  if (key == 'y' && isPlayer && isWebPlayer && song > 0) {
     oldsong = song;
     song--;
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
@@ -469,8 +495,8 @@ void keyPressed() {
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
     debug.UndoPrinting();
   }
-  if (key == 'f' && isPlayer && !isWebPlayer) sound[song].skip(100);
-  if (key == 'r' && isPlayer && !isWebPlayer) sound[song].skip(-100);
+  if (key == 'k' && isPlayer && !isWebPlayer) sound[song].skip(100);
+  if (key == 'j' && isPlayer && !isWebPlayer) sound[song].skip(-100);
 }
 
 void keyReleased() {
@@ -522,7 +548,19 @@ void keyReleased() {
     keys[22] = false;
   if (key == 'w')
     keys[23] = false;
-  //if (key == 'd') opc.setDithering(true);
+  if (key == 'r')
+    keys[24] = false;
+  if (key == 'c')
+    keys[25] = false;
+  if (key == 'i')
+    keys[26] = false;
+  if (key == 'z')
+    keys[27] = false;
+  if (key == 'm')
+    keys[28] = false;
+  if (key == 'o')
+    keys[29] = false;
+  if (keys[14] && keys[12]) opc.setDithering(true);
 }
 
 void mousePressed()
