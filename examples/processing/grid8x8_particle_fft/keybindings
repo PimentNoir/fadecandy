@@ -20,7 +20,7 @@ t + w = Toggle between web streaming and audio files player mode.
 t + c = Toggle between auto-generated colors gradient and file gradient. 
 t + i = Toggle between inversed frequencies weighting and default one. 
 t + z = Toggle between zeroing NaN FFT values or not.
-t + d = Deactivate dithering (releasing the two keys reactivate it). 
+t + d = Deactivate or activate fadecandy dithering. 
 
 p + [0-4] = Switch between different chirp pulsation. 
 r + [0-2] = Switch between different reactivity level. 

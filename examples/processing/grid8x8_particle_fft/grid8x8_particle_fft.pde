@@ -56,15 +56,16 @@ boolean useEMA;
 boolean isColorFile;
 boolean isZeroNaN;
 boolean isWebPlayer;
+boolean isDitheringEnabled;
 boolean[] keys;
 
 int song;
 int oldsong;
 //String[] filename = {"083_trippy-ringysnarebeat-3bars.mp3"};n
-String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://audio.scdn.arkena.com/11014/mouv-midfi128.mp3", "http://audio.scdn.arkena.com/11008/franceinter-midfi128.mp3", "http://audio.scdn.arkena.com/11012/francemusique-midfi128.mp3"};
-//String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
-//  "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
-//  "02 - Plastic People.mp3", "07. Stir It Up.mp3" }; 
+//String[] filename = {"http://www.ledjamradio.com/sound", "http://live.radiogrenouille.com/live", "http://stream1.addictradio.net/addictlounge.mp3", "http://audio.scdn.arkena.com/11014/mouv-midfi128.mp3", "http://audio.scdn.arkena.com/11008/franceinter-midfi128.mp3", "http://audio.scdn.arkena.com/11012/francemusique-midfi128.mp3"};
+String[] filename = {"02 Careful With That Axe, Eugene.mp3", "01. One Of These Days.mp3", "08 - The Good, The Bad and The Ugly.mp3", "06. Echoes.mp3", "07 - A fistful of Dollars [Main Title].mp3", "10 - Girl, You'll Be A Woman Soon - Urge Overkill.mp3", "01. The Eagles - Hotel California.mp3", "18 - Kill Bill Vol. 1 [Death rides a Horse].mp3", "02 - Once upon a time in America [Deborah's Theme].mp3", "17 - Once upon a time in the West [The man with the Harmonica].mp3", "Johnny Cash - Hurt.mp3", "New Shoes.mp3", "07 - Selah Sue - Explanations.mp3", "10-amon_tobin--bedtime_stories-oma.mp3", "07-amon_tobin--mass_and_spring-oma.mp3", "01-amon_tobin--journeyman-oma.mp3", "11. Redemption Song.mp3", "King Crimson - 1969 - In the Court of the Crimson King - 01 - 21st Century Schizoid Man.mp3", "02. No Woman No Cry.mp3", 
+  "05. Buffalo Soldier.mp3", "17 - Disco Boy.mp3", "Bobby McFerrin - Don't Worry, Be Happy.mp3", "06. Get up Stand Up.mp3", "01-amon_tobin--journeyman-oma.mp3", 
+  "02 - Plastic People.mp3", "07. Stir It Up.mp3" }; 
 
 String ColorGradientImage;
 
@@ -88,15 +89,18 @@ float beat_ratio = 1.0f;
 
 void setup()
 {
-  keys = new boolean[30]; // Number of keys state to track
+  keys = new boolean[30]; // Number of keys state to track.
   for (int i = 0; i < keys.length; i++ )
   {
     keys[i] = false;
   }
 
+  // Enable fadecandy dithering.
+  isDitheringEnabled = true;
+
   // Switch between audio player or audio line in capture.
-  //isPlayer = true;
-  isPlayer = false;
+  isPlayer = true;
+  //isPlayer = false;
   isWebPlayer = false;
   //isWebPlayer = true;
 
@@ -455,8 +459,12 @@ void keyPressed() {
     octaves--;
     debug.UndoPrinting();
   }
-  // FIXME: it's not a good usage of keys to toggle
-  if (keys[14] && keys[12]) opc.setDithering(false);
+  if (keys[14] && keys[12]) {
+    isDitheringEnabled = !isDitheringEnabled;
+    if (isDitheringEnabled) debug.prStr("Dithering enabled");
+    if (!isDitheringEnabled) debug.prStr("Dithering disabled");
+    opc.setDithering(isDitheringEnabled);
+  }
   if (key == ' ' && isPlayer) { 
     sound[song].pause();
   }
@@ -542,7 +550,7 @@ void keyReleased() {
     keys[19] = false;
   if (key == 'q')
     keys[20] = false;
-  if (key == 'q')
+  if (key == 'h')
     keys[21] = false;
   if (key == 'e')
     keys[22] = false;
@@ -560,7 +568,6 @@ void keyReleased() {
     keys[28] = false;
   if (key == 'o')
     keys[29] = false;
-  if (keys[14] && keys[12]) opc.setDithering(true);
 }
 
 void mousePressed()
@@ -734,7 +741,7 @@ void draw()
       }  
       if (isUndefined) {
         phase = 0.0f;
-        // Debug output
+        // Debug output.
         debug.prStr("Chirp log undefined! i = " + i + ", f0 = " + f0[i] + ", f1 = " + f1[i] + ", f0 * f1 = " +  f0[i] * f1[i]);
         continue;
       } else {
