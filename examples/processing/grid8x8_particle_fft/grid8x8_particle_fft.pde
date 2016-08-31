@@ -163,7 +163,7 @@ void setup()
     mixerInfo = AudioSystem.getMixerInfo(); 
 
     for (int i = 0; i < mixerInfo.length; i++) {
-      debug.prStr(i + ": " + mixerInfo[i].getName());
+      Debug.prStr(i + ": " + mixerInfo[i].getName());
     } 
     // index = 0 is pulseaudio mixer on GNU/Linux
     Mixer mixer = AudioSystem.getMixer(mixerInfo[0]); 
@@ -312,157 +312,157 @@ void keyPressed() {
   float noise_scale_inc = 0.001f;
   if (keys[13] && keys[11] && noise_scale_fft < 15-noise_scale_inc) {
     noise_scale_fft += noise_scale_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[13] && keys[10] && noise_scale_fft > noise_scale_inc) {
     noise_scale_fft -= noise_scale_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   float inc = 0.01f;
   if (keys[14] && keys[11] && decay < 1-inc && !useEMA) {
     decay += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[14] && keys[10] && decay > inc && !useEMA) {
     decay -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[11]) {
     persistence += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[10] && persistence > inc) {
     persistence -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[16] && keys[11]) {
     lacunarity += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[16] && keys[10] && lacunarity > inc) {
     lacunarity -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   float beat_inc = 0.5f;
   if (keys[17] && keys[11] && beat_ratio < 64) {
     beat_ratio += beat_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[17] && keys[10] && beat_ratio > 0) {
     beat_ratio -= beat_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   int phi_inc = 1;
   if (keys[18] && keys[11] && phideg < 360) {
     phideg += phi_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[18] && keys[10] && phideg > 0) {
     phideg -= phi_inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[19] && keys[11] && smooth_factor < 1-inc && useEMA) {
     smooth_factor += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[19] && keys[10] && smooth_factor > inc && useEMA) { 
     smooth_factor -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[20] && keys[11] && minSize < 1-inc) { 
     minSize += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[20] && keys[10] && minSize > inc) { 
     minSize -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[21] && keys[11] && sizeScale < 1-inc) { 
     sizeScale += inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[21] && keys[10] && sizeScale > inc) { 
     sizeScale -= inc;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[22] && keys[12]) {
     useEMA = !useEMA;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[23] && keys[12] && isPlayer) {
     isWebPlayer = !isWebPlayer;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (key == 'g') {
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[25] && keys[12]) {
     isColorFile = !isColorFile;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   } 
   if (keys[26] && keys[12]) {
     // Toggle keys
     isInversed = !isInversed;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[27] && keys[12]) {
     // Toggle keys
     isZeroNaN = !isZeroNaN;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[0]) {
     pulse_type = 0;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[1]) {
     pulse_type = 1;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[2]) {
     pulse_type = 2;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[3]) {
     pulse_type = 3;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[15] && keys[4]) {
     pulse_type = 4;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[28] && keys[11]) {
     MultiEndBuffer++;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[28] && keys[10]) {
     MultiEndBuffer--;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[24] && keys[0]) {
     reactivity_type = 0;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[24] && keys[1]) {
     reactivity_type = 1;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[24] && keys[2]) {
     reactivity_type = 2;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   // Limit the number of FBM octaves to the int range [1-64].
   if (keys[29] && keys[11] && octaves < 64) {
     octaves++;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[29] && keys[10] && octaves > 1) {
     octaves--;
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (keys[14] && keys[12]) {
     isDitheringEnabled = !isDitheringEnabled;
-    if (isDitheringEnabled) debug.prStr("Dithering enabled");
-    if (!isDitheringEnabled) debug.prStr("Dithering disabled");
+    if (isDitheringEnabled) Debug.prStr("Dithering enabled");
+    if (!isDitheringEnabled) Debug.prStr("Dithering disabled");
     opc.setDithering(isDitheringEnabled);
   }
   if (key == ' ' && isPlayer) { 
@@ -477,7 +477,7 @@ void keyPressed() {
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (key == 'y' && isPlayer && !isWebPlayer && sound[song].position() <= sound[song].length()-MultiEndBuffer*AudioBufferSize && song > 0) {
     oldsong = song;
@@ -485,7 +485,7 @@ void keyPressed() {
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (key == 'u' && isPlayer && isWebPlayer && song < filename.length-1) {
     oldsong = song;
@@ -493,7 +493,7 @@ void keyPressed() {
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (key == 'y' && isPlayer && isWebPlayer && song > 0) {
     oldsong = song;
@@ -501,7 +501,7 @@ void keyPressed() {
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   }
   if (key == 'k' && isPlayer && !isWebPlayer) sound[song].skip(100);
   if (key == 'j' && isPlayer && !isWebPlayer) sound[song].skip(-100);
@@ -625,17 +625,17 @@ void draw()
   }
 
   // FIXME: print the whole keys[] array content
-  //debug.prStrOnce("Key used = " + key);
+  //Debug.prStrOnce("Key used = " + key);
 
   if (isPlayer && isWebPlayer) {
-    debug.prStrOnce("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
+    Debug.prStrOnce("Mode: Web player playing " + metasound.fileName() + "\n Title: " + metasound.title() + "\n Audio buffer size: " + AudioBufferSize);
   } else if (isPlayer && !isWebPlayer) {
-    debug.prStrOnce("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
+    Debug.prStrOnce("Mode: File player playing " + metasound.fileName() + "\n Title: " + metasound.title() +"\n Author: " + metasound.author()  + "\n Track: " + metasound.track() + "\n Duration: " + (metasound.length()/1000)/60 + "min\n Encoded: " + metasound.encoded() + "\n Audio buffer size: " + AudioBufferSize);
   } else {
-    debug.prStrOnce("Mode: Line in with audio buffer size = " + AudioBufferSize);
+    Debug.prStrOnce("Mode: Line in with audio buffer size = " + AudioBufferSize);
   }
 
-  debug.prStrOnce("Multiple for end buffer size = " + MultiEndBuffer);
+  Debug.prStrOnce("Multiple for end buffer size = " + MultiEndBuffer);
 
   if (isPlayer && !isWebPlayer && sound[song].position() > sound[song].length()-MultiEndBuffer*AudioBufferSize && song < filename.length-1 && song >= 0) {
     oldsong = song; 
@@ -643,7 +643,7 @@ void draw()
     sound[song] = minim.loadFile(filename[song], AudioBufferSize);
     metasound = sound[song].getMetaData();
     reinit_player_fft(sound[song].bufferSize(), sound[song].sampleRate());
-    debug.UndoPrinting();
+    Debug.UndoPrinting();
   } 
 
   float now = millis(); 
@@ -654,15 +654,15 @@ void draw()
     fft.forward(in.mix);
   }
 
-  debug.prStrOnce("Current FFT Window: " + fftWindow.toString());
+  Debug.prStrOnce("Current FFT Window: " + fftWindow.toString());
 
   // All fftFilters have the same length.
   int fftFilterLength = fftFilter.length;
 
   if (useEMA) { 
-    debug.prStrOnce("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
+    Debug.prStrOnce("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
   } else {
-    debug.prStrOnce("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
+    Debug.prStrOnce("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
   }     
 
   for (int i = 0; i < fftFilterLength; i++) {
@@ -680,9 +680,9 @@ void draw()
   }
 
   if (isZeroNaN) {
-    debug.prStrOnce("Zero NaN FFT values in fftFilters used for displaying");
+    Debug.prStrOnce("Zero NaN FFT values in fftFilters used for displaying");
   } else {
-    debug.prStrOnce("Let NaN FFT values go through the fftFilters used for displaying");
+    Debug.prStrOnce("Let NaN FFT values go through the fftFilters used for displaying");
   }     
 
   // Normalize fftFilter array values between [0-1] float range for displaying and noise feeding purpose.
@@ -698,9 +698,9 @@ void draw()
   }
 
   if (isInversed) { 
-    debug.prStrOnce("Weighting: Basic inversed frequency weighting mode");
+    Debug.prStrOnce("Weighting: Basic inversed frequency weighting mode");
   } else {
-    debug.prStrOnce("Weighting: No frequency weighting mode");
+    Debug.prStrOnce("Weighting: No frequency weighting mode");
   }
 
   for (int i = 0; i < fftFilterLength; i++) {
@@ -710,7 +710,7 @@ void draw()
     // Variation on each frequency bands. 
     float fftFilterNormVar = abs(fftFilterNorm[i] - fftFilterNormPrev[i]);
 
-    debug.prStrOnce("Beat ratio = " + beat_ratio);
+    Debug.prStrOnce("Beat ratio = " + beat_ratio);
 
     phi *= phideg * PI / 180;
     int j = i + 1;
@@ -721,7 +721,7 @@ void draw()
       sampleRate = in.sampleRate();
     }
 
-    debug.prStrOnce("Sample Rate: " + sampleRate + "Hz");
+    Debug.prStrOnce("Sample Rate: " + sampleRate + "Hz");
 
     fftFilterAmpFreq[i] = ZeroNaNValue(fftFilterAmpFreq[i]);          
     fftFilterFreq[i] = ZeroNaNValue(fftFilterFreq[i]);          
@@ -731,7 +731,7 @@ void draw()
     case 0:
       float pulse_zero = fftFilterAmpFreq[i] * sin(fftFilterFreq[i] * 2 * PI * ((float)j / sampleRate) + phi);
       pulse = pulse_zero;
-      debug.prStrOnce("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = " + phideg);
+      Debug.prStrOnce("Pulse: " + pulse_type + " -> Sine wave with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = " + phideg);
       break;
     case 1:
       // A very basic exponential chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -742,7 +742,7 @@ void draw()
       if (isUndefined) {
         phase = 0.0f;
         // Debug output.
-        debug.prStr("Chirp log undefined! i = " + i + ", f0 = " + f0[i] + ", f1 = " + f1[i] + ", f0 * f1 = " +  f0[i] * f1[i]);
+        Debug.prStr("Chirp log undefined! i = " + i + ", f0 = " + f0[i] + ", f1 = " + f1[i] + ", f0 * f1 = " +  f0[i] * f1[i]);
         continue;
       } else {
         if (f0[i] == f1[i]) { 
@@ -754,7 +754,7 @@ void draw()
       }
       float pulse_one = fftFilterAmpFreq[i] * cos(phase + phi);       
       pulse = pulse_one;
-      debug.prStrOnce("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
+      Debug.prStrOnce("Pulse: " + pulse_type + " -> Log chirp with initial phase = " + phideg);  
       break;
     case 2:
       // Very basic linear chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -762,7 +762,7 @@ void draw()
       phase = 2 * PI * (f0[i] * ((float)j / sampleRate) + 0.5 * beta * ((float)j / sampleRate) * ((float)j / sampleRate));
       float pulse_two = fftFilterAmpFreq[i] * cos(phase + phi);
       pulse = pulse_two;
-      debug.prStrOnce("Pulse: " + pulse_type + " -> Linear chirp with initial phase = " + phideg);        
+      Debug.prStrOnce("Pulse: " + pulse_type + " -> Linear chirp with initial phase = " + phideg);        
       break;
     case 3:       
       // Very basic quadratic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -770,7 +770,7 @@ void draw()
       phase = 2 * PI * (f1[i] * ((float)j / sampleRate) + beta * (pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate) - ((float)j / sampleRate), 3) - pow(((float)j / (float)fftFilterLength) * ((float)j / sampleRate), 3)) / 3);
       float pulse_three = fftFilterAmpFreq[i] * cos(phase + phi);
       pulse = pulse_three;
-      debug.prStrOnce("Pulse: " + pulse_type + " -> Quadratic chirp with initial phase = " + phideg);        
+      Debug.prStrOnce("Pulse: " + pulse_type + " -> Quadratic chirp with initial phase = " + phideg);        
       break;
     case 4:       
       // Very basic hyperbolic chirp pulse with amplitude = fftFilterAmpFreq[i], frequency = fftFilterFreq[i] and initial phase = phideg.
@@ -788,42 +788,42 @@ void draw()
       } 
       float pulse_four = fftFilterAmpFreq[i] * cos(phase + phi);
       pulse = pulse_four;
-      debug.prStrOnce("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
+      Debug.prStrOnce("Pulse: " + pulse_type + " -> Hyperbolic chirp with initial phase = " + phideg);        
       break;
     default:
       fftFilter[i] = ZeroNaNValue(fftFilter[i]);
       float pulse_default = sin(fftFilter[i]);
       pulse=pulse_default;
-      debug.prStrOnce("Pulse: default sin(fftFilter[i])");
+      Debug.prStrOnce("Pulse: default sin(fftFilter[i])");
     }   
 
-    debug.prStrOnce("FBM Properties:\n Number of octaves: " + octaves + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
+    Debug.prStrOnce("FBM Properties:\n Number of octaves: " + octaves + "\n Persistence: " + persistence + "\n Lacunarity: " + lacunarity);
     switch(reactivity_type) {
     case 0:
       float low_noise_fft = SimplexNoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse, octaves, persistence, lacunarity);
       noise_fft = low_noise_fft;
-      debug.prStrOnce("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
+      Debug.prStrOnce("Reactivity: Low with FFT noise scale = " +  noise_scale_fft);
       break;
     case 1:
       float medium_noise_fft = SimplexNoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
       noise_fft = medium_noise_fft;
-      debug.prStrOnce("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
+      Debug.prStrOnce("Reactivity: Medium with FFT noise scale = " +  noise_scale_fft);
       break;
     case 2:
       float high_noise_fft = SimplexNoise.fbm(now * spin + noise_scale_fft * noise_fft + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
       noise_fft = high_noise_fft;
-      debug.prStrOnce("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
+      Debug.prStrOnce("Reactivity: High with FFT noise scale = " +  noise_scale_fft);
       break;
     default:
       float noise_default = SimplexNoise.fbm(now * spin + noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio, noise_scale_fft * fftFilterNorm[i] * noise_fft * fftFilterNormVar * beat_ratio + noise_scale_fft * pulse * noise_fft, octaves, persistence, lacunarity);
       noise_fft = noise_default;
-      debug.prStrOnce("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);
+      Debug.prStrOnce("Reactivity: default (Medium) with FFT noise scale = " +  noise_scale_fft);
     }
 
     //float size_pulse_blink = fftFilterNorm[i] * pulse;
     float size_pulse_noblink = fftFilterNorm[i] * pulse * noise_fft;
     float size = height * (minSize + sizeScale * size_pulse_noblink);
-    debug.prStrOnce("Visualisation properties: \n Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
+    Debug.prStrOnce("Visualisation properties: \n Particules minimum size = " + minSize + " with size scale = " + sizeScale); 
 
     // Do not loose some fftFilter values, use fftFilter normalized.
     float centerx = fftFilterNorm[i] * width * noise_fft; 
@@ -836,7 +836,7 @@ void draw()
       colorMode(RGB, 255);
       color rgb = colors.get(int(map(i, 0, fftFilterLength-1, 0, colors.width-1)), colors.height/2);
       tint(rgb, fftFilterNormInv[i] * noise_fft * opacity);
-      debug.prStrOnce("Color: Use color file = " + ColorGradientImage + " with opacity = " + opacity + " modulated by a coherent noise (RGB mode)");
+      Debug.prStrOnce("Color: Use color file = " + ColorGradientImage + " with opacity = " + opacity + " modulated by a coherent noise (RGB mode)");
     } else {
       colorMode(HSB, 100);
       // Choose hue values smoothly around the HSB spectrum to begin with.
@@ -851,10 +851,10 @@ void draw()
         brightness 
         );
       tint(hsb, fftFilterNormInv[i] * opacity);
-      debug.prStrOnce("Color: Use gradient autogenerated with a coherent noise and opacity = " + opacity + " (HSB mode)");
+      Debug.prStrOnce("Color: Use gradient autogenerated with a coherent noise and opacity = " + opacity + " (HSB mode)");
     }
-    // Last call to a debug.prStrOnce() function in the processing runtime.
-    debug.DonePrinting();
+    // Last call to a Debug.prStrOnce() function in the processing runtime.
+    Debug.DonePrinting();
     blendMode(ADD);
 
     image(dot, center.x - size/2, center.y - size/2, size, size);

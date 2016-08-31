@@ -16,21 +16,21 @@ public static final class Debug {
     Debug.enableDebug = enableDebug;
   }  
 
-  public void DonePrinting() {
+  static public void DonePrinting() {
     printCount = 1;
   }
 
-  public void UndoPrinting() {
+  static public void UndoPrinting() {
     if (enableDebug) printCount = 0;
   }
 
-  public void prStr(String string) {
+  static public void prStr(String string) {
     if (enableDebug) { 
       println(string);
     }
   }
 
-  public void prStrOnce(String string) {
+  static public void prStrOnce(String string) {
     if (printCount == 0 && enableDebug) { 
       println(string);
     }
