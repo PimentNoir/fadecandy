@@ -90,7 +90,7 @@ float beat_ratio = 1.0f;
 
 void setup()
 {
-  keys = new boolean[30]; // Number of keys state to track.
+  keys = new boolean[nrKeys];
   for (int i = 0; i < keys.length; i++ )
   {
     keys[i] = false;
@@ -291,9 +291,9 @@ void draw()
   int fftFilterLength = fftFilter.length;
 
   if (useEMA) { 
-    Debug.prStrOnce("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength-1));
+    Debug.prStrOnce("FFT Filter: EMA with smooth factor = " + smooth_factor + " and length = " + (fftFilterLength));
   } else {
-    Debug.prStrOnce("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength-1));
+    Debug.prStrOnce("FFT Filter: Log with decay = " + decay + " and length = " + (fftFilterLength));
   }     
 
   for (int i = 0; i < fftFilterLength; i++) {
