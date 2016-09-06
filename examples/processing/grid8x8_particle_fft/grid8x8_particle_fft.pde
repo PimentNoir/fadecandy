@@ -10,7 +10,7 @@
 // from an image or generated from a simplex noise FBM and FFT filter normalized  
 // and inversed values (the tunable is the boolean isColorFile in setup()).
 //
-// Please read keybindings text file for live interaction with the sketche.
+// Please read keybindings text file for live interaction with the sketch.
 //
 // CREDITS: 
 //     * Toufik Medjamia for the relative help on the 3D shape of the light diffuser;
