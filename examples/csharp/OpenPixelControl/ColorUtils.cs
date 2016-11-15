@@ -52,7 +52,7 @@ namespace OpenPixelControl
         public Pixel ToRgbPixel()
         {
             Color color = (Color)this;
-            return new Pixel((byte)(color.R - 1), (byte)(color.G - 1), (byte)(color.B - 1));
+            return new Pixel((byte)(color.R), (byte)(color.G), (byte)(color.B));
         }
 
         #region Casts to/from System.Drawing.Color
@@ -109,7 +109,7 @@ namespace OpenPixelControl
         public static implicit operator HSLColor(Color color)
         {
             HSLColor hslColor = new HSLColor();
-            hslColor.hue = color.GetHue() / 360.0; // we store hue as 0-1 as opposed to 0-360 
+            hslColor.hue = color.GetHue() / 360.0; // we store hue as 0-1 as opposed to 0-360
             hslColor.luminosity = color.GetBrightness();
             hslColor.saturation = color.GetSaturation();
             return hslColor;
