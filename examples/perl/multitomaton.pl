@@ -22,10 +22,10 @@ $client->can_connect();
 my $red_rule = $ARGV[0];
 $red_rule = int(rand(255)) unless $red_rule;
 
-my $green_rule = $ARGV[0];
+my $green_rule = $ARGV[1];
 $green_rule = int(rand(255)) unless $green_rule;
 
-my $blue_rule = $ARGV[0];
+my $blue_rule = $ARGV[2];
 $blue_rule = int(rand(255)) unless $blue_rule;
 
 print "Running rules $red_rule (red), $green_rule (green), and $blue_rule (blue) \n";
