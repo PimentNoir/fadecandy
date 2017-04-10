@@ -539,11 +539,19 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
         const Value &vFirstOut = inst[2];
         const Value &vCount = inst[3];
 
-        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsUint()) {
+        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsInt()) {
             unsigned channel = vChannel.GetUint();
             unsigned firstOPC = vFirstOPC.GetUint();
             unsigned firstOut = vFirstOut.GetUint();
-            unsigned count = vCount.GetUint();
+            unsigned count;
+            int direction;
+            if (vCount.GetInt() >= 0) {
+                count = vCount.GetInt();
+                direction = 1;
+            } else {
+                count = -vCount.GetInt();
+                direction = -1;
+            }
 
             if (channel != msg.channel) {
                 return;
@@ -553,14 +561,15 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
             firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
             firstOut = std::min<unsigned>(firstOut, unsigned(NUM_PIXELS));
             count = std::min<unsigned>(count, msgPixelCount - firstOPC);
-            count = std::min<unsigned>(count, NUM_PIXELS - firstOut);
+            count = std::min<unsigned>(count,
+                    direction > 0 ? NUM_PIXELS - firstOut : firstOut + 1);
 
             // Copy pixels
             const uint8_t *inPtr = msg.data + (firstOPC * 3);
             unsigned outIndex = firstOut;
-
             while (count--) {
-                uint8_t *outPtr = fbPixel(outIndex++);
+                uint8_t *outPtr = fbPixel(outIndex);
+                outIndex += direction;
                 outPtr[0] = inPtr[0];
                 outPtr[1] = inPtr[1];
                 outPtr[2] = inPtr[2];
@@ -580,13 +589,21 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
         const Value &vCount = inst[3];
         const Value &vColorChannels = inst[4];
 
-        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsUint()
+        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsInt()
             && vColorChannels.IsString() && vColorChannels.GetStringLength() == 3) {
 
             unsigned channel = vChannel.GetUint();
             unsigned firstOPC = vFirstOPC.GetUint();
             unsigned firstOut = vFirstOut.GetUint();
-            unsigned count = vCount.GetUint();
+            unsigned count;
+            int direction;
+            if (vCount.GetInt() >= 0) {
+                count = vCount.GetInt();
+                direction = 1;
+            } else {
+                count = -vCount.GetInt();
+                direction = -1;
+            }
             const char *colorChannels = vColorChannels.GetString();
 
             if (channel != msg.channel) {
@@ -597,15 +614,16 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
             firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
             firstOut = std::min<unsigned>(firstOut, unsigned(NUM_PIXELS));
             count = std::min<unsigned>(count, msgPixelCount - firstOPC);
-            count = std::min<unsigned>(count, NUM_PIXELS - firstOut);
+            count = std::min<unsigned>(count,
+                    direction > 0 ? NUM_PIXELS - firstOut : firstOut + 1);
 
             // Copy pixels
             const uint8_t *inPtr = msg.data + (firstOPC * 3);
             unsigned outIndex = firstOut;
             bool success = true;
-
             while (count--) {
-                uint8_t *outPtr = fbPixel(outIndex++);
+                uint8_t *outPtr = fbPixel(outIndex);
+                outIndex += direction;
 
                 for (int channel = 0; channel < 3; channel++) {
                     if (!OPC::pickColorChannel(outPtr[channel], colorChannels[channel], inPtr)) {
