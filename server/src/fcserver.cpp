@@ -33,6 +33,7 @@
 FCServer::FCServer(rapidjson::Document &config)
     : mConfig(config),
       mListen(config["listen"]),
+      mRelay(config["relay"]),
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
@@ -64,6 +65,29 @@ FCServer::FCServer(rapidjson::Document &config)
     }
 
     /*
+     * Validate the relay [host, port] list.
+     */
+
+    if (mRelay.IsArray() && mRelay.Size() == 2) {
+        const Value &host = mRelay[0u];
+        const Value &port = mRelay[1];
+        const char *hostStr = 0;
+
+        if (host.IsString()) {
+            hostStr = host.GetString();
+        } else if (!host.IsNull()) {
+            mError << "Hostname in 'relay' must be null (any) or a hostname string.\n";
+        }
+
+        if (!port.IsUint()) {
+            mError << "The 'relay' port must be an integer.\n";
+        }
+    }
+    else if (!mRelay.IsNull()) {
+        mError << "The optional 'relay' configuration key must be a [host, post] list.\n";
+    }
+
+    /*
      * Minimal validation on 'devices'
      */
 
@@ -78,7 +102,16 @@ bool FCServer::start(libusb_context *usb)
     const Value &port = mListen[1];
     const char *hostStr = host.IsString() ? host.GetString() : NULL;
 
-    return mTcpNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
+    bool started = mTcpNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
+
+    if (started && !mRelay.IsNull()) {
+        const Value &relayHost = mRelay[0u];
+        const Value &relayPort = mRelay[1];
+        const char *relayHostStr = relayHost.IsString() ? relayHost.GetString() : NULL;
+        mTcpNetServer.startRelay(relayHostStr, relayPort.GetUint());
+    }
+
+    return started;
 }
 
 bool FCServer::startUSB(libusb_context *usb)
@@ -118,6 +151,9 @@ void FCServer::cbOpcMessage(OPC::Message &msg, void *context)
     }
 
     self->mEventMutex.unlock();
+
+    // also forward the message to clients connected on the relay socket
+    self->mTcpNetServer.relayMessage(msg);
 }
 
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)

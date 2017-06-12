@@ -51,6 +51,7 @@ private:
 
     const Document& mConfig;
     const Value& mListen;
+    const Value& mRelay;
     const Value& mColor;
     const Value& mDevices;
     bool mVerbose;

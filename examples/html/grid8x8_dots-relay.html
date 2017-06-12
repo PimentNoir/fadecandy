@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="http://paperjs.org/assets/js/paper.js"></script>
+
+<!-- Define inlined PaperScript, and associate it with myCanvas -->
+<script type="text/paperscript" canvas="myCanvas">
+
+    /*
+     * This is a self-contained for controlling Fadecandy from JavaScript.
+     * We use the popular Paper.js library for drawing and vector math,
+     * and we communicate with the LEDs via a WebSocket connection to fcserver.
+     *
+     * The fcserver must be running before loading the page.
+     * Assumes an 8x8 LED matrix in top-down left-right order is connected
+     * to the first channel of an attached Fadecandy board.
+     *
+     * This example is released into the public domain.
+     * Feel free to use it as a starting point for your own projects.
+     *
+     * BROWSER SUPPORT:
+     *   - Firefox: Works really well
+     *   - Safari: Unusable. Runs for a few seconds, then stops.
+     *   - Chrome: Pretty good, but not as fast as Firefox.
+     * 
+     * 2013 Micah Elizabeth Scott
+     */
+
+    // Paint the background black
+    var background = new Path.Rectangle(view.bounds);
+    background.fillColor = 'black';
+
+    // Connect to a Fadecandy server running on the same computer, on a port configured to relay
+    var socket = new WebSocket('ws://127.0.0.1:7891');
+
+    // Options needed for relaying
+    // setting binaryType is required to properly receive the OPC messages
+    socket.binaryType = 'arraybuffer';
+
+    // Handler to receive the messages
+    socket.onmessage = function(event) {
+        packetReceived(event);
+    }
+
+    // Put some connection status text in the corner of the screen
+    var connectionStatus = new PointText(view.bounds.topLeft + new Point(8, 25));
+    connectionStatus.content = 'Connecting to fcserver...';
+    connectionStatus.style = {
+        fontSize: 20,
+        justification: 'left',
+        fillColor: 'white'
+    };
+    socket.onclose = function(event) {
+        connectionStatus.content = "Not connected to fcserver";
+        connectionStatus.style.fillColor = '#f44';
+    }
+    socket.onopen = function(event) {
+        connectionStatus.content = "Connected";
+        connectionStatus.style.fillColor = '#4f4';
+    }
+
+    // Figure out which areas of the screen are going to map to our LEDs.
+    // This example is hardcoded for an 8x8 grid of pixels, organized in a
+    // left-to-right top-down fashion. Each LED is represented by a small
+    // marker showing its location in the scene.
+
+    var leds = []
+    for (var y = 0; y < 8; y++) {
+        for (var x = 0; x < 8; x++) {
+            var spacing = view.bounds.height / 12;
+            var point = view.center + new Point(spacing * (x - 3.5), spacing * (y - 3.5));
+            var marker = new Path.Circle({
+                center: point,
+                radius: spacing * 0.25,
+                strokeColor: '#888',
+                strokeWidth: 1
+            });
+            leds.push(marker);
+        }
+    }
+
+    function packetReceived(event){
+        if (event && event.data && event.data ){
+            var data = new Uint8Array(event.data);
+            if (data.length > 4) {
+                var channel = data[0];
+                var command = data[1]
+                var pixelsRaw = data.slice(4);
+                var pixels = [];
+                var pixel;
+                // each  pixel byte is an RGB
+                for(var i=0; i < pixelsRaw.length; i++){
+                    if (!pixel) {
+                        pixel = { R: pixelsRaw[i] };
+                    }
+                    else if (!pixel.hasOwnProperty('G')) {
+                        pixel.G = pixelsRaw[i];
+                    }
+                    else if (!pixel.hasOwnProperty('B')) {
+                        pixel.B = pixelsRaw[i];
+                    }
+                    if (pixel.hasOwnProperty('B')) {
+                        // pixel is complete
+
+                        // update the LED
+                        var ledIndex = pixels.length;
+                        if (ledIndex < leds.length) {
+                            leds[ledIndex].fillColor = new Color(pixel.R/255, pixel.G/255, pixel.B/255);
+                        }
+
+                        // stash it and reset
+                        pixels.push(pixel);
+                        pixel = undefined;
+                    }
+                }
+            }
+        }
+    }
+
+</script>
+</head>
+<body style="margin: 0">
+    <canvas id="myCanvas" resize></canvas>
+</body>
+</html>
