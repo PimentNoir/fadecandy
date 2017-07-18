@@ -1,0 +1,13 @@
+[Unit]
+Description=Fadecandy USB LED controller server
+
+[Service]
+ExecStart=@CMAKE_INSTALL_PREFIX@/bin/@EXECUTABLE_NAME@
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+User=@FCSERVER_USER@
+Group=users
+
+[Install]
+WantedBy=multi-user.target

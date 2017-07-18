@@ -1,0 +1,16 @@
+#!/bin/bash
+
+echo "#########################################"
+echo "Creating user @FCSERVER_USER@"
+echo "#########################################"
+adduser --system @FCSERVER_USER@
+usermod -a -G video @FCSERVER_USER@
+usermod -a -G gpio @FCSERVER_USER@
+
+echo "Getting started"
+echo "---------------"
+echo
+echo " To start the service you can run:"
+echo
+echo "  sudo systemctl start @EXECUTABLE_NAME@.service"
+echo
