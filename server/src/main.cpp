@@ -47,6 +47,7 @@ const char *kDefaultConfig =
     "        ]\n"
     "    }\n";
 
+const char *kSystemConfigPath = "/etc/fcserver/config.json";
 
 int main(int argc, char **argv)
 {
@@ -73,8 +74,16 @@ int main(int argc, char **argv)
     } else if (argc == 1) {
         // Load default configuration
 
-        config.Parse<0>(kDefaultConfig);
+        FILE *configFile = fopen(kSystemConfigPath, "r");
+        if (configFile) {
+            std::clog << "Using system config at " << kSystemConfigPath << "\n";
+            rapidjson::FileStream istr(configFile);
+            config.ParseStream<0>(istr);
 
+        } else {
+            std::clog << "No system config file found, using default\n";
+            config.Parse<0>(kDefaultConfig);
+        }
     } else {
         // Unknown, show usage message.
 
