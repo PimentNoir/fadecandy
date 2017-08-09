@@ -52,6 +52,7 @@ To build the binaries and get a Debian package:
 
 
 ```bash
+$ make submodules # Fetches submodule git repositories
 $ mkdir build
 $ cd build
 $ cmake ..
