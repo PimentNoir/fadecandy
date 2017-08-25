@@ -25,16 +25,49 @@ It can build on Windows, Mac OS, or Linux using Make and other command line tool
 
 
 Getting Started
------
+---------------
 
 In order to build the binary from source you need to run the following commands inside of the **server** directory:
 
-`$ make submodules`
-
-`$ make`
+```bash
+$ make submodules
+$ make
+```
 
 The compiled binary will be created in the same **server** directory
 
 If you want to remove the compiled binary and source files run:
 
-`$ make clean`
+```bash
+$ make clean
+```
+
+
+Build using CMake
+-----------------
+
+The CMake project supports building a Debian package including a SystemD service. Run the following commands in the **server** directory to build using it.
+
+To build the binaries and get a Debian package:
+
+
+```bash
+$ make submodules # Fetches submodule git repositories
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make          # Builds the binaries.
+
+$ cpack -G DEB  # Generates the debian package.
+```
+
+To list CMake options:
+
+```bash
+$ cmake -LH ..
+```
+
+You can also install on the system without doing it via a Debian package:
+```bash
+$ make install
+```

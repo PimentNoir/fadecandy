@@ -5,7 +5,7 @@ debug-fcserver.exe
 fcserver
 fcserver.exe
 src/httpdocs.cpp
-
+build/
 *~
 *.swp
 *.swo

@@ -10,6 +10,8 @@ LFLAGS = -lm -lstdc++ -lpthread
 CFLAGS += -g -Wall
 LFLAGS += -g
 
+CFLAGS += -std=c++11
+
 # Annoying warnings on by default on Mac OS
 CFLAGS += -Wno-tautological-constant-out-of-range-compare -Wno-gnu-static-float-init
 
