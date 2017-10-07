@@ -3,7 +3,7 @@ Fadecandy Python Examples
 
 This directory contains examples for Fadecandy written in Python.
 
-The Open Pixel Control project includes its own [Python examples](https://github.com/zestyping/openpixelcontrol/tree/master/python_clients). Those will all work with Fadecandy too.
+The Open Pixel Control project includes its own [Python examples](https://github.com/zestyping/openpixelcontrol/tree/master/python). Those will all work with Fadecandy too.
 
 
 Simple LED Patterns
