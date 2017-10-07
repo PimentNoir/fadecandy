@@ -178,4 +178,36 @@ class Client(object):
 
         return True
 
+    def set_interpolation(self, enabled = True):
+        """
+        Enables or disables frame interpolation on runtime.
+
+        Return True on success.
+        """
+        self._debug('set_interpolation: connecting')
+        is_connected = self._ensure_connected()
+        if not is_connected:
+            self._debug('set_interpolation: not connected.  ignoring reconfiguration.')
+            return False
+    
+        #build firmaware configuration message as documented on
+        #https://github.com/scanlime/fadecandy/blob/master/doc/fc_protocol_opc.md#set-firmware-configuration
+        if enabled:
+            config_bit = 0
+        else:
+            config_bit = 2
+        message = struct.pack('BBBBBBBBB', 0, 255, 0, 5, 0, 1, 0, 2, config_bit)
+    
+        self._debug('set_interpolation: sending firmware configuration')
+        try:
+            self._socket.send(message)
+        except socket.error:
+            self._debug('set_interpolation: connection lost.  could not send firmware configuration.')
+            self._socket = None
+            return False
+        if not self._long_connection:
+            self._debug('set_interpolation: disconnecting')
+            self.disconnect()
+        return True
+
 
