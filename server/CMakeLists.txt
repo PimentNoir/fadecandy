@@ -121,6 +121,8 @@ set(SRC
     "${PROJECT_SOURCE_DIR}/src/fcserver.cpp"
     "${PROJECT_SOURCE_DIR}/src/version.cpp"
     "${PROJECT_SOURCE_DIR}/src/tinythread.cpp"
+    "${PROJECT_SOURCE_DIR}/src/spidevice.cpp"
+    "${PROJECT_SOURCE_DIR}/src/apa102spidevice.cpp"
     "${PROJECT_BINARY_DIR}/httpdocs.cpp"
     )
 

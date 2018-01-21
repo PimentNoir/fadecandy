@@ -12,6 +12,8 @@ CPP_FILES += \
 	src/fcserver.cpp \
 	src/version.cpp \
 	src/tinythread.cpp \
+	src/spidevice.cpp \
+	src/apa102spidevice.cpp \
 	src/httpdocs.cpp
 
 INCLUDES += -Isrc

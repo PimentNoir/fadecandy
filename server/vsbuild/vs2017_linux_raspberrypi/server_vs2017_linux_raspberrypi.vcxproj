@@ -63,7 +63,7 @@
     <Link>
       <LibraryDependencies>
       </LibraryDependencies>
-      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt</AdditionalDependencies>
+      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt;-lwiringPi</AdditionalDependencies>
       <AdditionalOptions>$(RemoteRootDir)/$(SolutionName)httpdocs.o</AdditionalOptions>
       <Relocation>
       </Relocation>
@@ -80,7 +80,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;FCSERVER_HAS_WIRINGPI;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -143,6 +143,7 @@
     <ClInclude Include="..\..\rapidjson\reader.h" />
     <ClInclude Include="..\..\rapidjson\stringbuffer.h" />
     <ClInclude Include="..\..\rapidjson\writer.h" />
+    <ClInclude Include="..\..\src\apa102spidevice.h" />
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\enttecdmxdevice.h" />
     <ClInclude Include="..\..\src\fast_mutex.h" />
@@ -900,6 +901,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="..\..\src\apa102spidevice.cpp" />
     <ClCompile Include="..\..\src\enttecdmxdevice.cpp" />
     <ClCompile Include="..\..\src\fcdevice.cpp" />
     <ClCompile Include="..\..\src\fcserver.cpp" />
@@ -924,7 +926,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;FCSERVER_HAS_WIRINGPI;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -935,7 +937,7 @@
       <AdditionalOptions />
     </ClCompile>
     <Link>
-      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt</AdditionalDependencies>
+      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt;-lwiringPi</AdditionalDependencies>
       <AdditionalOptions>$(RemoteRootDir)/$(SolutionName)httpdocs.o</AdditionalOptions>
       <Relocation>
       </Relocation>

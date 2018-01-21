@@ -2,6 +2,7 @@
 * Abstract base class for SPI-attached devices.
 *
 * Copyright (c) 2013 Micah Elizabeth Scott
+* Copyright (c) 2017 Lance Gilbert <lance@lancegilbert.us>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
 * this software and associated documentation files (the "Software"), to deal in
@@ -39,10 +40,9 @@ public:
 	virtual ~SPIDevice();
 
 	// Must be opened before any other methods are called.
-	virtual int open() = 0;
+	virtual int open(uint32_t port);
 
-	// Some drivers can't determine whether this is a supported device prior to open()
-	virtual bool probeAfterOpening();
+	virtual void write(void* buffer, int length);
 
 	// Check a configuration. Does it describe this device?
 	virtual bool matchConfiguration(const Value &config);
@@ -59,9 +59,6 @@ public:
 	// Write color LUT from parsed JSON
 	virtual void writeColorCorrection(const Value &color);
 
-	// Deal with any I/O that results from completed transfers, outside the context of a completion callback
-	virtual void flush() = 0;
-
 	// Describe this device by adding keys to a JSON object
 	virtual void describe(Value &object, Allocator &alloc);
 
@@ -73,6 +70,7 @@ protected:
 	struct timeval mTimestamp;
 	const char *mTypeString;
 	bool mVerbose;
+	uint32_t mPort;
 
 	// Utilities
 	const Value *findConfigMap(const Value &config);

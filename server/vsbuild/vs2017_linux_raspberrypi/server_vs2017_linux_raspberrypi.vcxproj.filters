@@ -183,6 +183,9 @@
     <ClInclude Include="..\..\src\spidevice.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\apa102spidevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\.gitignore" />
@@ -346,6 +349,9 @@
       <Filter>libusbx</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\spidevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\apa102spidevice.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
