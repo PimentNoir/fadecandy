@@ -80,7 +80,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG -DLWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -88,6 +88,7 @@
       <CAdditionalWarning>no-strict-aliasing</CAdditionalWarning>
       <CppAdditionalWarning>no-strict-aliasing</CppAdditionalWarning>
       <Verbose>true</Verbose>
+      <AdditionalOptions />
     </ClCompile>
     <RemotePreLinkEvent>
       <Command>(cd server/http; python manifest.py) &gt; $(RemoteRootDir)/$(SolutionName)httpdocs.cpp &amp;&amp; g++ -DFCSERVER_VERSION=fcserver-1.04-101-g686ab1f -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti -Wno-strict-aliasing -Os -DNDEBUG -DLWS_LIBRARY_VERSION= -DLWS_BUILD_HASH= -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT -DLWS_NO_WSAPOLL -DLWS_NO_DAEMONIZE -DOS_LINUX -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t -DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY -DHAVE_POLL_H -DHAVE_ASM_TYPES_H -DHAVE_SYS_SOCKET_H -DHAVE_LINUX_NETLINK_H -DHAVE_LINUX_FILTER_H -MMD -Iserver/src -Iserver -lserver/rapidjson -Iserver/libwebsockets/lib -Iserver/libusbx/libusb  -c -o $(RemoteRootDir)/$(SolutionName)httpdocs.o $(RemoteRootDir)/$(SolutionName)httpdocs.cpp</Command>
@@ -148,6 +149,7 @@
     <ClInclude Include="..\..\src\fcdevice.h" />
     <ClInclude Include="..\..\src\fcserver.h" />
     <ClInclude Include="..\..\src\opc.h" />
+    <ClInclude Include="..\..\src\spidevice.h" />
     <ClInclude Include="..\..\src\tcpnetserver.h" />
     <ClInclude Include="..\..\src\tinythread.h" />
     <ClInclude Include="..\..\src\usbdevice.h" />
@@ -902,6 +904,7 @@
     <ClCompile Include="..\..\src\fcdevice.cpp" />
     <ClCompile Include="..\..\src\fcserver.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\spidevice.cpp" />
     <ClCompile Include="..\..\src\tcpnetserver.cpp" />
     <ClCompile Include="..\..\src\tinythread.cpp" />
     <ClCompile Include="..\..\src\usbdevice.cpp" />
@@ -921,7 +924,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG -DLWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -929,6 +932,7 @@
       <CAdditionalWarning>no-strict-aliasing</CAdditionalWarning>
       <CppAdditionalWarning>no-strict-aliasing</CppAdditionalWarning>
       <Verbose>true</Verbose>
+      <AdditionalOptions />
     </ClCompile>
     <Link>
       <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt</AdditionalDependencies>

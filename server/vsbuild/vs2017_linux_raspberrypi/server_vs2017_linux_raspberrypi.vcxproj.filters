@@ -180,6 +180,9 @@
     <ClInclude Include="..\..\rapidjson\internal\strfunc.h">
       <Filter>rapidjson\internal</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\spidevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\.gitignore" />
@@ -207,6 +210,9 @@
     </None>
     <None Include="..\..\http\js\home.js">
       <Filter>http\js</Filter>
+    </None>
+    <None Include="..\..\http\manifest.py">
+      <Filter>http</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -339,6 +345,9 @@
     <ClCompile Include="..\..\libusbx\libusb\sync.c">
       <Filter>libusbx</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\spidevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\http\media\favicon.ico">
@@ -347,10 +356,5 @@
     <Image Include="..\..\http\media\favicon.png">
       <Filter>http\media</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\..\http\manifest.py">
-      <Filter>http</Filter>
-    </CustomBuild>
   </ItemGroup>
 </Project>
