@@ -15,7 +15,7 @@ void setup()
   clouds = createImage(128, 128, RGB);
 
   opc = new OPC(this, "127.0.0.1", 7890);
-  opc.ledGrid8x8(0, width/2, height/2, height / 8.0, 0, false);
+  opc.ledGrid8x8(0, width/2, height/2, height / 8.0, 0, false, false);
 }
 
 void draw()
