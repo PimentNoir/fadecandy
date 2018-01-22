@@ -30,8 +30,9 @@
 #include <ctype.h>
 #include <iostream>
 
+#ifdef FCSERVER_HAS_WIRINGPI
 #include <wiringPi.h>
-#include <wiringPiSPI.h>
+#endif
 
 FCServer::FCServer(rapidjson::Document &config)
     : mConfig(config),
@@ -281,7 +282,9 @@ void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
 
 bool FCServer::startSPI()
 {
+#ifdef FCSERVER_HAS_WIRINGPI
 	wiringPiSetup();
+#endif
 
 	for (unsigned i = 0; i < mDevices.Size(); ++i) {
 		const Value &device = mDevices[i];
