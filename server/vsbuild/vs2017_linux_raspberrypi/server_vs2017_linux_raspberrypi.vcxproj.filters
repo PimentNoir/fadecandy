@@ -1,0 +1,366 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{f4d936f6-fee9-440f-82b8-e153a185f8cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libwebsockets">
+      <UniqueIdentifier>{ae960df6-1f86-4189-bfb7-ab9c5b63e838}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx">
+      <UniqueIdentifier>{f551f232-76e0-4bac-ac00-e1063e88956f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os">
+      <UniqueIdentifier>{ba4c6d83-1339-4859-808f-c634164bbd0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\linux">
+      <UniqueIdentifier>{1389f851-a9c4-4c1d-9ea5-a15a41a6b087}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\posix">
+      <UniqueIdentifier>{d0e0ba4f-88bc-4795-8347-ea71ff5f7be3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\darwin">
+      <UniqueIdentifier>{149930c5-ce5c-4b5b-9f66-af4c06dd0377}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\windows">
+      <UniqueIdentifier>{f8cf92fb-c972-44fc-90e6-77c27b5210e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\wince">
+      <UniqueIdentifier>{1fa5204b-e426-4fc0-9e05-b76980a4ed99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\netbsd">
+      <UniqueIdentifier>{715c461b-70d8-4ce3-9daf-92a0270cd52f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libusbx\os\openbsd">
+      <UniqueIdentifier>{1a0a5db0-4d8d-42ef-831b-72d4aeef8e37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rapidjson">
+      <UniqueIdentifier>{bb496c80-4dd8-4f6c-acd9-52276c818ed4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rapidjson\internal">
+      <UniqueIdentifier>{c217c729-620d-46ca-8666-9ee9308fcdb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http">
+      <UniqueIdentifier>{961499f5-4701-4bda-bf0b-4874bbc31ac3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\css">
+      <UniqueIdentifier>{e5fd3758-4bfe-43f7-81dd-db9cdc5ef638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\dist">
+      <UniqueIdentifier>{9cf9f43b-cd0d-4523-8919-d8c99ca82e2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\dist\css">
+      <UniqueIdentifier>{0e85c7c8-4fd6-4415-a299-6960d6e23c47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\dist\js">
+      <UniqueIdentifier>{7206ac51-1b73-4b2a-8cd0-57e6726ccc22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\js">
+      <UniqueIdentifier>{197fff70-eda8-4431-b144-5d19923206dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http\media">
+      <UniqueIdentifier>{36b7d449-e946-459d-866e-2344e6ba6945}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\config.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\enttecdmxdevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fast_mutex.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fcdevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fcserver.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\opc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tcpnetserver.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tinythread.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\usbdevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\version.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebsockets\lib\extension-deflate-frame.h">
+      <Filter>libwebsockets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebsockets\lib\extension-deflate-stream.h">
+      <Filter>libwebsockets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebsockets\lib\getifaddrs.h">
+      <Filter>libwebsockets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebsockets\lib\libwebsockets.h">
+      <Filter>libwebsockets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libwebsockets\lib\private-libwebsockets.h">
+      <Filter>libwebsockets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\version_nano.h">
+      <Filter>libusbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\linux_usbfs.h">
+      <Filter>libusbx\os\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\threads_posix.h">
+      <Filter>libusbx\os\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\poll_posix.h">
+      <Filter>libusbx\os\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\darwin_usb.h">
+      <Filter>libusbx\os\darwin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\poll_windows.h">
+      <Filter>libusbx\os\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\threads_windows.h">
+      <Filter>libusbx\os\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\windows_common.h">
+      <Filter>libusbx\os\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\windows_usb.h">
+      <Filter>libusbx\os\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\wince_usb.h">
+      <Filter>libusbx\os\wince</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\hotplug.h">
+      <Filter>libusbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\libusb.h">
+      <Filter>libusbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\libusbi.h">
+      <Filter>libusbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\version.h">
+      <Filter>libusbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\document.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\filestream.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\prettywriter.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\rapidjson.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\reader.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\stringbuffer.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\writer.h">
+      <Filter>rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\internal\pow10.h">
+      <Filter>rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\internal\stack.h">
+      <Filter>rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rapidjson\internal\strfunc.h">
+      <Filter>rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\spidevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\apa102spidevice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\.gitignore" />
+    <None Include="..\..\..\README.md" />
+    <None Include="..\..\libwebsockets\lib\.gitignore">
+      <Filter>libwebsockets</Filter>
+    </None>
+    <None Include="..\..\http\404.html">
+      <Filter>http</Filter>
+    </None>
+    <None Include="..\..\http\index.html">
+      <Filter>http</Filter>
+    </None>
+    <None Include="..\..\http\dist\css\bootstrap.min.css">
+      <Filter>http\dist\css</Filter>
+    </None>
+    <None Include="..\..\http\css\narrow.css">
+      <Filter>http\css</Filter>
+    </None>
+    <None Include="..\..\http\dist\js\bootstrap.min.js">
+      <Filter>http\dist\js</Filter>
+    </None>
+    <None Include="..\..\http\dist\js\jquery-1.10.2.min.js">
+      <Filter>http\dist\js</Filter>
+    </None>
+    <None Include="..\..\http\js\home.js">
+      <Filter>http\js</Filter>
+    </None>
+    <None Include="..\..\http\manifest.py">
+      <Filter>http</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\enttecdmxdevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fcdevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fcserver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tcpnetserver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tinythread.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\usbdevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\version.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\base64-decode.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client-handshake.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client-parser.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\daemonize.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension-deflate-frame.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension-deflate-stream.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\getifaddrs.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\handshake.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\libwebsockets.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\minilex.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\output.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\parsers.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\server.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\server-handshake.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\sha-1.c">
+      <Filter>libwebsockets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_netlink.c">
+      <Filter>libusbx\os\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_udev.c">
+      <Filter>libusbx\os\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_usbfs.c">
+      <Filter>libusbx\os\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\poll_posix.c">
+      <Filter>libusbx\os\posix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\threads_posix.c">
+      <Filter>libusbx\os\posix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\darwin_usb.c">
+      <Filter>libusbx\os\darwin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\poll_windows.c">
+      <Filter>libusbx\os\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\threads_windows.c">
+      <Filter>libusbx\os\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\windows_usb.c">
+      <Filter>libusbx\os\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\wince_usb.c">
+      <Filter>libusbx\os\wince</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\netbsd_usb.c">
+      <Filter>libusbx\os\netbsd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\openbsd_usb.c">
+      <Filter>libusbx\os\openbsd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\core.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\descriptor.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\hotplug.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\io.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\strerror.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\sync.c">
+      <Filter>libusbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\spidevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\apa102spidevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\http\media\favicon.ico">
+      <Filter>http\media</Filter>
+    </Image>
+    <Image Include="..\..\http\media\favicon.png">
+      <Filter>http\media</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

@@ -76,6 +76,8 @@ This project is a collection of reusable pieces you can take or leave. The overa
   * WS2811 data cables < 10ft
 * No more than about 10000 LED pixels total
   * There's no hard limit, but it gets more difficult after this point.
+* Experimental support for APA102/APA102C/SK9822 via SPI
+  * Currently only works on Raspberry Pi and requires the WiringPi library. Compile with FCSERVER_HAS_WIRINGPI defined to enable support.
 
 These are fuzzy limitations based on current software capabilities and rough electrical limits, so you may be able to stretch them. But this gives you an idea about the kind of art we try to support. Projects are generally larger than wearables, but smaller than entire buildings.
 

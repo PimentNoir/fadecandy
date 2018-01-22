@@ -78,6 +78,8 @@ jQuery(function ($) {
         // Other initialization is device-type-specific
         if (json.type == "fadecandy") {
             this.initTypeFadecandy();
+        } else if (json.type == "apa102spi") {
+            this.initTypeAPA102SPI();
         } else {
             this.initTypeOther();
         }
@@ -217,6 +219,8 @@ jQuery(function ($) {
 
             // Common text fields
             m.find(".device-serial").text(device.json.serial);
+            m.find(".device-port").text(device.json.port);
+            m.find(".device-numLights").text(device.json.numLights);
 
             return m;
         },
@@ -307,6 +311,68 @@ jQuery(function ($) {
 
             this.view.find(".action-full").click(function (evt) {
                 device.fadeInSingleFrame( device.singleColorFrame(255, 255, 255) );
+            });
+        },
+
+        initTypeAPA102SPI: function () {
+            /*
+             * For Fadecandy devices, we can show some meaningful properties, and we can
+             * show a dropdown with actions to perform on those devices.
+             */
+
+            var device = this;
+
+            this.view.find(".list-group-item-heading")
+                .text("APA102/APA102C/SK9822 Device via SPI")
+                .after('\
+                    <p> \
+                        SPI Port <code class="device-port"></code>, \
+                        Number of Lights <code class="device-numLights"></code> \
+                    </p> \
+                    <div class="btn-group"> \
+                        \
+                        <div class="btn-group"> \
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> \
+                                Test Patterns <span class="caret"></span> \
+                            </button> \
+                            <ul class="dropdown-menu" role="menu"> \
+                                <li><a class="action-off" href="#">All pixels off</a></li> \
+                                <li><a class="action-full" href="#">Full brightness</a></li> \
+                                <li><a class="action-half" href="#">50% brightness</a></li> \
+                                <li><a class="action-red-full" href="#">Full Red Only</a></li> \
+                                <li><a class="action-green-full" href="#">Full Green Only</a></li> \
+                                <li><a class="action-blue-full" href="#">Full Blue Only</a></li> \
+                            </ul> \
+                        </div> \
+                    </div> \
+                ');
+
+            this.view.find(".device-port").text(this.json.port);
+            this.view.find(".device-numLights").text(this.json.numLights);
+            this.maxPixels = this.json.numLights;
+
+            this.view.find(".action-off").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(0, 0, 0));
+            });
+
+            this.view.find(".action-half").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(128, 128, 128));
+            });
+
+            this.view.find(".action-full").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(255, 255, 255));
+            });
+
+            this.view.find(".action-red-full").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(255, 0, 0));
+            });
+
+            this.view.find(".action-green-full").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(0, 255, 0));
+            });
+
+            this.view.find(".action-blue-full").click(function (evt) {
+                device.fadeInSingleFrame(device.singleColorFrame(0, 0, 255));
             });
         },
 

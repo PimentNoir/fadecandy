@@ -189,3 +189,30 @@ Enttec DMX devices use a different format for their mapping objects:
     * DMX channels are numbered from 1 to 512.
 * [ *Value*, *DMX Channel* ]
     * Map a constant value to a DMX channel; good for configuration modes
+
+Using Open Pixel Control with the APA102/APA102C/SK9822 
+---------------------------------
+
+The Fadecandy server now has experimental support for the APA102 family of LEDs.
+
+APA102 devices can be configured in the same way as a Fadecandy device. For example:
+
+    {
+        "listen": ["127.0.0.1", 7890],
+        "verbose": true,
+
+        "devices": [
+            {
+                    "type": "apa102spi",
+                    "port": 0,
+                    "numLights": 144,
+                    "map": [ [ 0, 0, 0, 144 ] ]
+                ]
+            }
+        ]
+    }
+
+Supported mapping objects for APA102 devices:
+
+* [ *OPC Channel*, *First OPC Pixel*, *First output pixel*, *Pixel count* ]
+    * Map a contiguous range of pixels from the specified OPC channel to the current device
