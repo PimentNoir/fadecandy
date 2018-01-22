@@ -51,7 +51,7 @@ public:
     float getTotalBrightnessDelta() const;
 
     virtual void beginFrame(const FrameInfo& f);
-    virtual void endFrame(const FrameInfo& f);
+    virtual bool endFrame(const FrameInfo& f);
     virtual void debug(const DebugInfo& f);
     virtual void shader(Vec3& rgb, const PixelInfo& p) const;
 
@@ -236,9 +236,10 @@ inline void Brightness::beginFrame(const FrameInfo& f)
     latestAverage = avg;
 }
 
-inline void Brightness::endFrame(const FrameInfo& f)
+inline bool Brightness::endFrame(const FrameInfo& f)
 {
     next.endFrame(f);
+    return Effect::endFrame(f);
 }
 
 inline void Brightness::debug(const DebugInfo& d)

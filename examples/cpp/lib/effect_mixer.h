@@ -63,7 +63,7 @@ public:
     virtual void shader(Vec3& rgb, const PixelInfo& p) const;
     virtual void postProcess(const Vec3& rgb, const PixelInfo& p);
     virtual void beginFrame(const FrameInfo& f);
-    virtual void endFrame(const FrameInfo& f);
+    virtual bool endFrame(const FrameInfo& f);
     virtual void debug(const DebugInfo& d);
 
 private:
@@ -223,11 +223,13 @@ inline void EffectMixer::postProcess(const Vec3& rgb, const PixelInfo& p)
     }
 }
 
-inline void EffectMixer::endFrame(const FrameInfo& f)
+inline bool EffectMixer::endFrame(const FrameInfo& f)
 {
+    bool lastFrame = false;
     for (unsigned i = 0; i < channels.size(); ++i) {
-        channels[i].effect->endFrame(f);
+        lastFrame |= channels[i].effect->endFrame(f);
     }
+    return lastFrame | Effect::endFrame(f);
 }
 
 inline void EffectMixer::debug(const DebugInfo& d)

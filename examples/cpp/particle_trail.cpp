@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
     EffectRunner r;
     ParticleTrailEffect e;
-    r.setEffect(&e);
+    r.addEffect(&e);
     r.setLayout("../layouts/grid32x16z.json");
     return r.main(argc, argv);
 }
