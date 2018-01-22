@@ -15,7 +15,7 @@ option(USE_BUILTIN_LIBUSB "Use the built-in libusb" ON)
 option(APPEND_PLATFORM "Append the platform to the executable name" OFF)
 option(WITH_INSTALL_TARGETS "Generate install targets used by make install and CPack for example" ON)
 option(WITH_SYSTEMD_SERVICE "Creates an install target for a SystemD service" ON)
-option(WITH_SYSTEMD_USER "Run the SystemD service using a special user. Name of the user can be changed using -DFCSERVER_USER=username" ON)
+option(WITH_SYSTEMD_USER "Run the SystemD service using a special user. Name of the user can be changed using -DFCSERVER_USER=username" OFF)
 set(FCSERVER_USER "fcserver" CACHE STRING "The user that is created after a debian package installation if WITH_SYSTEMD_USER is enabled")
 
 # TODO: Enable installing init daemon instead
@@ -156,9 +156,11 @@ include_directories("${PROJECT_SOURCE_DIR}/")
 
 if (USE_BUILTIN_WS)
     # Turn off unused libwebsockets parts.
-    set(WITHOUT_CLIENT ON)
-    set(WITHOUT_EXTENSIONS ON)
-    set(WITHOUT_TESTAPPS ON)
+    # TODO: Once libwebsockets version is updated these need to change, newer version uses prefix "LWS_*"
+    set(WITHOUT_CLIENT ON CACHE BOOL "")
+    set(WITHOUT_EXTENSIONS ON CACHE BOOL "")
+    set(WITHOUT_TESTAPPS ON CACHE BOOL "")
+    set(WITH_SSL OFF CACHE BOOL "")
 
     # Newer versions of CMake will complain since the libwebockets
     # version we're using is quite old.
@@ -272,6 +274,10 @@ if (WITH_INSTALL_TARGETS)
         set(SYSTEMD_UNIT_NAME "${PROJECT_BINARY_DIR}/${EXECUTABLE_NAME}.service")
 
         if (WITH_SYSTEMD_USER)
+            # TODO: Setup proper udev rules for FCSERVER_USER in the postinst.in script
+            # currently this must be done manually which is quite tedious.
+            # http://www.reactivated.net/writing_udev_rules.html
+
             # Run as specified user in FCSERVER_USER.
             configure_file("${PROJECT_SOURCE_DIR}/cmake/fcserver-user.service.in"
                            "${SYSTEMD_UNIT_NAME}")
