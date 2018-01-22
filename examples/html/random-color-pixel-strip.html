@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<style type="text/css">
+
+    body {
+        background: #222;
+        color: #ddd;
+        font: 15px verdana;
+    }
+
+    #connectionStatus {
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    label {
+        display: block;
+        width: 100px;
+        margin: 10px 0 0 0;
+    }
+
+    input {
+        width: 400px;
+        height: 25px;
+        margin: 10px 20px;
+    }
+
+    span.value {
+        font: 20px monospace;
+    }
+
+</style>
+<script type="text/javascript">
+
+    /*
+     * Experiment with random Color Queue      
+     */
+
+    $(function() {
+
+        function hexToRgb(hex) {
+            // http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                return r + r + g + g + b + b;
+            });
+
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // Set Default Black Color.
+        var defaultColor = {r:0,b:0,g:0};
+        
+        // Set Queue Speed, default is 3 seconds.
+        var speed = 3000;
+       
+        // Set all pixels to a given color
+        function writeFrame(red, green, blue) {
+            var leds = 60;
+            var packet = new Uint8ClampedArray(4 + leds * 3);
+            // console.log(packet);
+            if (socket.readyState != 1 /* OPEN */) {
+                // The server connection isn't open. Nothing to do.
+                return;
+            }
+
+            if (socket.bufferedAmount > packet.length) {
+                // The network is lagging, and we still haven't sent the previous frame.
+                // Don't flood the network, it will just make us laggy.
+                // If fcserver is running on the same computer, it should always be able
+                // to keep up with the frames we send, so we shouldn't reach this point.
+                return;
+            }
+
+            // Dest position in our packet. Start right after the header.
+            var dest = 4;
+            
+            //http://www.paulirish.com/2009/random-hex-color-code-snippets/
+            var myRandColor = '#'+Math.floor(Math.random()*16777215).toString(16);
+            var myHtmlText = "<div style='color:" + myRandColor + "'>"+ myRandColor + "</div>";
+            var myObj = hexToRgb(myRandColor);
+            $("#colorQueue").append(myHtmlText);
+             
+
+            // Sample the center pixel of each LED
+            for (var led = 0; led < leds; led++) {
+
+                //protection against null from random color.
+                myObj === null ? myObj = defaultColor : myObj;
+
+                packet[dest++] = myObj.r;
+                packet[dest++] = myObj.g;
+                packet[dest++] = myObj.b;
+            }
+            socket.send(packet.buffer);
+        }
+
+        // Animation parameters
+        var lastTime = 0;
+        var phase = 0;
+
+        // Animation loop
+        var animate = function() {
+
+            writeFrame(
+                defaultColor.r,
+                defaultColor.g,
+                defaultColor.b);
+
+            setTimeout(animate, speed);
+        }
+
+        // Connect to a Fadecandy server running on the same computer, on the default port
+        var socket = new WebSocket('ws://localhost:7890');
+
+        // Put some connection status text in the corner of the screen
+        $('#connectionStatus').text('Connecting to fcserver...');
+        socket.onclose = function(event) {
+            $('#connectionStatus').text('Not connected to fcserver');
+        }
+        socket.onopen = function(event) {
+            $('#connectionStatus').text('Connected');
+            animate();
+        }
+
+    })
+
+
+</script>
+</head>
+<body>
+<form>
+
+    <div id="connectionStatus"></div>
+
+    <h3> Next Color: </h3>
+    <div id="colorQueue"></div>
+
+    <br/>
+
+</form>
+</body>
+</html>
