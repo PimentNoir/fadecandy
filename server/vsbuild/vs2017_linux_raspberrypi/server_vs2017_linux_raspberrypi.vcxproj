@@ -1,0 +1,956 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0c0a9651-812d-49f1-8b47-6c29242b376d}</ProjectGuid>
+    <Keyword>Linux</Keyword>
+    <RootNamespace>server_vs2017_linux_raspberrypi</RootNamespace>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Raspberry</TargetLinuxPlatform>
+    <LinuxProjectType>{8748239F-558C-44D1-944B-07B09C35B330}</LinuxProjectType>
+    <ProjectName>server</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseOfStl />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <UseOfStl />
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <TargetExt />
+    <RemoteProjectDir>$(RemoteRootDir)/$(SolutionName)</RemoteProjectDir>
+    <RemoteCCompileToolExe>cc</RemoteCCompileToolExe>
+    <IncludePath>.;./server;./server/src;./server/libwebsockets/lib;./server/libusbx/libusb;./server/libusbx/libusb/os</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <TargetExt />
+    <RemoteProjectDir>$(RemoteRootDir)/$(SolutionName)</RemoteProjectDir>
+    <RemoteCCompileToolExe>cc</RemoteCCompileToolExe>
+    <IncludePath>.;./server;./server/src;./server/libwebsockets/lib;./server/libusbx/libusb;./server/libusbx/libusb/os</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Link>
+      <LibraryDependencies>
+      </LibraryDependencies>
+    </Link>
+    <RemotePostBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </RemotePostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Link>
+      <LibraryDependencies>
+      </LibraryDependencies>
+      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt;-lwiringPi</AdditionalDependencies>
+      <AdditionalOptions>$(RemoteRootDir)/$(SolutionName)httpdocs.o</AdditionalOptions>
+      <Relocation>
+      </Relocation>
+      <FunctionBinding>false</FunctionBinding>
+      <NoExecStackRequired>false</NoExecStackRequired>
+      <UnresolvedSymbolReferences />
+    </Link>
+    <RemotePostBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </RemotePostBuildEvent>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;FCSERVER_HAS_WIRINGPI;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
+      <CAdditionalWarning>no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning>no-strict-aliasing</CppAdditionalWarning>
+      <Verbose>true</Verbose>
+      <AdditionalOptions />
+    </ClCompile>
+    <RemotePreLinkEvent>
+      <Command>(cd server/http; python manifest.py) &gt; $(RemoteRootDir)/$(SolutionName)httpdocs.cpp &amp;&amp; g++ -DFCSERVER_VERSION=fcserver-1.04-101-g686ab1f -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti -Wno-strict-aliasing -Os -DNDEBUG -DLWS_LIBRARY_VERSION= -DLWS_BUILD_HASH= -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT -DLWS_NO_WSAPOLL -DLWS_NO_DAEMONIZE -DOS_LINUX -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t -DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY -DHAVE_POLL_H -DHAVE_ASM_TYPES_H -DHAVE_SYS_SOCKET_H -DHAVE_LINUX_NETLINK_H -DHAVE_LINUX_FILTER_H -MMD -Iserver/src -Iserver -lserver/rapidjson -Iserver/libwebsockets/lib -Iserver/libusbx/libusb  -c -o $(RemoteRootDir)/$(SolutionName)httpdocs.o $(RemoteRootDir)/$(SolutionName)httpdocs.cpp</Command>
+      <Message>Generating and compiling httpdocs.cpp</Message>
+    </RemotePreLinkEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libusbx\libusb\hotplug.h" />
+    <ClInclude Include="..\..\libusbx\libusb\libusb.h" />
+    <ClInclude Include="..\..\libusbx\libusb\libusbi.h" />
+    <ClInclude Include="..\..\libusbx\libusb\os\darwin_usb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\linux_usbfs.h" />
+    <ClInclude Include="..\..\libusbx\libusb\os\poll_posix.h" />
+    <ClInclude Include="..\..\libusbx\libusb\os\poll_windows.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\threads_posix.h" />
+    <ClInclude Include="..\..\libusbx\libusb\os\threads_windows.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\wince_usb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\windows_common.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\os\windows_usb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\libusbx\libusb\version.h" />
+    <ClInclude Include="..\..\libusbx\libusb\version_nano.h" />
+    <ClInclude Include="..\..\libwebsockets\lib\extension-deflate-frame.h" />
+    <ClInclude Include="..\..\libwebsockets\lib\extension-deflate-stream.h" />
+    <ClInclude Include="..\..\libwebsockets\lib\getifaddrs.h" />
+    <ClInclude Include="..\..\libwebsockets\lib\libwebsockets.h" />
+    <ClInclude Include="..\..\libwebsockets\lib\private-libwebsockets.h" />
+    <ClInclude Include="..\..\rapidjson\document.h" />
+    <ClInclude Include="..\..\rapidjson\filestream.h" />
+    <ClInclude Include="..\..\rapidjson\internal\pow10.h" />
+    <ClInclude Include="..\..\rapidjson\internal\stack.h" />
+    <ClInclude Include="..\..\rapidjson\internal\strfunc.h" />
+    <ClInclude Include="..\..\rapidjson\prettywriter.h" />
+    <ClInclude Include="..\..\rapidjson\rapidjson.h" />
+    <ClInclude Include="..\..\rapidjson\reader.h" />
+    <ClInclude Include="..\..\rapidjson\stringbuffer.h" />
+    <ClInclude Include="..\..\rapidjson\writer.h" />
+    <ClInclude Include="..\..\src\apa102spidevice.h" />
+    <ClInclude Include="..\..\src\config.h" />
+    <ClInclude Include="..\..\src\enttecdmxdevice.h" />
+    <ClInclude Include="..\..\src\fast_mutex.h" />
+    <ClInclude Include="..\..\src\fcdevice.h" />
+    <ClInclude Include="..\..\src\fcserver.h" />
+    <ClInclude Include="..\..\src\opc.h" />
+    <ClInclude Include="..\..\src\spidevice.h" />
+    <ClInclude Include="..\..\src\tcpnetserver.h" />
+    <ClInclude Include="..\..\src\tinythread.h" />
+    <ClInclude Include="..\..\src\usbdevice.h" />
+    <ClInclude Include="..\..\src\version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\.gitignore" />
+    <None Include="..\..\..\README.md" />
+    <None Include="..\..\http\404.html">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\css\narrow.css">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\dist\css\bootstrap.min.css">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\dist\js\bootstrap.min.js">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\dist\js\jquery-1.10.2.min.js">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\index.html">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\js\home.js">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </None>
+    <None Include="..\..\http\manifest.py">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">(cd %(RelativeDir); python %(Identity)) &gt; %(RelativeDir)/../src/httpdocs.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">(cd %(RelativeDir); python %(Identity)) &gt; %(RelativeDir)/../src/httpdocs.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">(cd %(RelativeDir); python %(Identity)) &gt; %(RelativeDir)/../src/httpdocs.cpp</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">(cd %(RelativeDir); python %(Identity)) &gt; %(RelativeDir)/../src/httpdocs.cpp</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</LinkObjects>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</TreatOutputAsContent>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</TreatOutputAsContent>
+    </None>
+    <None Include="..\..\libwebsockets\lib\.gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libusbx\libusb\core.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\descriptor.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\hotplug.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\io.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\darwin_usb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_netlink.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_udev.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG -DLWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;NDEBUG -DLWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\linux_usbfs.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\netbsd_usb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\openbsd_usb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\poll_posix.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\poll_windows.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\threads_posix.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\threads_windows.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\wince_usb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\os\windows_usb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\strerror.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libusbx\libusb\sync.c">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\base64-decode.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client-handshake.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client-parser.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\client.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\daemonize.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension-deflate-frame.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension-deflate-stream.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\extension.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\getifaddrs.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\handshake.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\libwebsockets.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\minilex.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\output.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\parsers.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\server-handshake.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\server.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\libwebsockets\lib\sha-1.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">_DEFAULT_SOURCE;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppAdditionalWarning>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </WarningLevel>
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppAdditionalWarning>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </CppLanguageStandard>
+      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RuntimeTypeInfo>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </CppLanguageStandard>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </ExceptionHandling>
+      <ThreadSafeStatics Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ThreadSafeStatics>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </ExceptionHandling>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </OmitFramePointers>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </OmitFramePointers>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">-MMD</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">-MMD</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\apa102spidevice.cpp" />
+    <ClCompile Include="..\..\src\enttecdmxdevice.cpp" />
+    <ClCompile Include="..\..\src\fcdevice.cpp" />
+    <ClCompile Include="..\..\src\fcserver.cpp" />
+    <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\spidevice.cpp" />
+    <ClCompile Include="..\..\src\tcpnetserver.cpp" />
+    <ClCompile Include="..\..\src\tinythread.cpp" />
+    <ClCompile Include="..\..\src\usbdevice.cpp" />
+    <ClCompile Include="..\..\src\version.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\http\media\favicon.ico">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </Image>
+    <Image Include="..\..\http\media\favicon.png">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+    </Image>
+  </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FCSERVER_VERSION=fcserver-1.04-101-g686ab1f;FCSERVER_HAS_WIRINGPI;NDEBUG;LWS_LIBRARY_VERSION=;LWS_BUILD_HASH=;LWS_NO_EXTENSIONS;LWS_NO_CLIENT;LWS_NO_WSAPOLL;LWS_NO_DAEMONIZE;OS_LINUX;THREADS_POSIX;POLL_NFDS_TYPE=nfds_t;LIBUSB_CALL=;DEFAULT_VISIBILITY=;HAVE_GETTIMEOFDAY;HAVE_POLL_H;HAVE_ASM_TYPES_H;HAVE_SYS_SOCKET_H;HAVE_LINUX_NETLINK_H;HAVE_LINUX_FILTER_H</PreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
+      <CAdditionalWarning>no-strict-aliasing</CAdditionalWarning>
+      <CppAdditionalWarning>no-strict-aliasing</CppAdditionalWarning>
+      <Verbose>true</Verbose>
+      <AdditionalOptions />
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>-lstdc++;-lm;-lpthread;-lrt;-lwiringPi</AdditionalDependencies>
+      <AdditionalOptions>$(RemoteRootDir)/$(SolutionName)httpdocs.o</AdditionalOptions>
+      <Relocation>
+      </Relocation>
+      <FunctionBinding>false</FunctionBinding>
+      <NoExecStackRequired>false</NoExecStackRequired>
+      <UnresolvedSymbolReferences>
+      </UnresolvedSymbolReferences>
+    </Link>
+    <RemotePreLinkEvent>
+      <Command>(cd server/http; python manifest.py) &gt; $(RemoteRootDir)/$(SolutionName)httpdocs.cpp &amp;&amp; g++ -DFCSERVER_VERSION=fcserver-1.04-101-g686ab1f -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti -Wno-strict-aliasing -Os -DNDEBUG -DLWS_LIBRARY_VERSION= -DLWS_BUILD_HASH= -DLWS_NO_EXTENSIONS -DLWS_NO_CLIENT -DLWS_NO_WSAPOLL -DLWS_NO_DAEMONIZE -DOS_LINUX -DTHREADS_POSIX -DPOLL_NFDS_TYPE=nfds_t -DLIBUSB_CALL= -DDEFAULT_VISIBILITY= -DHAVE_GETTIMEOFDAY -DHAVE_POLL_H -DHAVE_ASM_TYPES_H -DHAVE_SYS_SOCKET_H -DHAVE_LINUX_NETLINK_H -DHAVE_LINUX_FILTER_H -MMD -Iserver/src -Iserver -lserver/rapidjson -Iserver/libwebsockets/lib -Iserver/libusbx/libusb  -c -o $(RemoteRootDir)/$(SolutionName)httpdocs.o $(RemoteRootDir)/$(SolutionName)httpdocs.cpp</Command>
+      <Message>Generating and compiling httpdocs.cpp</Message>
+    </RemotePreLinkEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
