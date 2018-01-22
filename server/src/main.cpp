@@ -32,6 +32,7 @@
 const char *kDefaultConfig =
     "    {\n"
     "        \"listen\": [\"127.0.0.1\", 7890],\n"
+    "        \"relay\": null,\n"
     "        \"verbose\": true,\n"
     "    \n"
     "        \"color\": {\n"

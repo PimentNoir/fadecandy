@@ -89,6 +89,55 @@ bool TcpNetServer::start(const char *host, int port)
     return true;
 }
 
+bool TcpNetServer::startRelay(const char *host, int port)
+{
+    const int llNormal = LLL_ERR | LLL_WARN;
+    const int llVerbose = llNormal | LLL_NOTICE;
+
+    static struct libwebsocket_protocols protocols[] = {
+        // Only one protocol for now. Handles HTTP as well as our default WebSockets protocol.
+        {
+            "fcserver-relay",       // Name
+            lwsRelayCallback,       // Callback
+            sizeof(Client),         // Protocol-specific data size
+            sizeof(OPC::Message),   // Max frame size / rx buffer
+        },
+
+        { NULL, NULL, 0, 0 }    // terminator
+    };
+
+    struct lws_context_creation_info info;
+    memset(&info, 0, sizeof info);
+    info.gid = -1;
+    info.uid = -1;
+    info.host = host;
+    info.port = port;
+    info.protocols = protocols;
+    info.user = this;
+
+    // Quieter during create_context, since it's kind of chatty.
+    lws_set_log_level(llNormal, NULL);
+
+    struct libwebsocket_context *context = libwebsocket_create_context(&info);
+    if (!context) {
+        lwsl_err("libwebsocket init failed for relay\n");
+        return false;
+    }
+
+    // Maybe set up a more verbose log level now.
+    if (mVerbose) {
+        lws_set_log_level(llVerbose, NULL);
+    }
+
+    lwsl_notice("Relay Server listening on %s:%d\n", host ? host : "*", port);
+
+    // Note that we pass ownership of all libwebsockets state to this new thread.
+    // We shouldn't access it on the other threads afterwards.
+    mRelayThread = new tthread::thread(threadFunc, context);
+
+    return true;
+}
+
 void TcpNetServer::threadFunc(void *arg)
 {
     struct libwebsocket_context *context = (libwebsocket_context*) arg;
@@ -162,6 +211,47 @@ int TcpNetServer::lwsCallback(libwebsocket_context *context, libwebsocket *wsi,
         case LWS_CALLBACK_RECEIVE:
             // WebSockets data received
             return self->wsRead(context, wsi, *client, (uint8_t*)in, len);
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+int TcpNetServer::lwsRelayCallback(libwebsocket_context *context, libwebsocket *wsi,
+    enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
+{
+    /*
+     * Protocol callback for libwebsockets.
+     *
+     * Until we have a reason to support a non-default WebSockets protocol, this handles
+     * everything: plain HTTP, Open Pixel Control, and WebSockets.
+     *
+     * For HTTP, this serves simple static HTML documents which are included at compile-time
+     * from the 'http' directory. Our web UI interacts with the server via the public WebSockets API.
+     */
+
+    TcpNetServer *self = (TcpNetServer*) libwebsocket_context_user(context);
+    Client *client = (Client*) user;
+
+    switch (reason) {
+        case LWS_CALLBACK_CLOSED:
+        case LWS_CALLBACK_CLOSED_HTTP:
+        case LWS_CALLBACK_DEL_POLL_FD:
+            if (client && client->opcBuffer) {
+                free(client->opcBuffer);
+                client->opcBuffer = NULL;
+            }
+            if (self->mRelayClients.erase(wsi) > 0) {
+                lwsl_notice("Relay client disconnected!\n");
+            }
+            break;
+
+        case LWS_CALLBACK_ESTABLISHED:
+            lwsl_notice("Relay client connected!\n");
+            self->mRelayClients.insert(wsi);
+            break;
 
         default:
             break;
@@ -474,4 +564,23 @@ void TcpNetServer::jsonBroadcast(rapidjson::Document &message)
     mBroadcastMutex.lock();
     mBroadcastList.push_back(buffer);
     mBroadcastMutex.unlock();
+}
+
+void TcpNetServer::relayMessage(OPC::Message &msg)
+{
+    if (mRelayClients.size()) {
+        int headerLen = 4;
+        int bufferLen = headerLen + msg.length();
+        unsigned char buffer[bufferLen];
+        buffer[0] = (unsigned char)msg.channel;
+        buffer[1] = (unsigned char)msg.command;
+        buffer[2] = (unsigned char)msg.lenHigh;
+        buffer[3] = (unsigned char)msg.lenLow;
+        for (int i=0; i < msg.length(); i++) {
+            buffer[headerLen+i] = (unsigned char)msg.data[i];
+        }
+        for (std::set<libwebsocket*>::iterator cli = mRelayClients.begin(); cli != mRelayClients.end(); ++cli) {
+            libwebsocket_write(*cli, buffer, bufferLen, LWS_WRITE_BINARY);
+        }
+    }
 }

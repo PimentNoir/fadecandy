@@ -19,6 +19,7 @@ The configuration file is a JSON object. By default, it looks like this:
 ```
 {
     "listen": ["127.0.0.1", 7890],
+    "relay": NULL,
     "verbose": true,
 
     "color": {
@@ -40,6 +41,7 @@ The configuration file is a JSON object. By default, it looks like this:
 Name     | Summary
 -------- | -------------------------------------------------------
 listen   | What address and port should the server listen on?
+relay    | What address and port should the server relay messages to?
 verbose  | Does the server log anything except errors to the console?
 color    | Default global color correction settings
 devices  | List of configured devices
@@ -52,6 +54,13 @@ By default, fcserver listens on port 7890 on the local (loopback) interface. Thi
 The "listen" configuration key must be a JSON array of the form [**host**, **port**], where **port** is a number and **host** is either a string or *null*. If the host is *null*, fcserver listens on all network interfaces and it's reachable from other computers
 
 *Warning:* Do not run fcserver on an untrusted network. It has no built-in security provisions, so anyone on your network will have control of fcserver. Additionally, bugs in fcserver may compromise the security of your computer.
+
+Relay
+-----
+
+The "relay" configuration key is using the same format as the "listen" configuration key and allows clients to connect on a separate socket to receive a copy of the OPC messages the fcserver is handling.
+
+Relaying is disabled by default.
 
 Color
 -----
