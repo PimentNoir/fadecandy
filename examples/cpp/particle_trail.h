@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <math.h>
+#include <cmath>
 #include "lib/color.h"
 #include "lib/effect.h"
 #include "lib/particle.h"

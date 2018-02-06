@@ -26,7 +26,7 @@
 #include "rapidjson/document.h"
 #include "opc.h"
 #include <string>
-#include <libusb.h>
+#include <libusb.h> // Also brings in gettimeofday() in a portable way
 
 
 /*

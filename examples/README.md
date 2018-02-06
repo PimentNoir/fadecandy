@@ -51,7 +51,7 @@ More Examples
 There are other places to look for example code too!
 
 * The [Open Pixel Control](https://github.com/zestyping/openpixelcontrol) project
-  * Everything here will work with Fadecandy, including their [Python examples](https://github.com/zestyping/openpixelcontrol/tree/master/python_clients)
+  * Everything here will work with Fadecandy, including their [Python examples](https://github.com/zestyping/openpixelcontrol/tree/master/python)
 * The [Ardent Mobile Cloud Platform source code](https://github.com/ArdentHeavyIndustries/amcp-rpi)
   * The [AMCP](http://scanlime.org/2013/09/the-ardent-mobile-cloud-platform/) is the first art project to use Fadecandy.
   * It controls 2500 LEDs with five Fadecandy boards and a Raspberry Pi.

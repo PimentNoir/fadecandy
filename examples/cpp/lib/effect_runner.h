@@ -27,15 +27,15 @@
 
 #pragma once
 
-#include <math.h>
+#include <cmath>
 #include <unistd.h>
 #include <algorithm>
 #include <vector>
 #include <sys/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <ctime>
 
 #include "effect.h"
 #include "opc_client.h"
@@ -52,6 +52,7 @@ public:
     bool setServer(const char *hostport);
     bool setLayout(const char *filename);
     void setEffect(Effect* effect);
+    void addEffect(Effect* effect);
     void setMaxFrameRate(float fps);
     void setVerbose(bool verbose = true);
 
@@ -76,6 +77,7 @@ public:
     struct FrameStatus {
         float timeDelta;
         bool debugOutput;
+        bool lastFrame;
     };
 
     // Main loop body
@@ -87,7 +89,7 @@ public:
 
     // Simple argument parsing and optional main loop
     bool parseArguments(int argc, char **argv);
-    int main(int argc, char **argv);
+    int main(int argc, char **argv, bool loop = true);
 
 protected:
     // Extensibility for argument parsing
@@ -99,6 +101,7 @@ private:
     OPCClient opc;
     rapidjson::Document layout;
     Effect *effect;
+    std::vector<Effect*> effects;
     std::vector<uint8_t> frameBuffer;
     Effect::FrameInfo frameInfo;
 
@@ -123,7 +126,12 @@ private:
 
 
 inline EffectRunner::EffectRunner()
-    : effect(0),
+    : opc(),
+      layout(),
+      effect(0),
+      effects(),
+      frameBuffer(),
+      frameInfo(),
       minTimeDelta(0),
       currentDelay(0),
       filteredTimeDelta(0),
@@ -197,7 +205,14 @@ inline bool EffectRunner::hasLayout() const
 
 inline void EffectRunner::setEffect(Effect *effect)
 {
+    effects.clear();
+    effects.push_back( effect );
     this->effect = effect;
+}
+
+inline void EffectRunner::addEffect( Effect *effect )
+{
+    effects.push_back( effect );
 }
 
 inline Effect* EffectRunner::getEffect() const
@@ -237,9 +252,12 @@ inline float EffectRunner::getPercentBusy() const
 
 inline void EffectRunner::run()
 {
-    while (true) {
-        doFrame();
+    FrameStatus status;
+    do
+    {
+        status = doFrame();
     }
+    while( !status.lastFrame );
 }
    
 inline EffectRunner::FrameStatus EffectRunner::doFrame()
@@ -265,8 +283,9 @@ inline EffectRunner::FrameStatus EffectRunner::doFrame(float timeDelta)
     FrameStatus frameStatus;
 
     // Effects may get a modified view of time
-    frameStatus.timeDelta = frameInfo.timeDelta = timeDelta * speed;
+    frameStatus.timeDelta   = frameInfo.timeDelta = timeDelta * speed;
     frameStatus.debugOutput = false;
+    frameStatus.lastFrame   = false;
 
     jitterStatsMin = std::min(jitterStatsMin, frameStatus.timeDelta);
     jitterStatsMax = std::max(jitterStatsMax, frameStatus.timeDelta);
@@ -296,7 +315,7 @@ inline EffectRunner::FrameStatus EffectRunner::doFrame(float timeDelta)
             opc.write(frameBuffer);
         }
 
-        effect->endFrame(frameInfo);
+        frameStatus.lastFrame = effect->endFrame(frameInfo);
     }
 
     // Low-pass filter for timeDelta, to estimate our frame rate
@@ -370,13 +389,22 @@ inline bool EffectRunner::parseArguments(int argc, char **argv)
     return true;
 }
 
-inline int EffectRunner::main(int argc, char **argv)
+inline int EffectRunner::main(int argc, char **argv, bool loop)
 {
     if (!parseArguments(argc, argv)) {
         return 1;
     }
 
-    run();
+    do
+    {
+       for( std::vector<Effect*>::iterator i( effects.begin() );
+            i != effects.end(); ++i )
+       {
+          effect = *i;
+          run();
+       }
+    }
+    while( loop );
     return 0;
 }
 

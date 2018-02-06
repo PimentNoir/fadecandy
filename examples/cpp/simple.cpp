@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     EffectRunner r;
 
     MyEffect e;
-    r.setEffect(&e);
+    r.addEffect(&e);
 
     // Defaults, overridable with command line options
     r.setMaxFrameRate(100);

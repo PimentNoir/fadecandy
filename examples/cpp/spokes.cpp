@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     br.set(0.2);
 
     EffectRunner r;
-    r.setEffect(&br);
+    r.addEffect(&br);
     r.setLayout("../layouts/grid32x16z.json");
     return r.main(argc, argv);
 }

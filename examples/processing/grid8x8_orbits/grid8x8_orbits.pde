@@ -14,7 +14,7 @@ void setup()
 
   // Map an 8x8 grid of LEDs to the center of the window, scaled to take up most of the space
   float spacing = height / 14.0;
-  opc.ledGrid8x8(0, width/2, height/2, spacing, HALF_PI, false);
+  opc.ledGrid8x8(0, width/2, height/2, spacing, HALF_PI, false, false);
 }
 
 float px, py;

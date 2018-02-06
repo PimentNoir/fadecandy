@@ -6,7 +6,7 @@ int main(int argc, char **argv)
     EffectRunner r;
 
     DotEffect e("data/dot.png");
-    r.setEffect(&e);
+    r.addEffect(&e);
 
     // Defaults, overridable with command line options
     r.setLayout("../layouts/grid32x16z.json");

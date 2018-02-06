@@ -21,7 +21,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "libwebsockets.h"   // Lazy portable way to get gettimeofday()
 #include "usbdevice.h"
 #include <iostream>
 

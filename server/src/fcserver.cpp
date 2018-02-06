@@ -23,16 +23,21 @@
 
 #include "fcserver.h"
 #include "usbdevice.h"
+#include "apa102spidevice.h"
 #include "fcdevice.h"
 #include "version.h"
 #include "enttecdmxdevice.h"
 #include <ctype.h>
 #include <iostream>
 
+#ifdef FCSERVER_HAS_WIRINGPI
+#include <wiringPi.h>
+#endif
 
 FCServer::FCServer(rapidjson::Document &config)
     : mConfig(config),
       mListen(config["listen"]),
+      mRelay(config["relay"]),
       mColor(config["color"]),
       mDevices(config["devices"]),
       mVerbose(config["verbose"].IsTrue()),
@@ -64,6 +69,29 @@ FCServer::FCServer(rapidjson::Document &config)
     }
 
     /*
+     * Validate the relay [host, port] list.
+     */
+
+    if (mRelay.IsArray() && mRelay.Size() == 2) {
+        const Value &host = mRelay[0u];
+        const Value &port = mRelay[1];
+        const char *hostStr = 0;
+
+        if (host.IsString()) {
+            hostStr = host.GetString();
+        } else if (!host.IsNull()) {
+            mError << "Hostname in 'relay' must be null (any) or a hostname string.\n";
+        }
+
+        if (!port.IsUint()) {
+            mError << "The 'relay' port must be an integer.\n";
+        }
+    }
+    else if (!mRelay.IsNull()) {
+        mError << "The optional 'relay' configuration key must be a [host, post] list.\n";
+    }
+
+    /*
      * Minimal validation on 'devices'
      */
 
@@ -78,7 +106,16 @@ bool FCServer::start(libusb_context *usb)
     const Value &port = mListen[1];
     const char *hostStr = host.IsString() ? host.GetString() : NULL;
 
-    return mTcpNetServer.start(hostStr, port.GetUint()) && startUSB(usb);
+    bool started = mTcpNetServer.start(hostStr, port.GetUint()) && startUSB(usb) && startSPI();
+
+    if (started && !mRelay.IsNull()) {
+        const Value &relayHost = mRelay[0u];
+        const Value &relayPort = mRelay[1];
+        const char *relayHostStr = relayHost.IsString() ? relayHost.GetString() : NULL;
+        mTcpNetServer.startRelay(relayHostStr, relayPort.GetUint());
+    }
+
+    return started;
 }
 
 bool FCServer::startUSB(libusb_context *usb)
@@ -117,7 +154,15 @@ void FCServer::cbOpcMessage(OPC::Message &msg, void *context)
         dev->writeMessage(msg);
     }
 
+	for (std::vector<SPIDevice*>::iterator i = self->mSPIDevices.begin(), e = self->mSPIDevices.end(); i != e; ++i) {
+		SPIDevice *dev = *i;
+		dev->writeMessage(msg);
+	}
+
     self->mEventMutex.unlock();
+
+    // also forward the message to clients connected on the relay socket
+    self->mTcpNetServer.relayMessage(msg);
 }
 
 int FCServer::cbHotplug(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
@@ -233,6 +278,67 @@ void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
     mUSBDevices.erase(iter);
     delete dev;
     jsonConnectedDevicesChanged();
+}
+
+bool FCServer::startSPI()
+{
+#ifdef FCSERVER_HAS_WIRINGPI
+	wiringPiSetup();
+#endif
+
+	for (unsigned i = 0; i < mDevices.Size(); ++i) {
+		const Value &device = mDevices[i];
+
+		const Value &vtype = device["type"];
+		const Value &vport = device["port"];
+		const Value &vnumLights = device["numLights"];
+
+		if (vtype.IsNull() || (!vtype.IsString() || strcmp(vtype.GetString(), APA102SPIDevice::DEVICE_TYPE))) {
+			continue;
+		}
+
+		if (vport.IsNull() || (!vport.IsUint())) {
+			continue;
+		}
+
+		if (vnumLights.IsNull() || (!vnumLights.IsUint())) {
+			continue;
+		}
+
+		openAPA102SPIDevice(vport.GetUint(), vnumLights.GetUint());
+	}
+
+	return true;
+}
+
+void FCServer::openAPA102SPIDevice(uint32_t port, int numLights)
+{
+	APA102SPIDevice* dev = new APA102SPIDevice(numLights, mVerbose);
+
+	int r = dev->open(port);
+	if (r < 0) {
+		if (mVerbose) {
+			std::clog << "Error opening " << dev->getName() << "\n";
+		}
+		delete dev;
+		return;
+	}
+
+	for (unsigned i = 0; i < mDevices.Size(); ++i) {
+		if (dev->matchConfiguration(mDevices[i])) {
+			// Found a matching configuration for this device. We're keeping it!
+
+			dev->loadConfiguration(mDevices[i]);
+			dev->writeColorCorrection(mColor);
+			mSPIDevices.push_back(dev);
+
+			if (mVerbose) {
+				std::clog << "SPI device " << dev->getName() << " attached.\n";
+			}
+			jsonConnectedDevicesChanged();
+			return;
+		}
+	}
 }
 
 void FCServer::mainLoop()
@@ -395,6 +501,16 @@ void FCServer::jsonDeviceMessage(rapidjson::Document &message)
                     break;
             }
         }
+		for (unsigned i = 0; i != mSPIDevices.size(); i++) {
+			SPIDevice *spiDev = mSPIDevices[i];
+
+			if (spiDev->matchConfiguration(device)) {
+				matched = true;
+				spiDev->writeMessage(message);
+				if (message.HasMember("error"))
+					break;
+			}
+		}
     }
 
     if (!matched) {
@@ -412,6 +528,12 @@ void FCServer::jsonListConnectedDevices(rapidjson::Document &message)
         list.PushBack(rapidjson::kObjectType, message.GetAllocator());
         mUSBDevices[i]->describe(list[i], message.GetAllocator());
     }
+
+	for (unsigned i = 0; i != mSPIDevices.size(); i++) {
+		SPIDevice *spiDev = mSPIDevices[i];
+		list.PushBack(rapidjson::kObjectType, message.GetAllocator());
+		mSPIDevices[i]->describe(list[i], message.GetAllocator());
+	}
 }
 
 void FCServer::jsonServerInfo(rapidjson::Document &message)
