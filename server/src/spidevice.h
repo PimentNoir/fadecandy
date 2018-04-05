@@ -32,46 +32,46 @@
 class SPIDevice
 {
 public:
-	typedef rapidjson::Value Value;
-	typedef rapidjson::Document Document;
-	typedef rapidjson::MemoryPoolAllocator<> Allocator;
+    typedef rapidjson::Value Value;
+    typedef rapidjson::Document Document;
+    typedef rapidjson::MemoryPoolAllocator<> Allocator;
 
-	SPIDevice(const char *type, bool verbose);
-	virtual ~SPIDevice();
+    SPIDevice(const char *type, bool verbose);
+    virtual ~SPIDevice();
 
-	// Must be opened before any other methods are called.
-	virtual int open(uint32_t port);
+    // Must be opened before any other methods are called.
+    virtual int open(uint32_t port);
 
-	virtual void write(void* buffer, int length);
+    virtual void write(void* buffer, int length);
 
-	// Check a configuration. Does it describe this device?
-	virtual bool matchConfiguration(const Value &config);
+    // Check a configuration. Does it describe this device?
+    virtual bool matchConfiguration(const Value &config);
 
-	// Load a matching configuration
-	virtual void loadConfiguration(const Value &config) = 0;
+    // Load a matching configuration
+    virtual void loadConfiguration(const Value &config) = 0;
 
-	// Handle an incoming OPC message
-	virtual void writeMessage(const OPC::Message &msg) = 0;
+    // Handle an incoming OPC message
+    virtual void writeMessage(const OPC::Message &msg) = 0;
 
-	// Handle a device-specific JSON message
-	virtual void writeMessage(Document &msg);
+    // Handle a device-specific JSON message
+    virtual void writeMessage(Document &msg);
 
-	// Write color LUT from parsed JSON
-	virtual void writeColorCorrection(const Value &color);
+    // Write color LUT from parsed JSON
+    virtual void writeColorCorrection(const Value &color);
 
-	// Describe this device by adding keys to a JSON object
-	virtual void describe(Value &object, Allocator &alloc);
+    // Describe this device by adding keys to a JSON object
+    virtual void describe(Value &object, Allocator &alloc);
 
-	virtual std::string getName() = 0;
+    virtual std::string getName() = 0;
 
-	const char *getTypeString() { return mTypeString; }
+    const char *getTypeString() { return mTypeString; }
 
 protected:
-	struct timeval mTimestamp;
-	const char *mTypeString;
-	bool mVerbose;
-	uint32_t mPort;
+    struct timeval mTimestamp;
+    const char *mTypeString;
+    bool mVerbose;
+    uint32_t mPort;
 
-	// Utilities
-	const Value *findConfigMap(const Value &config);
+    // Utilities
+    const Value *findConfigMap(const Value &config);
 };
