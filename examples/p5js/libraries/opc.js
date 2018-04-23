@@ -17,8 +17,7 @@
 
 // Arrays for pixels[]'s locations to send rgb values to fcServer.
 var pixelLocationsRed = [];
-var pixelLocationsGre = [];
-var pixelLocationsBlu = [];
+var packet = new Uint8ClampedArray(0);
 
 // Arrays for to map pixels on screen.
 var ledXpoints = [];
@@ -39,14 +38,10 @@ function led(index, x, y) {
 	loadPixels();
 	if (pixelLocationsRed === null) {
 		pixelLocationsRed.length = index + 1;
-		pixelLocationsGre.length = index + 1;
-		pixelLocationsBlu.length = index + 1;
 		ledXpoints.length = index + 1;
 		ledYpoints.length = index + 1;
 	} else if (index >= pixelLocationsRed.length) {
 		pixelLocationsRed.length = index + 1;
-		pixelLocationsGre.length = index + 1;
-		pixelLocationsBlu.length = index + 1;
 		ledXpoints.length = index + 1;
 		ledYpoints.length = index + 1;
 	}
@@ -54,8 +49,6 @@ function led(index, x, y) {
 	var pixelD = pixelDensity();
 	var idx = pixelD*pixelD*4*y*width+x*pixelD*4;
 	pixelLocationsRed[index] = (idx);
-	pixelLocationsGre[index] = (idx + 1);
-	pixelLocationsBlu[index] = (idx + 2);
 	//Store x,y to draw points for pixel locations 
 	ledXpoints[index] = x;
 	ledYpoints[index] = y;
@@ -121,8 +114,10 @@ function drawFrame() {
 		return;
 	}
 	var leds = pixelLocationsRed.length;
-	var packet = new Uint8ClampedArray(4 + leds * 3);
-
+	if (packet.length != 4 + leds * 3) {
+		packet = new Uint8ClampedArray(4 + leds * 3);
+	}
+    
 	if (socket.readyState != 1 /* OPEN */ ) {
 		// The server connection isn't open. Nothing to do.
 		return;
@@ -143,9 +138,9 @@ function drawFrame() {
 	// Sample and send the center pixel of each LED
 	for (var led = 0; led < leds; led++) {
 		var i = led;
-		packet[dest++] = pixels[pixelLocationsRed[i]];
-		packet[dest++] = pixels[pixelLocationsGre[i]];
-		packet[dest++] = pixels[pixelLocationsBlu[i]];
+		packet[dest++] = pixels[pixelLocationsRed[i]+0];
+		packet[dest++] = pixels[pixelLocationsRed[i]+1];
+		packet[dest++] = pixels[pixelLocationsRed[i]+2];
 	}
 	socket.send(packet.buffer);
 
