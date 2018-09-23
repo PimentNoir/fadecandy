@@ -1,18 +1,18 @@
 /*
  * Open Pixel Control server for Fadecandy
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -154,10 +154,10 @@ void FCServer::cbOpcMessage(OPC::Message &msg, void *context)
         dev->writeMessage(msg);
     }
 
-	for (std::vector<SPIDevice*>::iterator i = self->mSPIDevices.begin(), e = self->mSPIDevices.end(); i != e; ++i) {
-		SPIDevice *dev = *i;
-		dev->writeMessage(msg);
-	}
+    for (std::vector<SPIDevice*>::iterator i = self->mSPIDevices.begin(), e = self->mSPIDevices.end(); i != e; ++i) {
+        SPIDevice *dev = *i;
+        dev->writeMessage(msg);
+    }
 
     self->mEventMutex.unlock();
 
@@ -283,62 +283,62 @@ void FCServer::usbDeviceLeft(std::vector<USBDevice*>::iterator iter)
 bool FCServer::startSPI()
 {
 #ifdef FCSERVER_HAS_WIRINGPI
-	wiringPiSetup();
+    wiringPiSetup();
 #endif
 
-	for (unsigned i = 0; i < mDevices.Size(); ++i) {
-		const Value &device = mDevices[i];
+    for (unsigned i = 0; i < mDevices.Size(); ++i) {
+        const Value &device = mDevices[i];
 
-		const Value &vtype = device["type"];
-		const Value &vport = device["port"];
-		const Value &vnumLights = device["numLights"];
+        const Value &vtype = device["type"];
+        const Value &vport = device["port"];
+        const Value &vnumLights = device["numLights"];
 
-		if (vtype.IsNull() || (!vtype.IsString() || strcmp(vtype.GetString(), APA102SPIDevice::DEVICE_TYPE))) {
-			continue;
-		}
+        if (vtype.IsNull() || (!vtype.IsString() || strcmp(vtype.GetString(), APA102SPIDevice::DEVICE_TYPE))) {
+            continue;
+        }
 
-		if (vport.IsNull() || (!vport.IsUint())) {
-			continue;
-		}
+        if (vport.IsNull() || (!vport.IsUint())) {
+            continue;
+        }
 
-		if (vnumLights.IsNull() || (!vnumLights.IsUint())) {
-			continue;
-		}
+        if (vnumLights.IsNull() || (!vnumLights.IsUint())) {
+            continue;
+        }
 
-		openAPA102SPIDevice(vport.GetUint(), vnumLights.GetUint());
-	}
+        openAPA102SPIDevice(vport.GetUint(), vnumLights.GetUint());
+    }
 
-	return true;
+    return true;
 }
 
 void FCServer::openAPA102SPIDevice(uint32_t port, int numLights)
 {
-	APA102SPIDevice* dev = new APA102SPIDevice(numLights, mVerbose);
+    APA102SPIDevice* dev = new APA102SPIDevice(numLights, mVerbose);
 
-	int r = dev->open(port);
-	if (r < 0) {
-		if (mVerbose) {
-			std::clog << "Error opening " << dev->getName() << "\n";
-		}
-		delete dev;
-		return;
-	}
+    int r = dev->open(port);
+    if (r < 0) {
+        if (mVerbose) {
+            std::clog << "Error opening " << dev->getName() << "\n";
+        }
+        delete dev;
+        return;
+    }
 
-	for (unsigned i = 0; i < mDevices.Size(); ++i) {
-		if (dev->matchConfiguration(mDevices[i])) {
-			// Found a matching configuration for this device. We're keeping it!
+    for (unsigned i = 0; i < mDevices.Size(); ++i) {
+        if (dev->matchConfiguration(mDevices[i])) {
+            // Found a matching configuration for this device. We're keeping it!
 
-			dev->loadConfiguration(mDevices[i]);
-			dev->writeColorCorrection(mColor);
-			mSPIDevices.push_back(dev);
+            dev->loadConfiguration(mDevices[i]);
+            dev->writeColorCorrection(mColor);
+            mSPIDevices.push_back(dev);
 
-			if (mVerbose) {
-				std::clog << "SPI device " << dev->getName() << " attached.\n";
-			}
-			jsonConnectedDevicesChanged();
-			return;
-		}
-	}
+            if (mVerbose) {
+                std::clog << "SPI device " << dev->getName() << " attached.\n";
+            }
+            jsonConnectedDevicesChanged();
+            return;
+        }
+    }
 }
 
 void FCServer::mainLoop()
@@ -501,16 +501,16 @@ void FCServer::jsonDeviceMessage(rapidjson::Document &message)
                     break;
             }
         }
-		for (unsigned i = 0; i != mSPIDevices.size(); i++) {
-			SPIDevice *spiDev = mSPIDevices[i];
+        for (unsigned i = 0; i != mSPIDevices.size(); i++) {
+            SPIDevice *spiDev = mSPIDevices[i];
 
-			if (spiDev->matchConfiguration(device)) {
-				matched = true;
-				spiDev->writeMessage(message);
-				if (message.HasMember("error"))
-					break;
-			}
-		}
+            if (spiDev->matchConfiguration(device)) {
+                matched = true;
+                spiDev->writeMessage(message);
+                if (message.HasMember("error"))
+                    break;
+            }
+        }
     }
 
     if (!matched) {
@@ -529,11 +529,11 @@ void FCServer::jsonListConnectedDevices(rapidjson::Document &message)
         mUSBDevices[i]->describe(list[i], message.GetAllocator());
     }
 
-	for (unsigned i = 0; i != mSPIDevices.size(); i++) {
-		SPIDevice *spiDev = mSPIDevices[i];
-		list.PushBack(rapidjson::kObjectType, message.GetAllocator());
-		mSPIDevices[i]->describe(list[i], message.GetAllocator());
-	}
+    for (unsigned i = 0; i != mSPIDevices.size(); i++) {
+        SPIDevice *spiDev = mSPIDevices[i];
+        list.PushBack(rapidjson::kObjectType, message.GetAllocator());
+        mSPIDevices[i]->describe(list[i], message.GetAllocator());
+    }
 }
 
 void FCServer::jsonServerInfo(rapidjson::Document &message)

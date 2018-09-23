@@ -72,7 +72,7 @@ The default color configuration is:
 ```
 "color": {
     "gamma": 2.5,
-    "whitepoint": [0.98, 1.0, 1.0]
+    "whitepoint": [0.98, 1.0, 1.0],
     "linearSlope": 1.0,
     "linearCutoff": 0.0
 },

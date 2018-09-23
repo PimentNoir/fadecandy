@@ -1,19 +1,19 @@
 /*
  * Fadecandy driver for the APA102/APA102C/SK9822 via SPI.
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
  * Copyright (c) 2017 Lance Gilbert <lance@lancegilbert.us>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -34,29 +34,29 @@ const char* APA102SPIDevice::DEVICE_TYPE = "apa102spi";
 APA102SPIDevice::APA102SPIDevice(uint32_t numLights, bool verbose)
     : SPIDevice(DEVICE_TYPE, verbose),
       mConfigMap(0),
-	  mNumLights(numLights)
+      mNumLights(numLights)
 {
-	uint32_t bufferSize = sizeof(PixelFrame) * (numLights + 2); // Number of lights plus start and end frames
-	mFrameBuffer = (PixelFrame*)malloc(bufferSize);
+    uint32_t bufferSize = sizeof(PixelFrame) * (numLights + 2); // Number of lights plus start and end frames
+    mFrameBuffer = (PixelFrame*)malloc(bufferSize);
 
-	uint32_t flushCount = (numLights / 2) + (numLights % 2);
-	mFlushBuffer = (PixelFrame*)malloc(flushCount);
+    uint32_t flushCount = (numLights / 2) + (numLights % 2);
+    mFlushBuffer = (PixelFrame*)malloc(flushCount);
 
-	// Initialize all buffers to zero
-	memset(mFlushBuffer, 0, flushCount);
+    // Initialize all buffers to zero
+    memset(mFlushBuffer, 0, flushCount);
     memset(mFrameBuffer, 0, bufferSize);
 
-	// Initialize start and end frames
-	mFrameBuffer[0].value = START_FRAME;
-	mFrameBuffer[numLights + 1].value = END_FRAME;
+    // Initialize start and end frames
+    mFrameBuffer[0].value = START_FRAME;
+    mFrameBuffer[numLights + 1].value = END_FRAME;
 }
 
 APA102SPIDevice::~APA102SPIDevice()
 {
-	free(mFrameBuffer);
-	free(mFlushBuffer);
+    free(mFrameBuffer);
+    free(mFlushBuffer);
 
-	flush();
+    flush();
 }
 
 void APA102SPIDevice::loadConfiguration(const Value &config)
@@ -73,82 +73,82 @@ std::string APA102SPIDevice::getName()
 
 void APA102SPIDevice::flush()
 {
-	/*
-	* Flush the buffer by writing zeros through every LED
-	* 
-	* This is nessecary in the event that we are not following up a writeBuffer()
-	* with another writeBuffer immediately.
-	*
-	*/
-	uint32_t flushCount = (mNumLights / 2) + (mNumLights % 2);
-	SPIDevice::write(mFlushBuffer, flushCount);
+    /*
+    * Flush the buffer by writing zeros through every LED
+    *
+    * This is nessecary in the event that we are not following up a writeBuffer()
+    * with another writeBuffer immediately.
+    *
+    */
+    uint32_t flushCount = (mNumLights / 2) + (mNumLights % 2);
+    SPIDevice::write(mFlushBuffer, flushCount);
 }
 
 void APA102SPIDevice::writeBuffer()
 {
-	SPIDevice::write(mFrameBuffer, sizeof(PixelFrame) * (mNumLights + 2));
+    SPIDevice::write(mFrameBuffer, sizeof(PixelFrame) * (mNumLights + 2));
 }
 
 void APA102SPIDevice::writeMessage(Document &msg)
 {
-	/*
-	* Dispatch a device-specific JSON command.
-	*
-	* This can be used to send frames or settings directly to one device,
-	* bypassing the mapping we use for Open Pixel Control clients. This isn't
-	* intended to be the fast path for regular applications, but it can be used
-	* by configuration tools that need to operate regardless of the mapping setup.
-	*/
+    /*
+    * Dispatch a device-specific JSON command.
+    *
+    * This can be used to send frames or settings directly to one device,
+    * bypassing the mapping we use for Open Pixel Control clients. This isn't
+    * intended to be the fast path for regular applications, but it can be used
+    * by configuration tools that need to operate regardless of the mapping setup.
+    */
 
-	const char *type = msg["type"].GetString();
+    const char *type = msg["type"].GetString();
 
-	if (!strcmp(type, "device_pixels")) {
-		// Write raw pixels, without any mapping
-		writeDevicePixels(msg);
-		flush();
-		return;
-	}
+    if (!strcmp(type, "device_pixels")) {
+        // Write raw pixels, without any mapping
+        writeDevicePixels(msg);
+        flush();
+        return;
+    }
 
-	// Chain to default handler
-	SPIDevice::writeMessage(msg);
+    // Chain to default handler
+    SPIDevice::writeMessage(msg);
 }
 
 void APA102SPIDevice::writeDevicePixels(Document &msg)
 {
-	/*
-	* Write pixels without mapping, from a JSON integer
-	* array in msg["pixels"]. The pixel array is removed from
-	* the reply to save network bandwidth.
-	*
-	* Pixel values are clamped to [0, 255], for convenience.
-	*/
+    /*
+    * Write pixels without mapping, from a JSON integer
+    * array in msg["pixels"]. The pixel array is removed from
+    * the reply to save network bandwidth.
+    *
+    * Pixel values are clamped to [0, 255], for convenience.
+    */
 
-	const Value &pixels = msg["pixels"];
-	if (!pixels.IsArray()) {
-		msg.AddMember("error", "Pixel array is missing", msg.GetAllocator());
-	}
-	else {
+    const Value &pixels = msg["pixels"];
+    if (!pixels.IsArray()) {
+        msg.AddMember("error", "Pixel array is missing", msg.GetAllocator());
+    }
+    else {
 
-		// Truncate to the framebuffer size, and only deal in whole pixels.
-		uint32_t numPixels = pixels.Size() / 3;
-		if (numPixels > mNumLights)
-			numPixels = mNumLights;
+        // Truncate to the framebuffer size, and only deal in whole pixels.
+        uint32_t numPixels = pixels.Size() / 3;
+        if (numPixels > mNumLights)
+            numPixels = mNumLights;
 
-		for (uint32_t i = 0; i < numPixels; i++) {
-			PixelFrame *out = fbPixel(i);
+        for (uint32_t i = 0; i < numPixels; i++) {
+            PixelFrame *out = fbPixel(i);
 
-			const Value &r = pixels[i * 3 + 0];
-			const Value &g = pixels[i * 3 + 1];
-			const Value &b = pixels[i * 3 + 2];
+            const Value &r = pixels[i * 3 + 0];
+            const Value &g = pixels[i * 3 + 1];
+            const Value &b = pixels[i * 3 + 2];
 
-			out->r = std::max(0, std::min(255, r.IsInt() ? r.GetInt() : 0));
-			out->g = std::max(0, std::min(255, g.IsInt() ? g.GetInt() : 0));
-			out->b = std::max(0, std::min(255, b.IsInt() ? b.GetInt() : 0));
-			out->l = 0xEF; // todo: fix so we actually pass brightness
-		}
+            out->r = std::max(0, std::min(255, r.IsInt() ? r.GetInt() : 0));
+            out->g = std::max(0, std::min(255, g.IsInt() ? g.GetInt() : 0));
+            out->b = std::max(0, std::min(255, b.IsInt() ? b.GetInt() : 0));
+            out->l = 0xEF; // todo: fix so we actually pass brightness
+        }
 
-		writeBuffer();
-	}
+        writeBuffer();
+    }
 }
 
 void APA102SPIDevice::writeMessage(const OPC::Message &msg)
@@ -161,7 +161,7 @@ void APA102SPIDevice::writeMessage(const OPC::Message &msg)
 
         case OPC::SetPixelColors:
             opcSetPixelColors(msg);
-			writeBuffer();
+            writeBuffer();
             return;
 
         case OPC::SystemExclusive:
@@ -194,66 +194,66 @@ void APA102SPIDevice::opcSetPixelColors(const OPC::Message &msg)
 
 void APA102SPIDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
 {
-	/*
-	* Parse one JSON mapping instruction, and copy any relevant parts of 'msg'
-	* into our framebuffer. This looks for any mapping instructions that we
-	* recognize:
-	*
-	*   [ OPC Channel, First OPC Pixel, First output pixel, Pixel count ]
-	*/
+    /*
+    * Parse one JSON mapping instruction, and copy any relevant parts of 'msg'
+    * into our framebuffer. This looks for any mapping instructions that we
+    * recognize:
+    *
+    *   [ OPC Channel, First OPC Pixel, First output pixel, Pixel count ]
+    */
 
-	unsigned msgPixelCount = msg.length() / 3;
+    unsigned msgPixelCount = msg.length() / 3;
 
-	if (inst.IsArray() && inst.Size() == 4) {
-		// Map a range from an OPC channel to our framebuffer
+    if (inst.IsArray() && inst.Size() == 4) {
+        // Map a range from an OPC channel to our framebuffer
 
-		const Value &vChannel = inst[0u];
-		const Value &vFirstOPC = inst[1];
-		const Value &vFirstOut = inst[2];
-		const Value &vCount = inst[3];
+        const Value &vChannel = inst[0u];
+        const Value &vFirstOPC = inst[1];
+        const Value &vFirstOut = inst[2];
+        const Value &vCount = inst[3];
 
-		if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsInt()) {
-			unsigned channel = vChannel.GetUint();
-			unsigned firstOPC = vFirstOPC.GetUint();
-			unsigned firstOut = vFirstOut.GetUint();
-			unsigned count;
-			int direction;
-			if (vCount.GetInt() >= 0) {
-				count = vCount.GetInt();
-				direction = 1;
-			}
-			else {
-				count = -vCount.GetInt();
-				direction = -1;
-			}
+        if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsInt()) {
+            unsigned channel = vChannel.GetUint();
+            unsigned firstOPC = vFirstOPC.GetUint();
+            unsigned firstOut = vFirstOut.GetUint();
+            unsigned count;
+            int direction;
+            if (vCount.GetInt() >= 0) {
+                count = vCount.GetInt();
+                direction = 1;
+            }
+            else {
+                count = -vCount.GetInt();
+                direction = -1;
+            }
 
-			if (channel != msg.channel) {
-				return;
-			}
+            if (channel != msg.channel) {
+                return;
+            }
 
-			// Clamping, overflow-safe
-			firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
-			firstOut = std::min<unsigned>(firstOut, mNumLights);
-			count = std::min<unsigned>(count, msgPixelCount - firstOPC);
-			count = std::min<unsigned>(count,
-				direction > 0 ? mNumLights - firstOut : firstOut + 1);
+            // Clamping, overflow-safe
+            firstOPC = std::min<unsigned>(firstOPC, msgPixelCount);
+            firstOut = std::min<unsigned>(firstOut, mNumLights);
+            count = std::min<unsigned>(count, msgPixelCount - firstOPC);
+            count = std::min<unsigned>(count,
+                direction > 0 ? mNumLights - firstOut : firstOut + 1);
 
-			// Copy pixels
-			const uint8_t *inPtr = msg.data + (firstOPC * 3);
-			unsigned outIndex = firstOut;
-			while (count--) {
-				PixelFrame *outPtr = fbPixel(outIndex);
-				outIndex += direction;
-				outPtr->r = inPtr[0];
-				outPtr->g = inPtr[1];
-				outPtr->b = inPtr[2];
-				outPtr->l = 0xEF; // todo: fix so we actually pass brightness
-				inPtr += 3;
-			}
+            // Copy pixels
+            const uint8_t *inPtr = msg.data + (firstOPC * 3);
+            unsigned outIndex = firstOut;
+            while (count--) {
+                PixelFrame *outPtr = fbPixel(outIndex);
+                outIndex += direction;
+                outPtr->r = inPtr[0];
+                outPtr->g = inPtr[1];
+                outPtr->b = inPtr[2];
+                outPtr->l = 0xEF; // todo: fix so we actually pass brightness
+                inPtr += 3;
+            }
 
-			return;
-		}
-	}
+            return;
+        }
+    }
 
     // Still haven't found a match?
     if (mVerbose) {
@@ -266,6 +266,6 @@ void APA102SPIDevice::opcMapPixelColors(const OPC::Message &msg, const Value &in
 
 void APA102SPIDevice::describe(rapidjson::Value &object, Allocator &alloc)
 {
-	SPIDevice::describe(object, alloc);
-	object.AddMember("numLights", mNumLights, alloc);
+    SPIDevice::describe(object, alloc);
+    object.AddMember("numLights", mNumLights, alloc);
 }
