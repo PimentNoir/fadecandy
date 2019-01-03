@@ -1,9 +1,12 @@
-# systemd .service files
+Fadecandy systemd Examples
+==========================
 
-In Linux, these example systemd services will automatically start the Fadecandy server and one of the Python example scripts on boot.
+Once installed and enabled, these example systemd .service files will automatically start the Fadecandy server and one of the Python example scripts on boot.  For Linux systems only.
 
-### Installation Procedure
-1. Ensure that the __fcserver__ executable resides in the directory specified in the .service file (/opt/fadecandy/server/ in this example)
+Installation Procedure
+----------------------
+
+1. Ensure that the __fcserver__ executable resides in the directory specified in the .service file. (/opt/fadecandy/server/ in this example)
 2. Copy the .service files into the /etc/systemd/system/ directory
     ~~~
     $ cp fadecandy.service example-leds.service /etc/systemd/system/
