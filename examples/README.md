@@ -22,6 +22,8 @@ This directory contains sample projects and configuration files for Fadecandy.
   * JSON layout files and layout generators
   * Compatible with the Open Pixel Control `gl_server`.
   * Compatible with some of the Node.js examples.
+* `systemd`
+  * Example systemd .service files for auto-starting on boot in Linux
 
 LED Layouts
 -----------
