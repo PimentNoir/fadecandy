@@ -1,0 +1,12 @@
+[Unit]
+Description=Fadecandy Server
+After=network.target
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/fadecandy/server
+ExecStart=/opt/fadecandy/server/fcserver config.json
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

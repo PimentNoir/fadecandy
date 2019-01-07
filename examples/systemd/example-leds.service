@@ -1,0 +1,12 @@
+[Unit]
+Description=Example LEDs
+Requires=fadecandy.service
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/fadecandy/examples/python
+ExecStart=/usr/bin/env python /opt/fadecandy/examples/python/chase.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
