@@ -352,7 +352,7 @@ public class OPC implements Runnable
           SocketAddress remoteaddr = new InetSocketAddress(host, port);
           socket.connect(remoteaddr, 10);
           socket.setTcpNoDelay(true);
-          pending = socket.getOutputStream();
+          pending = socket.getOutputStream(); // Avoid race condition...
           println("Connected to OPC server:", host);
           sendColorCorrectionPacket();        // These write to 'pending'
           sendFirmwareConfigPacket();         // rather than 'output' before
