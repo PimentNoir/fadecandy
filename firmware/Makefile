@@ -49,7 +49,7 @@ CPP_FILES = \
 	OctoWS2811z.cpp
 
 # Headers
-INCLUDES = -I. $(INCLUDES)
+INCLUDES = -I.
 
 # CPPFLAGS = compiler options for C and C++
 CPPFLAGS = -Wall -Wno-sign-compare -Wno-strict-aliasing -g -Os -mcpu=cortex-m4 \

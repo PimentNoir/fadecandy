@@ -344,10 +344,16 @@ public class OPC implements Runnable
 
       if(output == null) { // No OPC connection?
         try {              // Make one!
-          socket = new Socket(host, port);
+          //socket = new Socket(host, port);
+          //socket.setTcpNoDelay(true);
+          //pending = socket.getOutputStream(); // Avoid race condition...
+          //println("Connected to OPC server");
+          socket = new Socket();
+          SocketAddress remoteaddr = new InetSocketAddress(host, port);
+          socket.connect(remoteaddr, 10);
           socket.setTcpNoDelay(true);
-          pending = socket.getOutputStream(); // Avoid race condition...
-          println("Connected to OPC server");
+          pending = socket.getOutputStream();
+          println("Connected to OPC server:", host);
           sendColorCorrectionPacket();        // These write to 'pending'
           sendFirmwareConfigPacket();         // rather than 'output' before
           output = pending;                   // rest of code given access.
